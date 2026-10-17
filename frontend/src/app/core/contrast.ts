@@ -74,12 +74,21 @@ export function textSafe(color: string, background = WHITE, target = 4.5): strin
   return result;
 }
 
+/** The colour to put text on: itself when white or ink reaches 4.5:1 on it, otherwise darkened until white does. */
+export function fill(color: string): string {
+  return Math.max(contrast(WHITE, color), contrast(INK, color)) >= 4.5 ? color.toUpperCase() : textSafe(color);
+}
+
 export function deriveTheme(theme: StoredTheme): Theme {
+  const primaryFill = fill(theme.primary_color);
+  const secondaryFill = fill(theme.secondary_color);
   return {
     ...theme,
-    on_primary: readableOn(theme.primary_color),
+    primary_fill: primaryFill,
+    on_primary: readableOn(primaryFill),
     primary_text: textSafe(theme.primary_color),
-    on_secondary: readableOn(theme.secondary_color),
+    secondary_fill: secondaryFill,
+    on_secondary: readableOn(secondaryFill),
     secondary_text: textSafe(theme.secondary_color),
   };
 }

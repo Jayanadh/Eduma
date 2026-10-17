@@ -38,14 +38,18 @@ export class AuthStore {
     return name.split(' ').filter((part) => part.length > 2)[0] ?? name;
   });
 
-  /** Asks the server who is signed in. A failed call counts as signed out; it never rejects. */
-  async loadSession(): Promise<void> {
+  /** Who the server says is signed in: a user, null for nobody, or undefined when it could not be asked. */
+  private async askSession(): Promise<Me | null | undefined> {
     try {
-      const { user } = await firstValueFrom(this.http.get<SessionResponse>('/api/v1/session'));
-      this.current.set(user);
+      return (await firstValueFrom(this.http.get<SessionResponse>('/api/v1/session'))).user;
     } catch {
-      this.current.set(null);
+      return undefined;
     }
+  }
+
+  /** Asks the server who is signed in. At start-up a failed call counts as signed out; it never rejects. */
+  async loadSession(): Promise<void> {
+    this.current.set((await this.askSession()) ?? null);
   }
 
   login(username: string, password: string): Observable<Me> {
@@ -82,9 +86,12 @@ export class AuthStore {
     if (!before) {
       return Promise.resolve();
     }
-    this.sessionCheck ??= this.loadSession()
-      .then(() => {
-        const now = this.current();
+    this.sessionCheck ??= this.askSession()
+      .then((now) => {
+        if (now === undefined) {
+          return; // the server could not be asked (a network blip): nothing is known to have changed
+        }
+        this.current.set(now);
         if (!now) {
           // The session may have ended because the institution was suspended: learn the site's state again, so
           // /login can send the visitor to the "unavailable" page instead of a sign-in nobody can use.

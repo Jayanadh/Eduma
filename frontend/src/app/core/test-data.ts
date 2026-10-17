@@ -7,6 +7,8 @@ import { SiteStore } from './site-store';
 export const EDUMA_THEME: Theme = {
   primary_color: '#4B5AE4',
   secondary_color: '#FFD43B',
+  primary_fill: '#4B5AE4',
+  secondary_fill: '#FFD43B',
   heading_font: 'bricolage',
   body_font: 'dm-sans',
   on_primary: '#FFFFFF',
@@ -68,7 +70,7 @@ export function makeSite(kind: 'platform' | 'institution', overrides: object = {
       contact_phone: '+91 90000 00001',
       address: '1 Lake Road',
     },
-    theme: { ...EDUMA_THEME, primary_color: '#5B3FD9', heading_font: 'fredoka', body_font: 'nunito' },
+    theme: { ...EDUMA_THEME, primary_color: '#5B3FD9', primary_fill: '#5B3FD9', heading_font: 'fredoka', body_font: 'nunito' },
     content,
     logo_url: null,
     ...overrides,

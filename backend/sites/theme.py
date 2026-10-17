@@ -1,6 +1,7 @@
 """Brand colours and fonts, and the readable colours derived from them. An institution picks any primary and secondary
-colour; the server works out which text colour sits on each (white or ink) and, for coloured text and links on white, a
-darker shade that still reaches WCAG AA (4.5:1). Semantic colours (error, success...) are not themeable."""
+colour; the server works out the fill that text sits on (the colour itself, or a little darker for mid-tones), which
+text colour goes on it (white or ink), and, for coloured text and links on white, a darker shade. Each pair reaches
+WCAG AA (4.5:1). Semantic colours (error, success...) are not themeable."""
 
 import colorsys
 
@@ -51,7 +52,7 @@ def contrast(a: str, b: str) -> float:
 
 
 def readable_on(color: str) -> str:
-    """White or ink, whichever is easier to read on `color`. One of them always reaches 4.5:1."""
+    """White or ink, whichever is easier to read on `color`. On some mid-tones neither reaches 4.5:1: see fill()."""
     return WHITE if contrast(WHITE, color) >= contrast(INK, color) else INK
 
 
@@ -66,10 +67,21 @@ def text_safe(color: str, background: str = WHITE, target: float = 4.5) -> str:
     return color
 
 
+def fill(color: str) -> str:
+    """The colour to put text on: `color` itself when white or ink text reaches 4.5:1 on it, otherwise the same hue
+    darkened until white text does. The institution's chosen colour is stored unchanged."""
+    if max(contrast(WHITE, color), contrast(INK, color)) >= 4.5:
+        return color.upper()
+    return text_safe(color)
+
+
 def derive(primary: str, secondary: str) -> dict:
+    primary_fill, secondary_fill = fill(primary), fill(secondary)
     return {
-        "on_primary": readable_on(primary),
+        "primary_fill": primary_fill,
+        "on_primary": readable_on(primary_fill),
         "primary_text": text_safe(primary),
-        "on_secondary": readable_on(secondary),
+        "secondary_fill": secondary_fill,
+        "on_secondary": readable_on(secondary_fill),
         "secondary_text": text_safe(secondary),
     }

@@ -27,6 +27,14 @@ describe('contrast', () => {
     expect(textSafe('#F9A8D4')).toBe('#DA0F7D');
   });
 
+  it('puts text on a darker fill for mid-tones where neither white nor ink reaches 4.5:1', () => {
+    for (const color of ['#E0393E', '#D9480F', '#1C7ED6', '#CF2AD5']) {
+      const theme = deriveTheme({ primary_color: color, secondary_color: color, heading_font: 'bricolage', body_font: 'dm-sans' });
+      expect(theme.primary_fill).not.toBe(color);
+      expect(contrast(theme.on_primary, theme.primary_fill)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   it('derives the theme the server would', () => {
     expect(deriveTheme({ primary_color: '#4B5AE4', secondary_color: '#FFD43B', heading_font: 'bricolage', body_font: 'dm-sans' })).toMatchObject({
       on_primary: '#FFFFFF',

@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { PublicSite, Section } from '../../core/api/types';
+import { SiteStore } from '../../core/site-store';
 import { makeSite, onSite } from '../../core/test-data';
 import { LandingPage } from './landing-page';
 import { SiteView } from './site-view';
@@ -113,6 +114,20 @@ describe('LandingPage', () => {
     expect(page.textContent).toContain('Opening soon');
     expect(page.querySelector('#s-steps')).toBeNull();
     expect(page.querySelector('a[href="/login"]')).not.toBeNull();
+  });
+
+  it('offers to try again when the site could not be reached, instead of saying it does not exist', async () => {
+    const loaded = TestBed.inject(SiteStore).load();
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/v1/public/site')
+      .flush(null, { status: 503, statusText: 'Unavailable' });
+    await loaded;
+    const fixture = TestBed.createComponent(LandingPage);
+    await fixture.whenStable();
+    const page = fixture.nativeElement as HTMLElement;
+    expect(page.textContent).not.toContain('There is no Eduma site at this address');
+    expect(page.querySelector('[role="alert"]')?.textContent).toContain('could not be reached');
+    expect(page.querySelector('button')?.textContent).toContain('Try again');
   });
 
   it('says an unavailable institution is unavailable, with no sign-in', async () => {

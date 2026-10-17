@@ -38,6 +38,17 @@ describe('sessionInterceptor', () => {
     expect(navigate).toHaveBeenCalledWith('/login');
   });
 
+  it('keeps the user when the recheck itself fails (a network blip is not a sign-out)', async () => {
+    await signInAs(makeMe());
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    TestBed.inject(HttpClient).get('/api/v1/institution').subscribe({ error: () => undefined });
+    http.expectOne('/api/v1/institution').flush({}, { status: 403, statusText: 'Forbidden' });
+    http.expectOne('/api/v1/session').flush(null, { status: 0, statusText: 'Unknown Error' });
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(TestBed.inject(AuthStore).user()?.username).toBe('aster.admin');
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('leaves the public and session calls alone', async () => {
     await signInAs(makeMe());
     TestBed.inject(HttpClient).get('/api/v1/public/site').subscribe({ error: () => undefined });

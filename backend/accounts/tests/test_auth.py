@@ -157,3 +157,14 @@ def test_login_is_throttled(world):
     for _ in range(10):
         login(client, world.a_admin.username, "wrong")
     assert login(client, world.a_admin.username).json()["code"] == "rate_limited"
+
+
+def test_first_password_cannot_be_kept(world):
+    world.a_admin.must_change_password = True
+    world.a_admin.save()
+    client = host(world.a.slug)
+    login(client, world.a_admin.username)
+    same = client.post("/api/v1/session/change-password", {"old_password": PASSWORD, "new_password": PASSWORD})
+    assert same.status_code == 422
+    assert same.json()["errors"][0]["field"] == "new_password"
+    assert me(client)["must_change_password"] is True

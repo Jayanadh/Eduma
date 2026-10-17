@@ -44,6 +44,18 @@ describe('OnboardingPage', () => {
     expect(wizard.form.controls.address.controls.slug.value).toBe('aster');
   });
 
+  it('suggests a login ID that fits the 40-character limit for long names', async () => {
+    const wizard = await open();
+    wizard.form.controls.identity.controls.display_name.setValue(
+      'Sri Venkateswara Institute of Technology and Management',
+    );
+    const username = wizard.form.controls.admin.controls.username.value;
+    expect(username.length).toBeLessThanOrEqual(40);
+    expect(username).toMatch(/^[a-z0-9][a-z0-9._-]{2,39}$/);
+    expect(username.endsWith('.admin')).toBe(true);
+    expect(username).not.toContain('-.admin');
+  });
+
   it('reuses one idempotency key across retries', async () => {
     const wizard = await open();
     wizard.form.patchValue(VALUES);

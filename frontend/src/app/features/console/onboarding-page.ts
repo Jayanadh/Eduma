@@ -119,7 +119,8 @@ export class OnboardingPage {
     });
     address.controls.slug.valueChanges.pipe(takeUntilDestroyed()).subscribe((slug) => {
       if (!admin.controls.username.dirty && slug) {
-        admin.controls.username.setValue(`${slug}.admin`);
+        // Login IDs are at most 40 characters: room for ".admin" after the address.
+        admin.controls.username.setValue(`${slug.slice(0, 34).replace(/-+$/, '')}.admin`);
       }
     });
   }

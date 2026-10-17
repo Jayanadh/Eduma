@@ -40,8 +40,10 @@ def test_draft_created_from_defaults_then_published(world, admin_a):
         "secondary_color": "#FFD43B",
         "heading_font": "bricolage",
         "body_font": "dm-sans",
+        "primary_fill": "#4B5AE4",
         "on_primary": "#FFFFFF",
         "primary_text": "#4B5AE4",
+        "secondary_fill": "#FFD43B",
         "on_secondary": "#17132B",
         "secondary_text": draft["theme"]["secondary_text"],
     }

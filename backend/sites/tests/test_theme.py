@@ -1,6 +1,6 @@
 import pytest
 
-from sites.theme import BODY_FONTS, DEFAULT_THEME, HEADING_FONTS, contrast, derive, readable_on, text_safe
+from sites.theme import BODY_FONTS, DEFAULT_THEME, HEADING_FONTS, contrast, derive, fill, readable_on, text_safe
 
 
 def test_contrast_known_pairs():
@@ -27,11 +27,28 @@ def test_text_safe_darkens_only_when_needed():
 
 def test_derive():
     assert derive("#4B5AE4", "#FFD43B") == {
+        "primary_fill": "#4B5AE4",
         "on_primary": "#FFFFFF",
         "primary_text": "#4B5AE4",
+        "secondary_fill": "#FFD43B",
         "on_secondary": "#17132B",
         "secondary_text": text_safe("#FFD43B"),
     }
+
+
+@pytest.mark.parametrize("color", ["#E0393E", "#D9480F", "#1C7ED6", "#CF2AD5"])
+def test_mid_tones_get_a_fill_that_text_can_sit_on(color):
+    # Neither white nor ink reaches 4.5:1 on these, so text sits on a slightly darker fill instead.
+    assert max(contrast("#FFFFFF", color), contrast("#17132B", color)) < 4.5
+    theme = derive(color, color)
+    assert theme["primary_fill"] != color
+    assert contrast(theme["on_primary"], theme["primary_fill"]) >= 4.5
+    assert contrast(theme["on_secondary"], theme["secondary_fill"]) >= 4.5
+
+
+def test_fill_keeps_colours_that_already_work():
+    assert fill("#4B5AE4") == "#4B5AE4"
+    assert fill("#FFD43B") == "#FFD43B"
 
 
 def test_defaults_are_known_fonts():

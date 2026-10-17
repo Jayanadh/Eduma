@@ -19,6 +19,7 @@ describe('SiteStore', () => {
     const vars = themeVariables({
       ...EDUMA_THEME,
       primary_color: '#5B3FD9',
+      primary_fill: '#5B3FD9',
       secondary_text: '#8A6500',
       heading_font: 'fredoka',
       body_font: 'nunito',
@@ -29,6 +30,11 @@ describe('SiteStore', () => {
     expect(vars['--font-heading']).toContain('Fredoka');
     expect(vars['--font-body']).toContain('Nunito');
     expect(Object.keys(vars)).toHaveLength(8);
+  });
+
+  it('puts the readable fill, not the raw colour, behind text', () => {
+    const vars = themeVariables({ ...EDUMA_THEME, primary_color: '#E0393E', primary_fill: '#D3242A' });
+    expect(vars['--brand-primary']).toBe('#D3242A');
   });
 
   it('falls back to the default fonts for an unknown code', () => {

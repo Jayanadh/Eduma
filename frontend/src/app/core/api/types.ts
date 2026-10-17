@@ -20,6 +20,9 @@ export type Theme = {
   secondary_color: string;
   heading_font: string;
   body_font: string;
+  /** What text sits on: the colour itself, or a little darker for mid-tones so text stays readable. */
+  primary_fill: string;
+  secondary_fill: string;
   on_primary: string;
   primary_text: string;
   on_secondary: string;

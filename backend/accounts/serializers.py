@@ -35,3 +35,9 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate_new_password(self, value):
         password_validation.validate_password(value, self.context["request"].user)
         return value
+
+    def validate(self, attrs):
+        # Whoever set a first password still knows it, so keeping it is not a change.
+        if attrs["new_password"] == attrs["old_password"]:
+            raise serializers.ValidationError({"new_password": ["Choose a password different from your current one."]})
+        return attrs

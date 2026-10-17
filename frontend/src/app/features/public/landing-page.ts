@@ -14,13 +14,37 @@ import { SiteView } from './site-view';
       } @else {
         <app-site-view [site]="site" />
       }
+    } @else if (store.failed()) {
+      <main class="unreachable">
+        <img src="/eduma-logo.png" alt="Eduma" width="96" height="96" />
+        <h1>We could not load this page.</h1>
+        <p role="alert">The site could not be reached. Check your connection and try again.</p>
+        <button type="button" class="btn btn-primary" (click)="store.load()">Try again</button>
+      </main>
     } @else {
       <app-notice-page kind="not-found" />
     }
   `,
+  styles: `
+    .unreachable {
+      display: grid;
+      min-height: 100dvh;
+      place-content: center;
+      justify-items: center;
+      gap: 16px;
+      padding: 32px 16px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 800;
+    }
+  `,
 })
 export class LandingPage {
-  protected readonly site = inject(SiteStore).site;
+  protected readonly store = inject(SiteStore);
+  protected readonly site = this.store.site;
   protected readonly unavailable = computed(() => {
     const site = this.site();
     return site?.kind === 'institution' && site.mode === 'unavailable';

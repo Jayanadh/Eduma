@@ -163,8 +163,11 @@ with field errors and writes nothing. The wizard then opens the new institution'
 - `primary_color` is used for CTAs, active navigation and links. `secondary_color` is used for highlights, pills and
   tiles. Eduma defaults: `#4B5AE4` (sampled from the logo) and `#FFD43B`.
 - The server derives the readable variants and returns them with every theme:
-  - `on_primary` / `on_secondary`: whichever of white or ink `#17132B` has the higher contrast. One of them always
-    reaches at least 4.5:1.
+  - `primary_fill` / `secondary_fill`: the colour text sits on. It is the colour itself when white or ink `#17132B`
+    reaches 4.5:1 on it. Some mid-tones (e.g. `#E0393E`) reach only about 4.3:1 with either, so they get the same hue
+    darkened until white text reaches 4.5:1. The stored colour is unchanged. (Corrected after the final review: the
+    first version of this spec wrongly said white or ink always reaches 4.5:1.)
+  - `on_primary` / `on_secondary`: whichever of white or ink has the higher contrast on the fill.
   - `primary_text` / `secondary_text`: the colour darkened in HSL lightness steps of 2% until it reaches at least
     4.5:1 on white. Used for links and coloured text.
 - Semantic colours (danger, warning, success, info) and ink are fixed.

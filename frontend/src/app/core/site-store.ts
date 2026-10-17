@@ -21,10 +21,10 @@ export const FONT_FAMILIES: Readonly<Record<string, string>> = {
 /** The CSS variables a theme sets (see styles/_tokens.scss); the soft tints follow from these. */
 export function themeVariables(theme: Theme): Record<string, string> {
   return {
-    '--brand-primary': theme.primary_color,
+    '--brand-primary': theme.primary_fill,
     '--brand-on-primary': theme.on_primary,
     '--brand-primary-text': theme.primary_text,
-    '--brand-secondary': theme.secondary_color,
+    '--brand-secondary': theme.secondary_fill,
     '--brand-on-secondary': theme.on_secondary,
     '--brand-secondary-text': theme.secondary_text,
     '--font-heading': FONT_FAMILIES[theme.heading_font] ?? FONT_FAMILIES['bricolage'],

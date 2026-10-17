@@ -1,6 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { ImageSlot, StoredTheme } from '../../core/api/types';
-import { readableOn } from '../../core/contrast';
+import { fill, readableOn } from '../../core/contrast';
 import { FONT_FAMILIES } from '../../core/site-store';
 import { ImagePicker } from './image-picker';
 
@@ -36,9 +36,14 @@ type FontName = 'heading_font' | 'body_font';
           <div class="color-row">
             <input type="color" [attr.aria-label]="color.label + ' picker'" [value]="theme()[color.name]" (input)="setColor(color.name, $any($event.target).value)" />
             <input [id]="color.name" class="hex" maxlength="7" [value]="theme()[color.name]" (change)="setColor(color.name, $any($event.target).value, $any($event.target))" />
-            <span class="swatch" [style.background]="theme()[color.name]" [style.color]="textOn(theme()[color.name])">Aa</span>
+            <span class="swatch" [style.background]="fillOf(theme()[color.name])" [style.color]="textOn(theme()[color.name])">Aa</span>
           </div>
-          <span class="field-hint">{{ color.use }} {{ textOn(theme()[color.name]) === '#FFFFFF' ? 'White' : 'Dark' }} text will be used on it.</span>
+          <span class="field-hint">
+            {{ color.use }} {{ textOn(theme()[color.name]) === '#FFFFFF' ? 'White' : 'Dark' }} text will be used on it.
+            @if (adjusted(theme()[color.name])) {
+              Behind text it is shown a little darker, so the text stays readable.
+            }
+          </span>
         </div>
       }
       <div class="form-grid">
@@ -128,7 +133,15 @@ export class ThemeForm {
   }
 
   protected textOn(color: string): string {
-    return HEX.test(color) ? readableOn(color) : '#17132B';
+    return HEX.test(color) ? readableOn(fill(color)) : '#17132B';
+  }
+
+  protected fillOf(color: string): string {
+    return HEX.test(color) ? fill(color) : color;
+  }
+
+  protected adjusted(color: string): boolean {
+    return HEX.test(color) && fill(color) !== color.toUpperCase();
   }
 
   protected family(code: string): string {

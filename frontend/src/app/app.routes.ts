@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { guestOnly, platformOnly, signedIn } from './core/guards';
+import { guestOnly, memberOnly, platformOnly, signedIn } from './core/guards';
 import { leaveGuard } from './core/unsaved-changes';
 
 export const routes: Routes = [
@@ -55,6 +55,29 @@ export const routes: Routes = [
         path: 'audit',
         title: 'Audit log',
         loadComponent: () => import('./features/console/audit-page').then((m) => m.AuditPage),
+      },
+    ],
+  },
+  {
+    path: 'app',
+    loadComponent: () => import('./layout/shell').then((m) => m.Shell),
+    canActivateChild: [signedIn, memberOnly],
+    children: [
+      {
+        path: '',
+        title: 'Home',
+        loadComponent: () => import('./features/app/home-page').then((m) => m.HomePage),
+      },
+      {
+        path: 'site',
+        title: 'Public site',
+        canDeactivate: [leaveGuard],
+        loadComponent: () => import('./features/app/site-page').then((m) => m.SitePage),
+      },
+      {
+        path: 'profile',
+        title: 'Profile',
+        loadComponent: () => import('./features/app/profile-page').then((m) => m.ProfilePage),
       },
     ],
   },

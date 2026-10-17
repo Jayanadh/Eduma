@@ -4,12 +4,16 @@
  * left, so the admin types one. The server has the final say (reserved words, uniqueness).
  */
 export function slugify(name: string): string {
-  const slug = name
+  const full = name
     .toLowerCase()
     .replace(/['’]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40)
-    .replace(/-+$/, '');
+    .replace(/^-+|-+$/g, '');
+  let slug = full.slice(0, 40);
+  // Too long: end at the last whole word rather than part-way through one.
+  if (full.length > 40 && full[40] !== '-' && slug.includes('-')) {
+    slug = slug.slice(0, slug.lastIndexOf('-'));
+  }
+  slug = slug.replace(/-+$/, '');
   return slug.length >= 3 ? slug : '';
 }

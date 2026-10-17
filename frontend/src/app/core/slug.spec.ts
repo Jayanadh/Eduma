@@ -12,6 +12,12 @@ describe('slugify', () => {
     expect(slugify('श्री Vidya Niketan')).toBe('vidya-niketan');
   });
 
+  it('shortens a long name at a word boundary', () => {
+    expect(slugify('Lotus Valley International Residential School and Junior College')).toBe(
+      'lotus-valley-international-residential',
+    );
+  });
+
   it('keeps within 40 characters and never ends on a dash', () => {
     expect(slugify('a'.repeat(60))).toHaveLength(40);
     expect(slugify(`${'a'.repeat(39)} b`)).toBe('a'.repeat(39));

@@ -1,0 +1,90 @@
+<div class="shell">
+  <aside
+    #drawer
+    class="sidebar"
+    [class.open]="drawerOpen()"
+    aria-label="Main menu"
+    tabindex="-1"
+    [attr.role]="drawerOpen() ? 'dialog' : null"
+    [attr.aria-modal]="drawerOpen() ? 'true' : null"
+  >
+    <a class="brand" [routerLink]="home()">
+      @if (site.logoUrl(); as logo) {
+        <img [src]="logo" alt="" width="40" height="40" />
+      }
+      <span class="brand-text">
+        <strong>{{ site.institutionName() }}</strong>
+        <span>{{ isInstitution() ? 'Workspace' : 'Platform console' }}</span>
+      </span>
+    </a>
+
+    <nav class="side-nav" aria-label="Main">
+      @for (item of items(); track item.link) {
+        <a
+          class="nav-row"
+          [routerLink]="item.link"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.link === home() }"
+          ariaCurrentWhenActive="page"
+        >
+          <app-icon [name]="item.icon" [size]="19" />
+          <span>{{ item.label }}</span>
+        </a>
+      }
+      @if (isInstitution() && items().length) {
+        <a class="nav-row" routerLink="/">
+          <app-icon name="external" [size]="19" />
+          <span>View public page</span>
+        </a>
+      }
+    </nav>
+
+    @if (user(); as me) {
+      <div class="side-user">
+        <div class="me">
+          <span class="avatar" aria-hidden="true">{{ initials() || '•' }}</span>
+          <span class="me-text">
+            <strong>{{ me.full_name }}</strong>
+            <span>{{ roleLabel() }}</span>
+          </span>
+        </div>
+        <a class="nav-row" routerLink="/change-password">
+          <app-icon name="key" [size]="18" />
+          <span>Change password</span>
+        </a>
+        <button type="button" class="btn btn-secondary btn-sm btn-block" (click)="signOut()">
+          <app-icon name="log-out" [size]="16" />
+          Sign out
+        </button>
+      </div>
+    }
+  </aside>
+
+  @if (drawerOpen()) {
+    <div class="backdrop" (click)="closeDrawer(true)"></div>
+  }
+
+  <div class="main" [inert]="drawerOpen()">
+    <header class="topbar">
+      <button
+        #menuButton
+        type="button"
+        class="btn-icon"
+        aria-label="Open menu"
+        [attr.aria-expanded]="drawerOpen()"
+        (click)="openDrawer()"
+      >
+        <app-icon name="menu" [size]="20" />
+      </button>
+      <a class="brand topbar-brand" [routerLink]="home()">
+        @if (site.logoUrl(); as logo) {
+          <img [src]="logo" alt="" width="32" height="32" />
+        }
+        <strong>{{ site.institutionName() }}</strong>
+      </a>
+    </header>
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

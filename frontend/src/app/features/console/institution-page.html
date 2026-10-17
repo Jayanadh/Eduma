@@ -79,7 +79,7 @@
         </div>
       }
       @case ('branding') {
-        <app-site-editor class="section" [scope]="{ kind: 'platform', institutionId: institution.id }" [institution]="institution" />
+        <app-site-editor class="section" [scope]="{ kind: 'platform', institutionId: institution.id }" [institution]="institution" (published)="data.reload()" />
       }
       @case ('activity') {
         <app-audit-list class="section" [path]="'platform/institutions/' + institution.id + '/audit'" />

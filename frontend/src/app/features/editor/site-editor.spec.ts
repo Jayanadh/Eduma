@@ -71,8 +71,12 @@ describe('SiteEditor', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
+  let published = 0;
+
   async function open(): Promise<Editor> {
     const fixture = TestBed.createComponent(SiteEditor);
+    published = 0;
+    fixture.componentInstance.published.subscribe(() => published++);
     fixture.componentRef.setInput('scope', { kind: 'institution' });
     fixture.componentRef.setInput('institution', {
       slug: 'aster',
@@ -133,5 +137,13 @@ describe('SiteEditor', () => {
     expect(editor.previewStyle()['--brand-primary']).toBe('#FFD43B');
     expect(editor.previewStyle()['--brand-on-primary']).toBe('#17132B');
     expect(document.documentElement.style.getPropertyValue('--brand-primary')).not.toBe('#FFD43B');
+  });
+
+  it('tells its page when it has published, so readiness is fresh', async () => {
+    const editor = (await open()) as Editor & { publish(): void };
+    editor.publish();
+    http.expectOne('/api/v1/institution/site/draft/publish').flush({ ...draft(), status: 'published' });
+    http.expectOne('/api/v1/institution/site/draft').flush({ ...draft(), number: 2 });
+    expect(published).toBe(1);
   });
 });

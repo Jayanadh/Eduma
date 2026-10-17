@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage, fieldErrors, problemOf } from '../../core/api-error';
 import {
@@ -49,6 +49,8 @@ export function siteBase(scope: EditorScope): string {
 export class SiteEditor {
   readonly scope = input.required<EditorScope>();
   readonly institution = input.required<EditorInstitution>();
+  /** After a publish, so the page around the editor can refresh its readiness checklist. */
+  readonly published = output();
   private readonly api = inject(Api);
   private readonly confirm = inject(ConfirmDialog);
   private readonly toasts = inject(ToastService);
@@ -228,7 +230,7 @@ export class SiteEditor {
     });
   }
 
-  protected publish(): void {
+  publish(): void {
     if (this.dirty()) {
       this.save(() => this.publishSaved());
     } else {
@@ -250,6 +252,7 @@ export class SiteEditor {
           live ? 'Published. The public page is live.' : 'Published. It will go live when the institution is activated.',
         );
         this.history.set(null);
+        this.published.emit();
         this.load();
       },
       error: (err) => {

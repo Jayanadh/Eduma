@@ -11,6 +11,7 @@ from common import audit
 from common.exceptions import Problem
 from institutions.models import Institution
 from sites.content import referenced_assets
+from sites.images import clean_image
 from sites.models import BrandAsset, SiteRevision
 from sites.starter import starter_content
 from sites.theme import DEFAULT_THEME
@@ -104,3 +105,9 @@ def restore(institution: Institution, actor, revision_id) -> SiteRevision:
         audit.log(actor, "site.restored", draft, f"Restored version {source.number} of {institution}'s page into the draft",
                   institution=institution)
         return draft
+
+
+def store_asset(institution: Institution, actor, upload) -> BrandAsset:
+    file, info = clean_image(upload)
+    info.pop("ext")
+    return BrandAsset.objects.create(institution=institution, uploaded_by=actor, file=file, **info)

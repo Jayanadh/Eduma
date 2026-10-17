@@ -4,6 +4,7 @@ from django.urls import include, path
 
 from accounts.views import ChangePasswordView, LoginView, LogoutView, SessionView
 from common.views import health
+from sites.public import PublicSiteView, public_asset
 from sites.urls import site_patterns
 
 urlpatterns = [
@@ -12,6 +13,8 @@ urlpatterns = [
     path("api/v1/session/login", LoginView.as_view(), name="session-login"),
     path("api/v1/session/logout", LogoutView.as_view(), name="session-logout"),
     path("api/v1/session/change-password", ChangePasswordView.as_view(), name="session-change-password"),
+    path("api/v1/public/site", PublicSiteView.as_view(), name="public-site"),
+    path("api/v1/public/assets/<uuid:asset_id>", public_asset, name="public-asset"),
     path("api/v1/platform/institutions/<uuid:institution_id>/site/", include(site_patterns)),
     path("api/v1/institution/site/", include(site_patterns)),
 ]

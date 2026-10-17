@@ -1,11 +1,20 @@
 from django.shortcuts import get_object_or_404
+from rest_framework import status
+from rest_framework.exceptions import ValidationError
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from institutions.models import Institution
 from sites import services
 from sites.permissions import PlatformAdmin, member_with
-from sites.serializers import DraftInputSerializer, RevisionListSerializer, SiteRevisionSerializer, VersionSerializer
+from sites.serializers import (
+    DraftInputSerializer,
+    RevisionListSerializer,
+    SiteRevisionSerializer,
+    VersionSerializer,
+    asset_url,
+)
 
 
 class InstitutionScopedView(APIView):
@@ -54,3 +63,15 @@ class RevisionsView(InstitutionScopedView):
 class RestoreView(InstitutionScopedView):
     def post(self, request, revision_id, **kwargs):
         return revision_response(services.restore(self.institution(), request.user, revision_id))
+
+
+class AssetsView(InstitutionScopedView):
+    parser_classes = [MultiPartParser]
+
+    def post(self, request, **kwargs):
+        upload = request.FILES.get("file")
+        if upload is None:
+            raise ValidationError({"file": ["Choose an image to upload."]})
+        asset = services.store_asset(self.institution(), request.user, upload)
+        body = {"id": asset.id, "url": asset_url(asset.id), "width": asset.width, "height": asset.height}
+        return Response(body, status=status.HTTP_201_CREATED)

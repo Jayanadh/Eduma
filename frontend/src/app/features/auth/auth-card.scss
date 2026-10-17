@@ -1,0 +1,59 @@
+// The sign-in and change-password pages: one narrow card in the middle of the page, in the site's own colours.
+.stage {
+  display: grid;
+  min-height: 100dvh;
+  padding: 24px 16px;
+  place-items: center;
+}
+
+.auth-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 440px;
+  padding: 28px 24px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: 6px 6px 0 var(--ink);
+
+  @media (min-width: 600px) {
+    padding: 36px 36px 32px;
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+  }
+
+  .wordmark {
+    font-family: var(--font-heading);
+    font-size: 20px;
+    font-weight: 800;
+  }
+}
+
+h1 {
+  font-size: clamp(24px, 4vw, 30px);
+  font-weight: 800;
+}
+
+.back {
+  align-self: flex-start;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

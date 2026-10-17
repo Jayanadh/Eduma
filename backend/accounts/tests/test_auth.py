@@ -120,7 +120,7 @@ def test_first_password_must_be_changed(world):
     )
     assert changed.status_code == 204
     assert me(client)["must_change_password"] is False
-    assert client.get("/api/v1/institution").status_code != 403  # no longer blocked (route arrives in Task 7)
+    assert client.get("/api/v1/institution").status_code == 200
 
 
 def test_logout_ends_the_session(world):

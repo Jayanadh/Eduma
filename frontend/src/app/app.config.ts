@@ -21,9 +21,12 @@ export const appConfig: ApplicationConfig = {
     ),
     provideHttpClient(withInterceptors([sessionInterceptor])),
     // Before the first navigation: which site this address serves (and its theme), then who is signed in here.
+    // Both are injected up front: inject() works only before the first await.
     provideAppInitializer(async () => {
-      await inject(SiteStore).load();
-      await inject(AuthStore).loadSession();
+      const site = inject(SiteStore);
+      const auth = inject(AuthStore);
+      await site.load();
+      await auth.loadSession();
     }),
   ],
 };

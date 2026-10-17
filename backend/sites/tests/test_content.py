@@ -142,3 +142,10 @@ def test_eduma_page_names_all_four_institution_types():
         "Engineering colleges",
         "Universities",
     ]
+
+
+@pytest.mark.parametrize("category", Category.values)
+def test_starter_content_is_valid_for_the_longest_name(category):
+    name = "N" * 120  # display_name allows 120 characters
+    content = validate_content(starter_content(name, category))
+    assert content["sections"][0]["title"] in (f"Welcome to {name}", name)

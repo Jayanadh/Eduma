@@ -56,7 +56,8 @@ def starter_content(display_name: str, category: str) -> dict:
                 "type": "hero",
                 "visible": True,
                 "eyebrow": "Admissions open · 2027–28",
-                "title": f"Welcome to {display_name}",
+                # A long name (up to 120 characters) fills the heading on its own.
+                "title": welcome if len(welcome := f"Welcome to {display_name}") <= 120 else display_name,
                 "subtitle": (
                     "Caring teachers, a safe campus and parents kept in the loop. "
                     "Come and see where your child will learn."

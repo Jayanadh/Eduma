@@ -45,8 +45,13 @@ class Command(BaseCommand):
             if not institution.site_revisions.filter(status="published").exists():
                 self._style(institution, platform_admin, theme, publish=active)
             if active and institution.lifecycle_status == LifecycleStatus.SETUP:
-                services.transition(institution.pk, platform_admin, to=LifecycleStatus.ACTIVE, reason="Demo data",
-                                    version=institution.version)
+                services.transition(
+                    institution.pk,
+                    platform_admin,
+                    to=LifecycleStatus.ACTIVE,
+                    reason="Demo data",
+                    version=institution.version,
+                )
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
 
     def _platform_admin(self) -> User:

@@ -1,0 +1,45 @@
+.address-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 4px;
+}
+
+.overview {
+  display: grid;
+  gap: 16px;
+
+  @media (min-width: 1100px) {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: start;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+
+  dt {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+  }
+}
+
+.btn-sm {
+  align-self: flex-start;
+}

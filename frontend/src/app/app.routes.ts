@@ -43,6 +43,17 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/console/onboarding-page').then((m) => m.OnboardingPage),
       },
+      {
+        path: 'institutions/:id',
+        title: 'Institution',
+        loadComponent: () =>
+          import('./features/console/institution-page').then((m) => m.InstitutionPage),
+      },
+      {
+        path: 'audit',
+        title: 'Audit log',
+        loadComponent: () => import('./features/console/audit-page').then((m) => m.AuditPage),
+      },
     ],
   },
   {

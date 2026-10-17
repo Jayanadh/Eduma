@@ -1,0 +1,91 @@
+<div class="page">
+  <app-load-error [message]="data.error()" (retry)="data.reload()" />
+  @if (data.value(); as institution) {
+    <app-page-header eyebrow="{{ categoryLabel() }}" [title]="institution.display_name" backLink="/console/institutions">
+      <app-status-badge [status]="institution.lifecycle_status" />
+      @for (action of moves(); track action.to) {
+        <button type="button" [class]="'btn btn-sm ' + (action.tone === 'danger' ? 'btn-secondary' : 'btn-primary')" (click)="move(action)">
+          {{ action.label }}
+        </button>
+      }
+    </app-page-header>
+
+    <div class="address-row">
+      <span class="muted small">Web address</span>
+      <app-copy-url [url]="institution.url" open />
+    </div>
+    @if (institution.status_reason) {
+      <p class="muted small">Last change: {{ institution.status_reason }}</p>
+    }
+
+    <nav class="chips section" aria-label="Sections of this institution">
+      @for (tab of tabs; track tab.key) {
+        <button type="button" class="chip" [attr.aria-current]="current() === tab.key ? 'page' : null" [class.active]="current() === tab.key" (click)="openTab(tab.key)">
+          {{ tab.label }}
+        </button>
+      }
+    </nav>
+
+    @switch (current()) {
+      @case ('overview') {
+        <div class="overview section">
+          <div class="stack">
+            <section class="card">
+              <h2 class="card-title">Ready to go live?</h2>
+              <ul class="checklist">
+                @for (item of institution.readiness; track item.code) {
+                  <li [class.done]="item.done">
+                    <span class="mark"><app-icon [name]="item.done ? 'check' : 'minus'" [size]="14" /></span>
+                    <span>{{ item.label }} <span class="sr-only">{{ item.done ? '(done)' : '(not done yet)' }}</span></span>
+                  </li>
+                }
+              </ul>
+              @if (institution.lifecycle_status === 'setup') {
+                <p class="muted small">Activate it from the top of this page once these are done.</p>
+              }
+            </section>
+            <section class="card">
+              <h2 class="card-title">Institution Admin</h2>
+              @if (institution.admin; as admin) {
+                <dl class="facts">
+                  <div><dt>Name</dt><dd>{{ admin.full_name }}</dd></div>
+                  <div><dt>Login ID</dt><dd class="url">{{ admin.username }}</dd></div>
+                  <div>
+                    <dt>Signed in</dt>
+                    <dd>
+                      @if (admin.last_login) {
+                        {{ dateTime(admin.last_login) }}
+                      } @else {
+                        Not yet
+                      }
+                      @if (admin.must_change_password) {
+                        · still on their first password
+                      }
+                    </dd>
+                  </div>
+                </dl>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="resetPassword()">
+                  <app-icon name="key" [size]="16" /> Reset password
+                </button>
+              } @else {
+                <p class="muted">No active Institution Admin.</p>
+              }
+            </section>
+          </div>
+          <section class="card">
+            <h2 class="card-title">Details</h2>
+            <app-institution-profile-form [institution]="institution" (saved)="data.value.set($event)" (reload)="data.reload()" />
+          </section>
+        </div>
+      }
+      @case ('branding') {
+        <p class="section muted">The site editor is on its way.</p>
+      }
+      @case ('activity') {
+        <app-audit-list class="section" [path]="'platform/institutions/' + institution.id + '/audit'" />
+      }
+    }
+  } @else if (data.loading()) {
+    <p class="muted page" role="status">Loading…</p>
+  }
+</div>

@@ -80,3 +80,9 @@ class DraftInputSerializer(serializers.Serializer):
 
 class VersionSerializer(serializers.Serializer):
     version = serializers.IntegerField()
+
+
+class RestoreSerializer(serializers.Serializer):
+    """The draft's version, when there is a draft to replace."""
+
+    version = serializers.IntegerField(required=False, allow_null=True, default=None)

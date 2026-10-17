@@ -105,10 +105,11 @@ export class SiteEditor {
     inject(DestroyRef).onDestroy(() => this.unsaved.dirty.set(false));
   }
 
-  protected load(): void {
+  /** Loads the draft; with keepEdits, unsaved local edits stay and only the draft's identity and version are taken. */
+  protected load(keepEdits = false): void {
     this.loadError.set('');
     this.api.get<Revision>(`${this.base()}/draft`).subscribe({
-      next: (draft) => this.accept(draft),
+      next: (draft) => (keepEdits && this.dirty() ? this.draft.set(draft) : this.accept(draft)),
       error: (err) => this.loadError.set(apiErrorMessage(err)),
     });
   }
@@ -177,6 +178,7 @@ export class SiteEditor {
     }
     this.saving.set(true);
     this.problems.set([]);
+    const sentAt = this.edits();
     this.api
       .put<Revision>(`${this.base()}/draft`, {
         version: version ?? draft.version,
@@ -188,7 +190,8 @@ export class SiteEditor {
         next: (saved) => {
           this.saving.set(false);
           this.draft.set(saved);
-          this.setDirty(false);
+          // Anything typed while the save was on its way is still unsaved.
+          this.setDirty(this.edits() !== sentAt);
           this.conflict.set(false);
           if (after) {
             after();
@@ -253,7 +256,7 @@ export class SiteEditor {
         );
         this.history.set(null);
         this.published.emit();
-        this.load();
+        this.load(true);
       },
       error: (err) => {
         this.saving.set(false);
@@ -277,7 +280,7 @@ export class SiteEditor {
     });
   }
 
-  protected async restore(revision: RevisionListItem): Promise<void> {
+  async restore(revision: Pick<RevisionListItem, 'id' | 'number'>): Promise<void> {
     const yes = await this.confirm.ask({
       title: `Restore version ${revision.number}?`,
       message: 'Its look and sections replace the current draft. Nothing goes live until you publish.',
@@ -286,14 +289,22 @@ export class SiteEditor {
     if (!yes) {
       return;
     }
-    this.api.post<Revision>(`${this.base()}/revisions/${revision.id}/restore`).subscribe({
-      next: (draft) => {
-        this.accept(draft);
-        this.history.set(null);
-        this.toasts.show(`Version ${revision.number} is back in the draft.`);
-      },
-      error: (err) => this.toasts.show(apiErrorMessage(err), 'danger'),
-    });
+    this.api
+      .post<Revision>(`${this.base()}/revisions/${revision.id}/restore`, { version: this.draft()?.version ?? null })
+      .subscribe({
+        next: (draft) => {
+          this.accept(draft);
+          this.history.set(null);
+          this.toasts.show(`Version ${revision.number} is back in the draft.`);
+        },
+        error: (err) => {
+          if (problemOf(err)?.code === 'version_conflict') {
+            this.conflict.set(true);
+          } else {
+            this.toasts.show(apiErrorMessage(err), 'danger');
+          }
+        },
+      });
   }
 
   protected warnBeforeUnload(event: BeforeUnloadEvent): void {

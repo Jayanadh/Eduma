@@ -98,14 +98,18 @@ def publish(institution: Institution, actor, version: int) -> SiteRevision:
         return draft
 
 
-def restore(institution: Institution, actor, revision_id) -> SiteRevision:
+def restore(institution: Institution, actor, revision_id, version: int | None) -> SiteRevision:
     """Copies an earlier revision's theme, logo and content into the draft; publishing it is a separate step."""
     with transaction.atomic():
         institution = _lock(institution)
         source = institution.site_revisions.filter(pk=revision_id).first()
         if source is None:
             raise Http404
-        draft = institution.site_revisions.filter(status=Status.DRAFT).first() or _create_draft(institution, actor)
+        draft = institution.site_revisions.filter(status=Status.DRAFT).first()
+        if draft is not None:
+            draft.check_version(version)  # restoring replaces the draft: never over someone's newer save
+        else:
+            draft = _create_draft(institution, actor)
         for name in (*THEME_FIELDS, "logo", "content"):
             setattr(draft, name, getattr(source, name))
         draft.save()

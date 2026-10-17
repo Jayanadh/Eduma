@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { OfferingsSection, Revision, SiteContent } from '../../core/api/types';
 import { EDUMA_THEME } from '../../core/test-data';
+import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { SiteEditor } from './site-editor';
 
 type Editor = {
@@ -145,5 +146,42 @@ describe('SiteEditor', () => {
     http.expectOne('/api/v1/institution/site/draft/publish').flush({ ...draft(), status: 'published' });
     http.expectOne('/api/v1/institution/site/draft').flush({ ...draft(), number: 2 });
     expect(published).toBe(1);
+  });
+
+  it('restores with the draft version and shows a conflict if the draft changed', async () => {
+    const confirm = TestBed.inject(ConfirmDialog);
+    vi.spyOn(confirm, 'ask').mockResolvedValue(true);
+    const editor = (await open()) as Editor & { restore(revision: { id: string; number: number }): Promise<void> };
+    await editor.restore({ id: 'old', number: 1 });
+    const request = http.expectOne('/api/v1/institution/site/revisions/old/restore');
+    expect(request.request.body).toEqual({ version: 3 });
+    request.flush({ code: 'version_conflict', current_version: 4 }, { status: 409, statusText: 'Conflict' });
+    expect(editor.conflict()).toBe(true);
+  });
+
+  it('keeps edits typed while a save is in flight as unsaved', async () => {
+    const editor = await open();
+    editor.content.sections[0].title = 'First';
+    editor.changed();
+    editor.save();
+    const request = http.expectOne('/api/v1/institution/site/draft');
+    editor.content.sections[0].title = 'First and more';
+    editor.changed();
+    request.flush({ ...draft(), version: 4 });
+    expect(editor.dirty()).toBe(true);
+    expect(editor.content.sections[0].title).toBe('First and more');
+  });
+
+  it('keeps edits typed during a publish when the new draft arrives', async () => {
+    const editor = (await open()) as Editor & { publish(): void };
+    editor.publish();
+    http.expectOne('/api/v1/institution/site/draft/publish').flush({ ...draft(), status: 'published' });
+    editor.content.sections[0].title = 'Typed while publishing';
+    editor.changed();
+    http.expectOne('/api/v1/institution/site/draft').flush({ ...draft(), id: 'r2', number: 2, version: 1 });
+    expect(editor.content.sections[0].title).toBe('Typed while publishing');
+    expect(editor.dirty()).toBe(true);
+    editor.save();
+    expect(http.expectOne('/api/v1/institution/site/draft').request.body.version).toBe(1);
   });
 });

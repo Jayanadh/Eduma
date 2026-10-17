@@ -10,6 +10,7 @@ from sites import services
 from sites.permissions import PlatformAdmin, member_with
 from sites.serializers import (
     DraftInputSerializer,
+    RestoreSerializer,
     RevisionListSerializer,
     SiteRevisionSerializer,
     VersionSerializer,
@@ -64,7 +65,10 @@ class RevisionsView(InstitutionScopedView):
 
 class RestoreView(InstitutionScopedView):
     def post(self, request, revision_id, **kwargs):
-        return revision_response(services.restore(self.institution(), request.user, revision_id))
+        serializer = RestoreSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        version = serializer.validated_data["version"]
+        return revision_response(services.restore(self.institution(), request.user, revision_id, version))
 
 
 class AssetsView(InstitutionScopedView):

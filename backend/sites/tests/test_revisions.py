@@ -104,7 +104,10 @@ def test_restore_copies_old_revision_into_draft(world, admin_a):
     admin_a.post(f"{DRAFT}/publish", {"version": first["version"]})
     second = admin_a.get(DRAFT).json()
     admin_a.put(DRAFT, payload(second, primary_color="#0F766E"))
-    restored = admin_a.post(f"/api/v1/institution/site/revisions/{first['id']}/restore").json()
+    current = admin_a.get(DRAFT).json()
+    restored = admin_a.post(
+        f"/api/v1/institution/site/revisions/{first['id']}/restore", {"version": current["version"]}
+    ).json()
     assert restored["status"] == "draft"
     assert restored["id"] == second["id"]
     assert restored["theme"]["primary_color"] == "#4B5AE4"
@@ -157,3 +160,14 @@ def test_unknown_logo_rejected(admin_a):
     response = admin_a.put(DRAFT, payload(draft, logo=str(uuid.uuid4())))
     assert response.status_code == 422
     assert response.json()["errors"][0]["field"] == "logo"
+
+
+def test_restore_over_a_newer_draft_is_409(admin_a):
+    first = admin_a.get(DRAFT).json()
+    admin_a.post(f"{DRAFT}/publish", {"version": first["version"]})
+    second = admin_a.get(DRAFT).json()
+    admin_a.put(DRAFT, payload(second, primary_color="#0F766E"))  # someone else saves meanwhile
+    stale = admin_a.post(f"/api/v1/institution/site/revisions/{first['id']}/restore", {"version": second["version"]})
+    assert stale.status_code == 409
+    assert stale.json()["code"] == "version_conflict"
+    assert admin_a.get(DRAFT).json()["theme"]["primary_color"] == "#0F766E"

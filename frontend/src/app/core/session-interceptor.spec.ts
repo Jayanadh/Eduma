@@ -31,6 +31,9 @@ describe('sessionInterceptor', () => {
       .flush({ code: 'authentication_required' }, { status: 403, statusText: 'Forbidden' });
     http.expectOne('/api/v1/session').flush({ user: null });
     await new Promise((resolve) => setTimeout(resolve));
+    // The site may have changed too (an institution suspended): ask again before choosing where to go.
+    http.expectOne('/api/v1/public/site').flush({ kind: 'institution', mode: 'unavailable', institution: { display_name: 'Aster School' } });
+    await new Promise((resolve) => setTimeout(resolve));
     expect(TestBed.inject(AuthStore).user()).toBeNull();
     expect(navigate).toHaveBeenCalledWith('/login');
   });

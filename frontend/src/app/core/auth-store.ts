@@ -5,6 +5,7 @@ import { catchError, firstValueFrom, map, Observable, of, tap, throwError } from
 import { ToastService } from '../ui/toast';
 import { apiErrorMessage } from './api-error';
 import { Me } from './api/types';
+import { SiteStore } from './site-store';
 
 type SessionResponse = { user: Me | null };
 
@@ -22,6 +23,7 @@ export class AuthStore {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly toasts = inject(ToastService);
+  private readonly site = inject(SiteStore);
   private readonly current = signal<Me | null>(null);
   private sessionCheck: Promise<void> | null = null;
 
@@ -84,7 +86,9 @@ export class AuthStore {
       .then(() => {
         const now = this.current();
         if (!now) {
-          void this.router.navigateByUrl('/login');
+          // The session may have ended because the institution was suspended: learn the site's state again, so
+          // /login can send the visitor to the "unavailable" page instead of a sign-in nobody can use.
+          void this.site.load().then(() => this.router.navigateByUrl('/login'));
         } else if (now.id !== before.id) {
           void this.router.navigateByUrl(this.home());
         }

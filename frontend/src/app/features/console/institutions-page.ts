@@ -26,21 +26,21 @@ import { StatusBadge } from '../../ui/status-badge';
         <app-search-box id="institution-search" label="Search by name or address" (search)="filter(search, $event)" />
         <div class="field">
           <label for="filter-category">Category</label>
-          <select id="filter-category" [value]="category()" (change)="filter(category, $any($event.target).value)">
+          <select id="filter-category" (change)="filter(category, $any($event.target).value)">
             <option value="">All categories</option>
             @for (option of categories; track option[0]) {
-              <option [value]="option[0]">{{ option[1] }}</option>
+              <option [value]="option[0]" [selected]="option[0] === category()">{{ option[1] }}</option>
             }
           </select>
         </div>
         <div class="field">
           <label for="filter-status">State</label>
-          <select id="filter-status" [value]="status()" (change)="filter(status, $any($event.target).value)">
+          <select id="filter-status" (change)="filter(status, $any($event.target).value)">
             <option value="">All states</option>
-            <option value="setup">Setting up</option>
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
-            <option value="archived">Archived</option>
+            <option value="setup" [selected]="status() === 'setup'">Setting up</option>
+            <option value="active" [selected]="status() === 'active'">Active</option>
+            <option value="suspended" [selected]="status() === 'suspended'">Suspended</option>
+            <option value="archived" [selected]="status() === 'archived'">Archived</option>
           </select>
         </div>
       </div>

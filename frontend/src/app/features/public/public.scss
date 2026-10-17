@@ -3,6 +3,9 @@
 // scoped under .site and coloured only through the --brand-* variables, so each institution's theme restyles it.
 
 .site {
+  // Layout follows the page's own width (a container), so the editor's phone-width preview lays out like a phone.
+  container: site / inline-size;
+
   // Three soft tones made from the brand colours, for tiles, cards and notes. Ink text stays readable on each.
   --tone-0: color-mix(in srgb, var(--brand-primary) 16%, white);
   --tone-1: color-mix(in srgb, var(--brand-secondary) 45%, white);
@@ -43,7 +46,7 @@
   margin: 0 auto;
   padding: 0 16px;
 
-  @media (min-width: 720px) {
+  @container site (min-width: 720px) {
     padding: 0 24px;
   }
 }
@@ -55,7 +58,7 @@
   z-index: 20;
   padding: 12px 12px 0;
 
-  @media (min-width: 720px) {
+  @container site (min-width: 720px) {
     padding: 16px 24px 0;
   }
 }
@@ -116,7 +119,7 @@
     }
   }
 
-  @media (min-width: 960px) {
+  @container site (min-width: 960px) {
     display: flex;
   }
 }
@@ -127,13 +130,13 @@
   gap: 8px;
   margin-left: auto;
 
-  @media (min-width: 960px) {
+  @container site (min-width: 960px) {
     margin-left: 0;
   }
 }
 
 .header-cta {
-  @media (max-width: 559px) {
+  @container site (max-width: 559px) {
     display: none !important;
   }
 }
@@ -264,7 +267,7 @@ app-cta-link {
   // Room for the sticky header when a menu link jumps here.
   scroll-margin-top: 88px;
 
-  @media (min-width: 720px) {
+  @container site (min-width: 720px) {
     padding: 80px 0;
   }
 
@@ -283,7 +286,7 @@ app-cta-link {
 
   h2 {
     max-width: 20ch;
-    font-size: clamp(30px, 4.4vw, 48px);
+    font-size: clamp(30px, 4.4cqi, 48px);
     line-height: 1.05;
   }
 
@@ -304,7 +307,7 @@ app-cta-link {
 .block-hero {
   padding: 40px 0 64px;
 
-  @media (min-width: 720px) {
+  @container site (min-width: 720px) {
     padding: 56px 0 88px;
   }
 }
@@ -319,7 +322,7 @@ app-cta-link {
 .hero-title {
   max-width: 15ch;
   margin-top: 20px;
-  font-size: clamp(40px, 7.2vw, 80px);
+  font-size: clamp(40px, 7.2cqi, 80px);
   line-height: 1.02;
   letter-spacing: -0.035em;
 }
@@ -328,7 +331,7 @@ app-cta-link {
   max-width: 56ch;
   margin-top: 18px;
   color: var(--muted);
-  font-size: clamp(16px, 1.7vw, 18px);
+  font-size: clamp(16px, 1.7cqi, 18px);
 }
 
 .hero-actions {
@@ -352,7 +355,7 @@ app-cta-link {
 
 .hero-card {
   flex: none;
-  width: min(30vw, 250px);
+  width: min(30cqi, 250px);
   aspect-ratio: 4 / 5;
   margin: 0;
   overflow: hidden;
@@ -368,7 +371,7 @@ app-cta-link {
 
   &:nth-of-type(2) {
     z-index: 2;
-    width: min(34vw, 290px);
+    width: min(34cqi, 290px);
   }
 
   &:nth-of-type(3) {
@@ -378,7 +381,7 @@ app-cta-link {
 
   .count-1 & {
     transform: none;
-    width: min(70vw, 320px);
+    width: min(70cqi, 320px);
   }
 }
 
@@ -413,7 +416,7 @@ app-cta-link {
     font-weight: 700;
   }
 
-  @media (max-width: 599px) {
+  @container site (max-width: 599px) {
     width: 84px;
     height: 84px;
 
@@ -444,7 +447,7 @@ app-cta-link {
 }
 
 .sticker {
-  @media (max-width: 599px) {
+  @container site (max-width: 599px) {
     padding: 4px 9px;
     font-size: 9.5px;
     letter-spacing: 0.04em;
@@ -563,7 +566,7 @@ app-cta-link {
     font-size: 14.5px;
   }
 
-  @media (min-width: 800px) {
+  @container site (min-width: 800px) {
     grid-template-columns: repeat(var(--steps, 4), minmax(0, 1fr));
 
     // The dotted route joining the steps.
@@ -638,7 +641,7 @@ app-cta-link {
   grid-auto-rows: 150px;
   gap: 14px;
 
-  @media (min-width: 800px) {
+  @container site (min-width: 800px) {
     grid-template-columns: 1.3fr 1fr 1.3fr;
     grid-auto-rows: 190px;
     gap: 18px;
@@ -743,7 +746,7 @@ app-cta-link {
     max-width: 18ch;
     margin-top: 16px;
     color: #ffffff;
-    font-size: clamp(30px, 4.4vw, 50px);
+    font-size: clamp(30px, 4.4cqi, 50px);
     line-height: 1.05;
   }
 
@@ -754,7 +757,7 @@ app-cta-link {
     font-size: 17px;
   }
 
-  @media (min-width: 900px) {
+  @container site (min-width: 900px) {
     &.with-image {
       grid-template-columns: 1.1fr 0.9fr;
     }
@@ -795,7 +798,7 @@ app-cta-link {
   display: grid;
   gap: 32px;
 
-  @media (min-width: 900px) {
+  @container site (min-width: 900px) {
     grid-template-columns: 0.8fr 1.2fr;
     align-items: start;
   }
@@ -880,7 +883,7 @@ app-cta-link {
   display: grid;
   gap: 20px;
 
-  @media (min-width: 720px) {
+  @container site (min-width: 720px) {
     grid-template-columns: 1.4fr 1fr auto;
     align-items: start;
   }

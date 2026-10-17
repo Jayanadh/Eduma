@@ -79,7 +79,7 @@
         </div>
       }
       @case ('branding') {
-        <p class="section muted">The site editor is on its way.</p>
+        <app-site-editor class="section" [scope]="{ kind: 'platform', institutionId: institution.id }" [institution]="institution" />
       }
       @case ('activity') {
         <app-audit-list class="section" [path]="'platform/institutions/' + institution.id + '/audit'" />

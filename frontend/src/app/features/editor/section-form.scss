@@ -1,0 +1,52 @@
+.section-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 4px 4px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+
+  legend {
+    padding: 0 6px;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .btn-ghost {
+    align-self: flex-start;
+  }
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .btn-ghost {
+    align-self: flex-start;
+  }
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+
+  input {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.btn-secondary {
+  align-self: flex-start;
+}

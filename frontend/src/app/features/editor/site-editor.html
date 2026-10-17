@@ -1,0 +1,137 @@
+@if (loadError()) {
+  <div class="notice notice-danger" role="alert">
+    {{ loadError() }}
+    <button type="button" class="btn btn-secondary btn-sm" (click)="load()">Try again</button>
+  </div>
+}
+@if (draft(); as current) {
+  <div class="editor">
+    <div class="toolbar">
+      <p class="state" role="status">
+        @if (dirty()) {
+          <span class="badge badge-warning">Unsaved changes</span>
+        } @else {
+          <app-status-badge status="draft" [label]="'Draft saved · version ' + current.number" />
+        }
+      </p>
+      <div class="row">
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="!dirty() || saving()" (click)="save()">Save draft</button>
+        <button type="button" class="btn btn-primary btn-sm" [disabled]="saving()" (click)="publish()">
+          <app-icon name="upload" [size]="16" /> Publish
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" [attr.aria-expanded]="!!history()" (click)="toggleHistory()">
+          <app-icon name="clock" [size]="16" /> History
+        </button>
+      </div>
+      <div class="chips view-switch" role="group" aria-label="Show">
+        <button type="button" class="chip" [class.active]="view() === 'edit'" [attr.aria-pressed]="view() === 'edit'" (click)="view.set('edit')">Edit</button>
+        <button type="button" class="chip" [class.active]="view() === 'preview'" [attr.aria-pressed]="view() === 'preview'" (click)="view.set('preview')">Preview</button>
+      </div>
+    </div>
+
+    @if (conflict()) {
+      <div class="notice notice-warning" role="alert">
+        Someone else saved changes to this page.
+        <div class="row">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="load()">Reload latest (discard mine)</button>
+          @if (!draftGone()) {
+            <button type="button" class="btn btn-secondary btn-sm" (click)="keepMine()">Keep mine and save</button>
+          }
+        </div>
+      </div>
+    }
+    @if (problems().length) {
+      <div class="notice notice-danger" role="alert">
+        <ul class="problems">
+          @for (problem of problems(); track $index) {
+            <li>{{ problem }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (history(); as revisions) {
+      <section class="card history" aria-label="Earlier versions">
+        <h3 class="card-title">Versions</h3>
+        <ul class="list">
+          @for (revision of revisions; track revision.id) {
+            <li class="list-row">
+              <span class="list-main">
+                <span class="list-title">Version {{ revision.number }}</span>
+                <span class="muted small">
+                  @if (revision.published_at) {
+                    Published {{ dateTime(revision.published_at) }}{{ revision.published_by_name ? ' by ' + revision.published_by_name : '' }}
+                  } @else {
+                    Started {{ dateTime(revision.created_at) }}
+                  }
+                </span>
+              </span>
+              <app-status-badge [status]="revision.status" />
+              @if (revision.status !== 'draft') {
+                <button type="button" class="btn btn-secondary btn-sm" (click)="restore(revision)">Restore</button>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <div class="panes" [attr.data-view]="view()">
+      <div class="edit-pane">
+        <section class="card stack">
+          <h3 class="card-title">Look</h3>
+          <app-theme-form [theme]="theme()" [logo]="logo()" [base]="base()" (themeChange)="setTheme($event.name, $event.value)" (logoChange)="setLogo($event)" />
+        </section>
+        <section class="card">
+          <h3 class="card-title">Sections</h3>
+          <p class="muted small">Open a section to edit it. Hidden sections stay in the draft but are not shown.</p>
+          <ol class="sections">
+            @for (section of content.sections; track section.id; let i = $index, last = $last) {
+              <li class="section-item" [class.hidden-section]="!section.visible">
+                <div class="section-row">
+                  <button type="button" class="section-toggle" [attr.aria-expanded]="open() === section.id" (click)="toggleOpen(section)">
+                    <app-icon [name]="open() === section.id ? 'chevron-down' : 'chevron-right'" [size]="18" />
+                    <span>
+                      <strong>{{ labels[section.type] }}</strong>
+                      <span class="muted small">{{ section.title || '(no heading)' }}</span>
+                    </span>
+                  </button>
+                  @if (i > 0) {
+                    <label class="switch">
+                      <input type="checkbox" [checked]="section.visible" (change)="toggleSection(i)" [attr.aria-label]="'Show ' + labels[section.type]" />
+                      <span>{{ section.visible ? 'Shown' : 'Hidden' }}</span>
+                    </label>
+                    <button type="button" class="btn-icon small" [disabled]="i === 1" [attr.aria-label]="'Move ' + labels[section.type] + ' up'" (click)="moveSection(i, -1)">
+                      <app-icon name="arrow-up" [size]="16" />
+                    </button>
+                    <button type="button" class="btn-icon small" [disabled]="last" [attr.aria-label]="'Move ' + labels[section.type] + ' down'" (click)="moveSection(i, 1)">
+                      <app-icon name="arrow-down" [size]="16" />
+                    </button>
+                  }
+                </div>
+                @if (open() === section.id) {
+                  <app-section-form [section]="section" [base]="base()" (changed)="changed()" />
+                }
+              </li>
+            }
+          </ol>
+        </section>
+      </div>
+
+      <div class="preview-pane">
+        <div class="preview-bar">
+          <span class="muted small">Preview of the draft</span>
+          <div class="chips" role="group" aria-label="Preview width">
+            <button type="button" class="chip" [class.active]="width() === 'wide'" [attr.aria-pressed]="width() === 'wide'" (click)="width.set('wide')">Wide</button>
+            <button type="button" class="chip" [class.active]="width() === 'phone'" [attr.aria-pressed]="width() === 'phone'" (click)="width.set('phone')">Phone</button>
+          </div>
+        </div>
+        <div class="preview-frame" [class.phone]="width() === 'phone'" [style]="previewStyle()" aria-label="Page preview" role="region" tabindex="0">
+          <app-site-view [site]="previewSite()" [preview]="true" />
+        </div>
+      </div>
+    </div>
+  </div>
+} @else if (!loadError()) {
+  <p class="muted" role="status">Loading the page…</p>
+}

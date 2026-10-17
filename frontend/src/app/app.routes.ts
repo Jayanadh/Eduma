@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { guestOnly, platformOnly, signedIn } from './core/guards';
+import { leaveGuard } from './core/unsaved-changes';
 
 export const routes: Routes = [
   {
@@ -46,6 +47,7 @@ export const routes: Routes = [
       {
         path: 'institutions/:id',
         title: 'Institution',
+        canDeactivate: [leaveGuard],
         loadComponent: () =>
           import('./features/console/institution-page').then((m) => m.InstitutionPage),
       },

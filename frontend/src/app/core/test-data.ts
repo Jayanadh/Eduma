@@ -12,7 +12,7 @@ export const EDUMA_THEME: Theme = {
   on_primary: '#FFFFFF',
   primary_text: '#4B5AE4',
   on_secondary: '#17132B',
-  secondary_text: '#806300',
+  secondary_text: '#8D6E00',
 };
 
 /** An Institution Admin by default; override only what a test cares about. */

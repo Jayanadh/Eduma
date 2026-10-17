@@ -12,6 +12,8 @@ import { LoadError } from '../../ui/load-error';
 import { PageHeader } from '../../ui/page-header';
 import { StatusBadge } from '../../ui/status-badge';
 import { ToastService } from '../../ui/toast';
+import { UnsavedChanges } from '../../core/unsaved-changes';
+import { SiteEditor } from '../editor/site-editor';
 import { AuditList } from './audit-list';
 import { allowedMoves, lifecycleQuestion, Move } from './lifecycle';
 import { InstitutionProfileForm } from './profile-form';
@@ -25,7 +27,16 @@ const TABS = [
 /** One institution, for the platform admin: its state and readiness, its details, its branding and its history. */
 @Component({
   selector: 'app-institution-page',
-  imports: [AuditList, CopyUrl, Icon, InstitutionProfileForm, LoadError, PageHeader, StatusBadge],
+  imports: [
+    AuditList,
+    CopyUrl,
+    Icon,
+    InstitutionProfileForm,
+    LoadError,
+    PageHeader,
+    SiteEditor,
+    StatusBadge,
+  ],
   templateUrl: './institution-page.html',
   styleUrl: './institution-page.scss',
 })
@@ -37,9 +48,12 @@ export class InstitutionPage {
   private readonly confirm = inject(ConfirmDialog);
   private readonly toasts = inject(ToastService);
   private readonly router = inject(Router);
+  private readonly unsaved = inject(UnsavedChanges);
 
   protected readonly tabs = TABS;
-  protected readonly current = computed(() => (TABS.some((tab) => tab.key === this.tab()) ? this.tab() : 'overview'));
+  protected readonly current = computed(() =>
+    TABS.some((tab) => tab.key === this.tab()) ? this.tab() : 'overview',
+  );
   protected readonly data = load(
     () => this.api.get<InstitutionDetail>(`platform/institutions/${this.id()}`),
     () => this.id(),
@@ -60,7 +74,9 @@ export class InstitutionPage {
       return;
     }
     const missing = institution.readiness.filter((item) => !item.done).map((item) => item.label);
-    const reason = await this.confirm.prompt(lifecycleQuestion(move, institution.display_name, missing));
+    const reason = await this.confirm.prompt(
+      lifecycleQuestion(move, institution.display_name, missing),
+    );
     if (reason === null) {
       return;
     }
@@ -75,7 +91,9 @@ export class InstitutionPage {
       .subscribe({
         next: (updated) => {
           this.data.value.set(updated);
-          this.toasts.show(`${updated.display_name} is now ${this.stateWord(updated.lifecycle_status)}.`);
+          this.toasts.show(
+            `${updated.display_name} is now ${this.stateWord(updated.lifecycle_status)}.`,
+          );
         },
         error: (err) => {
           this.toasts.show(apiErrorMessage(err), 'danger');
@@ -94,20 +112,35 @@ export class InstitutionPage {
     if (password === null) {
       return;
     }
-    this.api.post<void>(`platform/institutions/${institution.id}/admin-password`, { password }).subscribe({
-      next: () => {
-        this.toasts.show('Password set. Hand it over in person; they will choose their own at sign-in.');
-        this.data.reload();
-      },
-      error: (err) => this.toasts.show(apiErrorMessage(err), 'danger'),
+    this.api
+      .post<void>(`platform/institutions/${institution.id}/admin-password`, { password })
+      .subscribe({
+        next: () => {
+          this.toasts.show(
+            'Password set. Hand it over in person; they will choose their own at sign-in.',
+          );
+          this.data.reload();
+        },
+        error: (err) => this.toasts.show(apiErrorMessage(err), 'danger'),
+      });
+  }
+
+  protected async openTab(key: string): Promise<void> {
+    if (key === this.current() || !(await this.unsaved.confirmLeave())) {
+      return;
+    }
+    void this.router.navigate([], {
+      queryParams: { tab: key === 'overview' ? null : key },
+      replaceUrl: true,
     });
   }
 
-  protected openTab(key: string): void {
-    void this.router.navigate([], { queryParams: { tab: key === 'overview' ? null : key }, replaceUrl: true });
-  }
-
   private stateWord(status: InstitutionDetail['lifecycle_status']): string {
-    return { setup: 'being set up', active: 'active', suspended: 'suspended', archived: 'archived' }[status];
+    return {
+      setup: 'being set up',
+      active: 'active',
+      suspended: 'suspended',
+      archived: 'archived',
+    }[status];
   }
 }

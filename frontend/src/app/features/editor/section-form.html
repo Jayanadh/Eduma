@@ -1,0 +1,211 @@
+@let s = section();
+<div class="section-form">
+  <div class="form-grid">
+    <div class="field">
+      <label [for]="id('eyebrow')">Small label above the heading</label>
+      <input [id]="id('eyebrow')" maxlength="40" [(ngModel)]="s.eyebrow" (ngModelChange)="touch()" />
+    </div>
+    <div class="field" [class.full]="s.type !== 'hero'">
+      <label [for]="id('title')">Heading</label>
+      <input [id]="id('title')" maxlength="120" [(ngModel)]="s.title" (ngModelChange)="touch()" />
+    </div>
+  </div>
+
+  @switch (s.type) {
+    @case ('hero') {
+      <div class="field">
+        <label [for]="id('subtitle')">Text under the heading</label>
+        <textarea [id]="id('subtitle')" maxlength="300" rows="3" [(ngModel)]="s.subtitle" (ngModelChange)="touch()"></textarea>
+      </div>
+      <fieldset class="group">
+        <legend>Main button</legend>
+        <div class="form-grid">
+          <div class="field"><label [for]="id('cta1-label')">Words</label><input [id]="id('cta1-label')" maxlength="30" [(ngModel)]="s.primary_cta.label" (ngModelChange)="touch()" /></div>
+          <div class="field"><label [for]="id('cta1-href')">Goes to</label><input [id]="id('cta1-href')" maxlength="500" placeholder="https://…, mailto:…, tel:… or #s-faq" [(ngModel)]="s.primary_cta.href" (ngModelChange)="touch()" /></div>
+        </div>
+      </fieldset>
+      <fieldset class="group">
+        <legend>
+          <label class="check"><input type="checkbox" [checked]="!!s.secondary_cta" (change)="toggleCta($any(s), 'secondary_cta')" /> Second button</label>
+        </legend>
+        @if (s.secondary_cta; as cta) {
+          <div class="form-grid">
+            <div class="field"><label [for]="id('cta2-label')">Words</label><input [id]="id('cta2-label')" maxlength="30" [(ngModel)]="cta.label" (ngModelChange)="touch()" /></div>
+            <div class="field"><label [for]="id('cta2-href')">Goes to</label><input [id]="id('cta2-href')" maxlength="500" [(ngModel)]="cta.href" (ngModelChange)="touch()" /></div>
+          </div>
+        }
+      </fieldset>
+      <fieldset class="group">
+        <legend>Pictures (up to 3)</legend>
+        @for (image of s.images; track $index) {
+          <div class="entry">
+            <app-image-picker [label]="'Picture ' + ($index + 1)" [base]="base()" [slot]="image" (changed)="setImage(s.images, $index, $event)" />
+            <button type="button" class="btn btn-ghost btn-sm" (click)="remove($index)">Remove picture</button>
+          </div>
+        }
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="!canAdd()" (click)="add()"><app-icon name="plus" [size]="16" /> Add picture</button>
+      </fieldset>
+      <fieldset class="group">
+        <legend>
+          <label class="check"><input type="checkbox" [checked]="!!s.badge" (change)="toggleBadge()" /> Round badge</label>
+        </legend>
+        @if (s.badge; as badge) {
+          <div class="form-grid">
+            <div class="field"><label [for]="id('badge-value')">Big text</label><input [id]="id('badge-value')" maxlength="12" placeholder="Since 1998" [(ngModel)]="badge.value" (ngModelChange)="touch()" /></div>
+            <div class="field"><label [for]="id('badge-label')">Small text</label><input [id]="id('badge-label')" maxlength="24" [(ngModel)]="badge.label" (ngModelChange)="touch()" /></div>
+          </div>
+        }
+      </fieldset>
+      <div class="field">
+        <label [for]="id('stickers')">Stickers (up to 2, comma-separated)</label>
+        <input [id]="id('stickers')" [ngModel]="joined(s.stickers, ', ')" (ngModelChange)="split($any(s), 'stickers', $event, ', ', 2)" />
+      </div>
+    }
+
+    @case ('offerings') {
+      <div class="field">
+        <label [for]="id('subtitle')">Text under the heading</label>
+        <textarea [id]="id('subtitle')" maxlength="300" rows="2" [(ngModel)]="s.subtitle" (ngModelChange)="touch()"></textarea>
+      </div>
+      @for (item of s.items; track $index; let i = $index) {
+        <fieldset class="group">
+          <legend>Card {{ i + 1 }}</legend>
+          <div class="field"><label [for]="id('title', i)">Title</label><input [id]="id('title', i)" maxlength="60" [(ngModel)]="item.title" (ngModelChange)="touch()" /></div>
+          <div class="field"><label [for]="id('text', i)">Text</label><textarea [id]="id('text', i)" maxlength="200" rows="2" [(ngModel)]="item.text" (ngModelChange)="touch()"></textarea></div>
+          <div class="field"><label [for]="id('tags', i)">Tags (up to 3, comma-separated)</label><input [id]="id('tags', i)" [ngModel]="joined(item.tags, ', ')" (ngModelChange)="split($any(item), 'tags', $event, ', ', 3)" /></div>
+          <label class="check"><input type="checkbox" [checked]="!!item.image" (change)="toggleImage($any(item), 'image')" /> Picture</label>
+          @if (item.image; as image) {
+            <app-image-picker [base]="base()" label="Card picture" [slot]="image" (changed)="setImage($any(item), 'image', $event)" />
+          }
+          <label class="check"><input type="checkbox" [checked]="!!item.cta" (change)="toggleCta($any(item), 'cta')" /> Button</label>
+          @if (item.cta; as cta) {
+            <div class="form-grid">
+              <div class="field"><label [for]="id('cta-label', i)">Button words</label><input [id]="id('cta-label', i)" maxlength="30" [(ngModel)]="cta.label" (ngModelChange)="touch()" /></div>
+              <div class="field"><label [for]="id('cta-href', i)">Goes to</label><input [id]="id('cta-href', i)" maxlength="500" [(ngModel)]="cta.href" (ngModelChange)="touch()" /></div>
+            </div>
+          }
+          <button type="button" class="btn btn-ghost btn-sm" (click)="remove(i)">Remove card</button>
+        </fieldset>
+      }
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="!canAdd()" (click)="add()"><app-icon name="plus" [size]="16" /> Add card</button>
+    }
+
+    @case ('steps') {
+      @for (item of s.items; track $index; let i = $index) {
+        <fieldset class="group">
+          <legend>Step {{ i + 1 }}</legend>
+          <div class="form-grid">
+            <div class="field"><label [for]="id('title', i)">Title</label><input [id]="id('title', i)" maxlength="40" [(ngModel)]="item.title" (ngModelChange)="touch()" /></div>
+            <div class="field">
+              <label [for]="id('icon', i)">Icon</label>
+              <select [id]="id('icon', i)" [(ngModel)]="item.icon" (ngModelChange)="touch()">
+                @for (icon of icons; track icon) {
+                  <option [value]="icon">{{ icon }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="field"><label [for]="id('text', i)">Text</label><textarea [id]="id('text', i)" maxlength="160" rows="2" [(ngModel)]="item.text" (ngModelChange)="touch()"></textarea></div>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="remove(i)">Remove step</button>
+        </fieldset>
+      }
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="!canAdd()" (click)="add()"><app-icon name="plus" [size]="16" /> Add step</button>
+    }
+
+    @case ('people') {
+      <div class="field">
+        <label [for]="id('subtitle')">Text under the heading</label>
+        <textarea [id]="id('subtitle')" maxlength="300" rows="2" [(ngModel)]="s.subtitle" (ngModelChange)="touch()"></textarea>
+      </div>
+      @for (item of s.items; track $index; let i = $index) {
+        <fieldset class="group">
+          <legend>Person {{ i + 1 }}</legend>
+          <div class="form-grid">
+            <div class="field"><label [for]="id('name', i)">Name</label><input [id]="id('name', i)" maxlength="60" [(ngModel)]="item.name" (ngModelChange)="touch()" /></div>
+            <div class="field"><label [for]="id('role', i)">Role</label><input [id]="id('role', i)" maxlength="60" [(ngModel)]="item.role" (ngModelChange)="touch()" /></div>
+          </div>
+          <div class="field"><label [for]="id('facts', i)">Facts (one per line, up to 4)</label><textarea [id]="id('facts', i)" rows="3" [ngModel]="joined(item.facts, '\n')" (ngModelChange)="split($any(item), 'facts', $event, '\n', 4)"></textarea></div>
+          <label class="check"><input type="checkbox" [checked]="!!item.photo" (change)="toggleImage($any(item), 'photo')" /> Photo</label>
+          @if (item.photo; as photo) {
+            <app-image-picker [base]="base()" label="Photo" [slot]="photo" (changed)="setImage($any(item), 'photo', $event)" />
+          }
+          <button type="button" class="btn btn-ghost btn-sm" (click)="remove(i)">Remove person</button>
+        </fieldset>
+      }
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="!canAdd()" (click)="add()"><app-icon name="plus" [size]="16" /> Add person</button>
+    }
+
+    @case ('gallery') {
+      @for (image of s.images; track $index) {
+        <div class="entry">
+          <app-image-picker [label]="'Photo ' + ($index + 1)" [base]="base()" [slot]="image" (changed)="setImage(s.images, $index, $event)" />
+          <button type="button" class="btn btn-ghost btn-sm" (click)="remove($index)">Remove photo</button>
+        </div>
+      }
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="!canAdd()" (click)="add()"><app-icon name="plus" [size]="16" /> Add photo</button>
+    }
+
+    @case ('testimonials') {
+      @for (item of s.items; track $index; let i = $index) {
+        <fieldset class="group">
+          <legend>Testimonial {{ i + 1 }}</legend>
+          <div class="field"><label [for]="id('quote', i)">Words</label><textarea [id]="id('quote', i)" maxlength="300" rows="3" [(ngModel)]="item.quote" (ngModelChange)="touch()"></textarea></div>
+          <div class="form-grid">
+            <div class="field"><label [for]="id('name', i)">Name</label><input [id]="id('name', i)" maxlength="60" [(ngModel)]="item.name" (ngModelChange)="touch()" /></div>
+            <div class="field"><label [for]="id('relation', i)">Who they are</label><input [id]="id('relation', i)" maxlength="60" placeholder="Parent of a Grade 4 student" [(ngModel)]="item.relation" (ngModelChange)="touch()" /></div>
+            <div class="field">
+              <label [for]="id('rating', i)">Stars</label>
+              <select [id]="id('rating', i)" [(ngModel)]="item.rating" (ngModelChange)="touch()">
+                @for (rating of ratings; track $index) {
+                  <option [ngValue]="rating">{{ rating ? rating + ' of 5' : 'None' }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <label class="check"><input type="checkbox" [checked]="!!item.photo" (change)="toggleImage($any(item), 'photo')" /> Photo</label>
+          @if (item.photo; as photo) {
+            <app-image-picker [base]="base()" label="Photo" [slot]="photo" (changed)="setImage($any(item), 'photo', $event)" />
+          }
+          <button type="button" class="btn btn-ghost btn-sm" (click)="remove(i)">Remove testimonial</button>
+        </fieldset>
+      }
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="!canAdd()" (click)="add()"><app-icon name="plus" [size]="16" /> Add testimonial</button>
+    }
+
+    @case ('feature') {
+      <div class="field"><label [for]="id('text')">Text</label><textarea [id]="id('text')" maxlength="400" rows="4" [(ngModel)]="s.text" (ngModelChange)="touch()"></textarea></div>
+      <div class="field"><label [for]="id('bullets')">Points (one per line, up to 5)</label><textarea [id]="id('bullets')" rows="4" [ngModel]="joined(s.bullets, '\n')" (ngModelChange)="split($any(s), 'bullets', $event, '\n', 5)"></textarea></div>
+      <label class="check"><input type="checkbox" [checked]="!!s.image" (change)="toggleImage($any(s), 'image')" /> Picture</label>
+      @if (s.image; as image) {
+        <app-image-picker [base]="base()" label="Picture" [slot]="image" (changed)="setImage($any(s), 'image', $event)" />
+      }
+      <label class="check"><input type="checkbox" [checked]="!!s.cta" (change)="toggleCta($any(s), 'cta')" /> Button</label>
+      @if (s.cta; as cta) {
+        <div class="form-grid">
+          <div class="field"><label [for]="id('cta-label')">Button words</label><input [id]="id('cta-label')" maxlength="30" [(ngModel)]="cta.label" (ngModelChange)="touch()" /></div>
+          <div class="field"><label [for]="id('cta-href')">Goes to</label><input [id]="id('cta-href')" maxlength="500" [(ngModel)]="cta.href" (ngModelChange)="touch()" /></div>
+        </div>
+      }
+    }
+
+    @case ('faq') {
+      <div class="field"><label [for]="id('subtitle')">Text under the heading</label><textarea [id]="id('subtitle')" maxlength="300" rows="2" [(ngModel)]="s.subtitle" (ngModelChange)="touch()"></textarea></div>
+      <label class="check"><input type="checkbox" [checked]="!!s.cta" (change)="toggleCta($any(s), 'cta')" /> Button</label>
+      @if (s.cta; as cta) {
+        <div class="form-grid">
+          <div class="field"><label [for]="id('cta-label')">Button words</label><input [id]="id('cta-label')" maxlength="30" [(ngModel)]="cta.label" (ngModelChange)="touch()" /></div>
+          <div class="field"><label [for]="id('cta-href')">Goes to</label><input [id]="id('cta-href')" maxlength="500" [(ngModel)]="cta.href" (ngModelChange)="touch()" /></div>
+        </div>
+      }
+      @for (item of s.items; track $index; let i = $index) {
+        <fieldset class="group">
+          <legend>Question {{ i + 1 }}</legend>
+          <div class="field"><label [for]="id('q', i)">Question</label><input [id]="id('q', i)" maxlength="160" [(ngModel)]="item.q" (ngModelChange)="touch()" /></div>
+          <div class="field"><label [for]="id('a', i)">Answer</label><textarea [id]="id('a', i)" maxlength="600" rows="3" [(ngModel)]="item.a" (ngModelChange)="touch()"></textarea></div>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="remove(i)">Remove question</button>
+        </fieldset>
+      }
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="!canAdd()" (click)="add()"><app-icon name="plus" [size]="16" /> Add question</button>
+    }
+  }
+</div>

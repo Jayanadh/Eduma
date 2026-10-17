@@ -56,20 +56,20 @@ _KNOWN = [
 ]
 
 
-def _flatten(detail, path: str = "") -> list[dict]:
+def flatten_errors(detail, path: str = "") -> list[dict]:
     """Nested DRF error details as [{field: "a.b.0.c", code, message}]."""
     if isinstance(detail, dict):
         found = []
         for key, value in detail.items():
             name = "" if key in ("non_field_errors", "detail") else str(key)
-            found += _flatten(value, f"{path}.{name}".strip(".") if name else path)
+            found += flatten_errors(value, f"{path}.{name}".strip(".") if name else path)
         return found
     if isinstance(detail, list):
         found = []
         for index, value in enumerate(detail):
             # A list of messages belongs to one field; a list of objects is indexed (items.0.title).
             nested = isinstance(value, (dict, list))
-            found += _flatten(value, f"{path}.{index}".strip(".") if nested else path)
+            found += flatten_errors(value, f"{path}.{index}".strip(".") if nested else path)
         return found
     return [{"field": path, "code": getattr(detail, "code", "invalid"), "message": str(detail)}]
 
@@ -94,7 +94,7 @@ def problem_handler(exc, context):
         return _response(exc.status_code, exc.problem_code, exc.title, str(exc.detail), **exc.extra)
     for kind, status, code, title in _KNOWN:
         if isinstance(exc, kind):
-            errors = _flatten(exc.detail) if kind is drf.ValidationError else []
+            errors = flatten_errors(exc.detail) if kind is drf.ValidationError else []
             detail = errors[0]["message"] if errors else str(exc.detail)
             headers = {"Retry-After": str(exc.wait)} if kind is drf.Throttled and exc.wait else None
             return _response(status, code, title, detail, errors, headers)

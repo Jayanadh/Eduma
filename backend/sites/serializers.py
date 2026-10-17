@@ -29,8 +29,18 @@ class SiteRevisionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SiteRevision
-        fields = ["id", "number", "status", "version", "theme", "logo", "content", "created_at", "published_at",
-                  "published_by_name"]
+        fields = [
+            "id",
+            "number",
+            "status",
+            "version",
+            "theme",
+            "logo",
+            "content",
+            "created_at",
+            "published_at",
+            "published_by_name",
+        ]
         read_only_fields = fields
 
     def get_theme(self, revision: SiteRevision) -> dict:

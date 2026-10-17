@@ -12,13 +12,25 @@ from sites.starter import starter_content
 
 
 def hero(**kw):
-    return {"id": "hero", "type": "hero", "visible": True, "title": "Hello",
-            "primary_cta": {"label": "Visit", "href": "#s-faq"}, **kw}
+    return {
+        "id": "hero",
+        "type": "hero",
+        "visible": True,
+        "title": "Hello",
+        "primary_cta": {"label": "Visit", "href": "#s-faq"},
+        **kw,
+    }
 
 
 def faq(n=1, **kw):
-    return {"id": "faq", "type": "faq", "visible": True, "title": "FAQ",
-            "items": [{"q": f"Q{i}", "a": "A"} for i in range(n)], **kw}
+    return {
+        "id": "faq",
+        "type": "faq",
+        "visible": True,
+        "title": "FAQ",
+        "items": [{"q": f"Q{i}", "a": "A"} for i in range(n)],
+        **kw,
+    }
 
 
 def fields(data) -> list[str]:
@@ -52,7 +64,9 @@ def test_unsafe_hrefs_rejected(href):
     assert "sections.0.primary_cta.href" in fields({"sections": [hero(primary_cta={"label": "Go", "href": href})]})
 
 
-@pytest.mark.parametrize("href", ["https://a.example", "http://a.example", "mailto:a@b.c", "tel:+919", "#s-faq", "/login"])
+@pytest.mark.parametrize(
+    "href", ["https://a.example", "http://a.example", "mailto:a@b.c", "tel:+919", "#s-faq", "/login"]
+)
 def test_safe_hrefs_allowed(href):
     assert validate_href(href) == href
 
@@ -72,11 +86,23 @@ def test_nested_paths_point_at_the_field():
 
 
 def test_referenced_assets_finds_every_image():
-    content = validate_content({"sections": [
-        hero(images=[{"asset": "8c5e9a52-8d2c-4f63-9d3a-2e7f2b7a2d11", "alt": "a"}, {"alt": "empty"}]),
-        {"id": "gallery", "type": "gallery", "title": "G", "images": [{"asset": "1d2e3f40-0000-4000-8000-000000000001"}]},
-    ]})
-    assert referenced_assets(content) == {"8c5e9a52-8d2c-4f63-9d3a-2e7f2b7a2d11", "1d2e3f40-0000-4000-8000-000000000001"}
+    content = validate_content(
+        {
+            "sections": [
+                hero(images=[{"asset": "8c5e9a52-8d2c-4f63-9d3a-2e7f2b7a2d11", "alt": "a"}, {"alt": "empty"}]),
+                {
+                    "id": "gallery",
+                    "type": "gallery",
+                    "title": "G",
+                    "images": [{"asset": "1d2e3f40-0000-4000-8000-000000000001"}],
+                },
+            ]
+        }
+    )
+    assert referenced_assets(content) == {
+        "8c5e9a52-8d2c-4f63-9d3a-2e7f2b7a2d11",
+        "1d2e3f40-0000-4000-8000-000000000001",
+    }
 
 
 def test_validated_content_is_plain_json():
@@ -111,5 +137,8 @@ def test_eduma_contact_is_filled_at_request_time(settings):
 def test_eduma_page_names_all_four_institution_types():
     offerings = next(s for s in EDUMA_CONTENT["sections"] if s["type"] == "offerings")
     assert [item["title"] for item in offerings["items"]] == [
-        "Schools", "Colleges", "Engineering colleges", "Universities",
+        "Schools",
+        "Colleges",
+        "Engineering colleges",
+        "Universities",
     ]

@@ -98,8 +98,11 @@ def test_asset_of_b_cannot_be_used_in_a_draft(world, client_for):
     b_asset = upload(client_for(world.b.slug, world.b_admin), image_file()).json()["id"]
     client = client_for(world.a.slug, world.a_admin)
     draft = client.get("/api/v1/institution/site/draft").json()
-    body = {"version": draft["version"], **{k: draft["theme"][k] for k in
-            ("primary_color", "secondary_color", "heading_font", "body_font")}, "content": draft["content"]}
+    body = {
+        "version": draft["version"],
+        **{k: draft["theme"][k] for k in ("primary_color", "secondary_color", "heading_font", "body_font")},
+        "content": draft["content"],
+    }
     response = client.put("/api/v1/institution/site/draft", {**body, "logo": b_asset})
     assert response.status_code == 422 and response.json()["errors"][0]["field"] == "logo"
     content = draft["content"]

@@ -36,8 +36,13 @@ def test_draft_created_from_defaults_then_published(world, admin_a):
     assert draft["status"] == "draft"
     assert draft["number"] == 1
     assert draft["theme"] == {
-        "primary_color": "#4B5AE4", "secondary_color": "#FFD43B", "heading_font": "bricolage", "body_font": "dm-sans",
-        "on_primary": "#FFFFFF", "primary_text": "#4B5AE4", "on_secondary": "#17132B",
+        "primary_color": "#4B5AE4",
+        "secondary_color": "#FFD43B",
+        "heading_font": "bricolage",
+        "body_font": "dm-sans",
+        "on_primary": "#FFFFFF",
+        "primary_text": "#4B5AE4",
+        "on_secondary": "#17132B",
         "secondary_text": draft["theme"]["secondary_text"],
     }
     assert draft["content"]["sections"][0]["title"] == "Welcome to Aster School"
@@ -136,8 +141,11 @@ def test_bad_theme_and_content_rejected(admin_a):
     response = admin_a.put(DRAFT, payload(draft, primary_color="#12345", heading_font="comic-sans"))
     assert response.status_code == 422
     assert {e["field"] for e in response.json()["errors"]} == {"primary_color", "heading_font"}
-    bad_content = {"sections": [{"id": "hero", "type": "hero", "title": "x",
-                                 "primary_cta": {"label": "Go", "href": "javascript:alert(1)"}}]}
+    bad_content = {
+        "sections": [
+            {"id": "hero", "type": "hero", "title": "x", "primary_cta": {"label": "Go", "href": "javascript:alert(1)"}}
+        ]
+    }
     response = admin_a.put(DRAFT, payload(draft, content=bad_content))
     assert response.json()["errors"][0]["field"] == "content.sections.0.primary_cta.href"
 

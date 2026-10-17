@@ -102,8 +102,12 @@ def test_missing_or_bad_idempotency_key_is_400(platform):
 
 
 def test_list_search_needs_three_chars_and_filters(world, platform):
-    factories.institution(slug="vector", display_name="Vector Engineering College", lifecycle_status="setup",
-                          category="engineering_college")
+    factories.institution(
+        slug="vector",
+        display_name="Vector Engineering College",
+        lifecycle_status="setup",
+        category="engineering_college",
+    )
     everyone = platform.get(URL).json()
     assert everyone["count"] == 3
     assert platform.get(URL, {"search": "as"}).json()["count"] == 3  # too short: ignored
@@ -121,13 +125,17 @@ def test_slug_check(world, platform):
     check = platform.get(f"{URL}/slug-check", {"slug": world.a.slug}).json()
     assert check == {"available": False, "reason": "This address is already taken."}
     assert platform.get(f"{URL}/slug-check", {"slug": "www"}).json() == {
-        "available": False, "reason": "This address is reserved."}
+        "available": False,
+        "reason": "This address is reserved.",
+    }
     assert platform.get(f"{URL}/slug-check", {"slug": "New-Place"}).json() == {"available": True, "reason": ""}
 
 
 def test_platform_edits_profile_with_version(world, platform):
     detail = platform.get(f"{URL}/{world.a.id}").json()
-    response = platform.patch(f"{URL}/{world.a.id}", {"version": detail["version"], "display_name": "Aster Public School"})
+    response = platform.patch(
+        f"{URL}/{world.a.id}", {"version": detail["version"], "display_name": "Aster Public School"}
+    )
     assert response.status_code == 200
     assert response.json()["display_name"] == "Aster Public School"
     stale = platform.patch(f"{URL}/{world.a.id}", {"version": detail["version"], "display_name": "Old"})
@@ -168,8 +176,9 @@ def test_institution_admin_reads_and_edits_own_profile(world, client_for):
     assert own["display_name"] == "Aster School"
     assert own["url"] == "http://aster.eduma.test"
     assert "admin" not in own and "readiness" in own
-    response = client.patch("/api/v1/institution", {"version": own["version"], "address": "2 Hill Road",
-                                                     "display_name": "Ignored"})
+    response = client.patch(
+        "/api/v1/institution", {"version": own["version"], "address": "2 Hill Road", "display_name": "Ignored"}
+    )
     assert response.status_code == 200
     world.a.refresh_from_db()
     assert world.a.address == "2 Hill Road"

@@ -1,4 +1,5 @@
 """Builders for tests. Each makes a valid record with sensible defaults; pass keywords to change any of them."""
+
 import itertools
 
 from accounts.models import Membership, Role, User

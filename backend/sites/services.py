@@ -26,7 +26,9 @@ def _lock(institution: Institution) -> Institution:
 
 def _draft_gone() -> Problem:
     return Problem(
-        409, "version_conflict", "This draft was published or replaced by someone else. Reload to continue.",
+        409,
+        "version_conflict",
+        "This draft was published or replaced by someone else. Reload to continue.",
         current_version=None,
     )
 
@@ -86,8 +88,13 @@ def publish(institution: Institution, actor, version: int) -> SiteRevision:
         draft.published_by = actor
         draft.published_at = timezone.now()
         draft.save()
-        audit.log(actor, "site.published", draft, f"Published version {draft.number} of {institution}'s page",
-                  institution=institution)
+        audit.log(
+            actor,
+            "site.published",
+            draft,
+            f"Published version {draft.number} of {institution}'s page",
+            institution=institution,
+        )
         return draft
 
 
@@ -102,8 +109,13 @@ def restore(institution: Institution, actor, revision_id) -> SiteRevision:
         for name in (*THEME_FIELDS, "logo", "content"):
             setattr(draft, name, getattr(source, name))
         draft.save()
-        audit.log(actor, "site.restored", draft, f"Restored version {source.number} of {institution}'s page into the draft",
-                  institution=institution)
+        audit.log(
+            actor,
+            "site.restored",
+            draft,
+            f"Restored version {source.number} of {institution}'s page into the draft",
+            institution=institution,
+        )
         return draft
 
 

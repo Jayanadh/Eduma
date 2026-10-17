@@ -4,7 +4,7 @@ from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Q
 from rest_framework import mixins, status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import ParseError, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,6 +19,7 @@ from institutions.serializers import (
     InstitutionSerializer,
     OwnInstitutionSerializer,
     PasswordSerializer,
+    TransitionSerializer,
 )
 from sites.permissions import PlatformAdmin, member_with
 
@@ -80,6 +81,14 @@ class PlatformInstitutionViewSet(
         updated = services.update_institution(institution.pk, request.user, version, changes)
         return Response(InstitutionSerializer(updated).data)
 
+    @action(detail=True, methods=["post"])
+    def transition(self, request, pk=None):
+        institution = self.get_object()
+        serializer = TransitionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        updated = services.transition(institution.pk, request.user, **serializer.validated_data)
+        return Response(InstitutionSerializer(updated).data)
+
     @action(detail=False, methods=["get"], url_path="slug-check")
     def slug_check(self, request):
         try:
@@ -123,3 +132,9 @@ class OwnInstitutionView(APIView):
         version = changes.pop("version", None)
         updated = services.update_institution(request.institution.pk, request.user, version, changes)
         return Response(OwnInstitutionSerializer(updated).data)
+
+
+@api_view(["GET"])
+@permission_classes([PlatformAdmin])
+def platform_overview(request):
+    return Response(services.overview())

@@ -60,7 +60,9 @@ class SiteRevision(VersionedModel):
         ordering = ["-number"]
         constraints = [
             models.UniqueConstraint(fields=["institution", "number"], name="unique_revision_number"),
-            models.UniqueConstraint(fields=["institution"], condition=Q(status="draft"), name="one_draft_per_institution"),
+            models.UniqueConstraint(
+                fields=["institution"], condition=Q(status="draft"), name="one_draft_per_institution"
+            ),
             models.UniqueConstraint(
                 fields=["institution"], condition=Q(status="published"), name="one_published_per_institution"
             ),

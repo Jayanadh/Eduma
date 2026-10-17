@@ -23,7 +23,12 @@ BODY_FONTS = {
     "lora": "Lora",
 }
 # Eduma's own theme: the indigo of the logo and a warm yellow.
-DEFAULT_THEME = {"primary_color": "#4B5AE4", "secondary_color": "#FFD43B", "heading_font": "bricolage", "body_font": "dm-sans"}
+DEFAULT_THEME = {
+    "primary_color": "#4B5AE4",
+    "secondary_color": "#FFD43B",
+    "heading_font": "bricolage",
+    "body_font": "dm-sans",
+}
 
 
 def _rgb(color: str) -> tuple[float, float, float]:

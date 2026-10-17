@@ -10,8 +10,22 @@ from common.models import VersionedModel
 SLUG_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$")
 # Subdomains Eduma keeps for itself.
 RESERVED_SLUGS = frozenset(
-    {"www", "api", "app", "admin", "console", "login", "static", "media", "mail", "eduma", "platform", "help",
-     "support", "status"}
+    {
+        "www",
+        "api",
+        "app",
+        "admin",
+        "console",
+        "login",
+        "static",
+        "media",
+        "mail",
+        "eduma",
+        "platform",
+        "help",
+        "support",
+        "status",
+    }
 )
 
 

@@ -2,7 +2,9 @@ import hashlib
 import json
 
 from django.db import IntegrityError, transaction
-from django.db.models import BooleanField, Exists, ExpressionWrapper, OuterRef, Q
+from django.db.models import BooleanField, Count, Exists, ExpressionWrapper, OuterRef, Q
+from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 from accounts.models import Membership, Role, User
 from common import audit
@@ -27,8 +29,9 @@ def _admins(institution_ref):
 def with_readiness(queryset):
     """Annotates each institution with one boolean per readiness check (see READINESS)."""
     return queryset.annotate(
-        admin_ready=Exists(_admins(OuterRef("pk")).filter(user__last_login__isnull=False,
-                                                           user__must_change_password=False)),
+        admin_ready=Exists(
+            _admins(OuterRef("pk")).filter(user__last_login__isnull=False, user__must_change_password=False)
+        ),
         site_published=Exists(SiteRevision.objects.filter(institution=OuterRef("pk"), status="published")),
         contacts=ExpressionWrapper(~Q(contact_email="") & ~Q(contact_phone=""), output_field=BooleanField()),
     )
@@ -67,12 +70,19 @@ def create_institution(actor, data: dict, key, digest: str) -> tuple[Institution
     try:
         with transaction.atomic():
             institution = Institution.objects.create(
-                **fields, lifecycle_status=LifecycleStatus.SETUP, creation_key=key, creation_hash=digest,
+                **fields,
+                lifecycle_status=LifecycleStatus.SETUP,
+                creation_key=key,
+                creation_hash=digest,
                 created_by=actor,
             )
             user = User(
-                username=admin["username"], full_name=admin["full_name"], email=admin.get("email", ""),
-                mobile=admin.get("mobile", ""), must_change_password=True, created_by=actor,
+                username=admin["username"],
+                full_name=admin["full_name"],
+                email=admin.get("email", ""),
+                mobile=admin.get("mobile", ""),
+                must_change_password=True,
+                created_by=actor,
             )
             user.set_password(admin["password"])
             user.save()
@@ -92,8 +102,11 @@ def update_institution(institution_id, actor, version: int, changes: dict) -> In
     with transaction.atomic():
         institution = Institution.objects.select_for_update().get(pk=institution_id)
         institution.check_version(version)
-        if "slug" in changes and changes["slug"] != institution.slug and \
-                institution.lifecycle_status != LifecycleStatus.SETUP:
+        if (
+            "slug" in changes
+            and changes["slug"] != institution.slug
+            and institution.lifecycle_status != LifecycleStatus.SETUP
+        ):
             raise InvalidTransition("The web address can be changed only while the institution is being set up.")
         diff = {
             name: {"from": getattr(institution, name), "to": value}
@@ -115,6 +128,79 @@ def reset_admin_password(institution: Institution, actor, password: str) -> User
     admin.set_password(password)
     admin.must_change_password = True
     admin.save()
-    audit.log(actor, "membership.password_reset", admin, f"Reset the password of {admin.full_name}",
-              institution=institution)
+    audit.log(
+        actor, "membership.password_reset", admin, f"Reset the password of {admin.full_name}", institution=institution
+    )
     return admin
+
+
+# (from, to) → the audit action. Anything else is refused.
+TRANSITIONS = {
+    (LifecycleStatus.SETUP, LifecycleStatus.ACTIVE): "institution.activated",
+    (LifecycleStatus.ACTIVE, LifecycleStatus.SUSPENDED): "institution.suspended",
+    (LifecycleStatus.SUSPENDED, LifecycleStatus.ACTIVE): "institution.reactivated",
+    (LifecycleStatus.SETUP, LifecycleStatus.ARCHIVED): "institution.archived",
+    (LifecycleStatus.ACTIVE, LifecycleStatus.ARCHIVED): "institution.archived",
+    (LifecycleStatus.SUSPENDED, LifecycleStatus.ARCHIVED): "institution.archived",
+}
+
+
+def transition(institution_id, actor, *, to: str, reason: str, version: int, override_reason: str = "") -> Institution:
+    """Moves an institution through its lifecycle with a recorded reason. Suspension and archiving end members'
+    sessions on their next request (see sites.middleware.SessionSiteMiddleware); nothing is deleted."""
+    reason, override_reason = reason.strip(), override_reason.strip()
+    if not reason:
+        raise ValidationError({"reason": ["Give a reason; it is kept in the audit log."]})
+    with transaction.atomic():
+        institution = Institution.objects.select_for_update().get(pk=institution_id)
+        institution.check_version(version)
+        start = institution.lifecycle_status
+        action = TRANSITIONS.get((start, to))
+        if action is None:
+            raise InvalidTransition(
+                f"An institution that is {LifecycleStatus(start).label.lower()} cannot move to "
+                f"{LifecycleStatus(to).label.lower()}."
+            )
+        if action == "institution.activated":
+            missing = [item["label"] for item in readiness(institution) if not item["done"]]
+            if missing and not override_reason:
+                raise ValidationError(
+                    {
+                        "override_reason": [
+                            f"Readiness checks are not complete: {', '.join(missing)}. "
+                            "Give an override reason to activate anyway."
+                        ]
+                    }
+                )
+        if action == "institution.reactivated" and first_admin(institution) is None:
+            raise InvalidTransition("Add an active Institution Admin before reactivating.")
+        institution.lifecycle_status = to
+        institution.status_reason = reason
+        if to == LifecycleStatus.ACTIVE and institution.activated_at is None:
+            institution.activated_at = timezone.now()
+        institution.save()
+        audit.log(
+            actor,
+            action,
+            institution,
+            f"{action.split('.')[1].capitalize()} {institution.display_name}",
+            changes={"from": start, "to": to, "reason": reason, "override_reason": override_reason},
+        )
+        return institution
+
+
+def overview() -> dict:
+    counts = dict.fromkeys(LifecycleStatus.values, 0)
+    for state, total in Institution.objects.values_list("lifecycle_status").annotate(total=Count("id")):
+        counts[state] = total
+    waiting = with_readiness(Institution.objects.filter(lifecycle_status=LifecycleStatus.SETUP)).order_by("created_at")
+    needs_action = [
+        {
+            "id": item.id,
+            "display_name": item.display_name,
+            "slug": item.slug,
+            "missing": [label for code, label in READINESS if not getattr(item, code)],
+        }
+        for item in waiting[:20]
+    ]
+    return {"counts": counts, "needs_action": needs_action}

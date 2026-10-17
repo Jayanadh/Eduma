@@ -9,8 +9,19 @@ from testing import factories
 
 @pytest.mark.parametrize(
     "raw,ok",
-    [("aster-school", True), ("WWW", False), ("-ab", False), ("ab-", False), ("ab", False), ("Aster", True),
-     ("a" * 40, True), ("a" * 41, False), ("api", False), ("a_b", False), ("sri-vidya-2", True)],
+    [
+        ("aster-school", True),
+        ("WWW", False),
+        ("-ab", False),
+        ("ab-", False),
+        ("ab", False),
+        ("Aster", True),
+        ("a" * 40, True),
+        ("a" * 41, False),
+        ("api", False),
+        ("a_b", False),
+        ("sri-vidya-2", True),
+    ],
 )
 def test_validate_slug(raw, ok):
     if ok:

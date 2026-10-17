@@ -131,8 +131,14 @@ class Faq(Section):
 
 
 SERIALIZERS = {
-    "hero": Hero, "offerings": Offerings, "steps": Steps, "people": People, "gallery": Gallery,
-    "testimonials": Testimonials, "feature": Feature, "faq": Faq,
+    "hero": Hero,
+    "offerings": Offerings,
+    "steps": Steps,
+    "people": People,
+    "gallery": Gallery,
+    "testimonials": Testimonials,
+    "feature": Feature,
+    "faq": Faq,
 }
 
 
@@ -154,7 +160,9 @@ def validate_content(data) -> dict:
         raise serializers.ValidationError({"sections": errors})
     types = [section["type"] for section in cleaned]
     if not cleaned or types[0] != "hero" or not cleaned[0]["visible"]:
-        raise serializers.ValidationError({"sections": ["The page starts with the hero section, which cannot be hidden."]})
+        raise serializers.ValidationError(
+            {"sections": ["The page starts with the hero section, which cannot be hidden."]}
+        )
     if len(set(types)) != len(types):
         raise serializers.ValidationError({"sections": ["Each kind of section can appear only once."]})
     # Plain JSON (UUIDs as strings), ready to store.

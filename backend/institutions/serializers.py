@@ -5,14 +5,23 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from accounts.models import User, validate_username
-from institutions.models import Institution, validate_slug
+from institutions.models import Institution, LifecycleStatus, validate_slug
 from institutions.services import first_admin, readiness
 from sites.hosts import institution_url
 
 PROFILE_FIELDS = ["contact_email", "contact_phone", "address"]
 EDITABLE_FIELDS = [
-    "slug", "legal_name", "display_name", "category", "country_code", "timezone", "base_currency",
-    *PROFILE_FIELDS, "board_affiliation_code", "udise_code", "aishe_code",
+    "slug",
+    "legal_name",
+    "display_name",
+    "category",
+    "country_code",
+    "timezone",
+    "base_currency",
+    *PROFILE_FIELDS,
+    "board_affiliation_code",
+    "udise_code",
+    "aishe_code",
 ]
 
 
@@ -81,8 +90,13 @@ def admin_summary(institution: Institution) -> dict | None:
     admin = first_admin(institution)
     if admin is None:
         return None
-    return {"id": admin.id, "username": admin.username, "full_name": admin.full_name,
-            "must_change_password": admin.must_change_password, "last_login": admin.last_login}
+    return {
+        "id": admin.id,
+        "username": admin.username,
+        "full_name": admin.full_name,
+        "must_change_password": admin.must_change_password,
+        "last_login": admin.last_login,
+    }
 
 
 class InstitutionSerializer(InstitutionFieldsMixin, serializers.ModelSerializer):
@@ -95,8 +109,18 @@ class InstitutionSerializer(InstitutionFieldsMixin, serializers.ModelSerializer)
 
     class Meta:
         model = Institution
-        fields = ["id", *EDITABLE_FIELDS, "url", "lifecycle_status", "status_reason", "activated_at", "created_at",
-                  "version", "readiness", "admin"]
+        fields = [
+            "id",
+            *EDITABLE_FIELDS,
+            "url",
+            "lifecycle_status",
+            "status_reason",
+            "activated_at",
+            "created_at",
+            "version",
+            "readiness",
+            "admin",
+        ]
         read_only_fields = ["id", "lifecycle_status", "status_reason", "activated_at", "created_at"]
         extra_kwargs = {"slug": {"validators": []}}
 
@@ -144,3 +168,10 @@ class InstitutionListSerializer(serializers.ModelSerializer):
 
 class PasswordSerializer(serializers.Serializer):
     password = serializers.CharField(trim_whitespace=False)
+
+
+class TransitionSerializer(serializers.Serializer):
+    to = serializers.ChoiceField(LifecycleStatus.choices)
+    reason = serializers.CharField(max_length=500, allow_blank=True)
+    override_reason = serializers.CharField(max_length=500, allow_blank=True, required=False, default="")
+    version = serializers.IntegerField()

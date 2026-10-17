@@ -3,6 +3,7 @@
 Every value that differs between a laptop and a server comes from an environment
 variable with a development default, so `python manage.py runserver 8001` works with no setup.
 """
+
 import ipaddress
 import os
 from pathlib import Path

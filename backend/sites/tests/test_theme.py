@@ -36,7 +36,10 @@ def test_derive():
 
 def test_defaults_are_known_fonts():
     assert DEFAULT_THEME == {
-        "primary_color": "#4B5AE4", "secondary_color": "#FFD43B", "heading_font": "bricolage", "body_font": "dm-sans",
+        "primary_color": "#4B5AE4",
+        "secondary_color": "#FFD43B",
+        "heading_font": "bricolage",
+        "body_font": "dm-sans",
     }
     assert set(HEADING_FONTS) == {"bricolage", "fredoka", "jakarta", "space-grotesk", "fraunces", "playfair"}
     assert set(BODY_FONTS) == {"dm-sans", "inter", "nunito", "source-sans", "lora"}

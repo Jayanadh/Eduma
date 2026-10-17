@@ -49,7 +49,10 @@ def _institution_payload(institution) -> dict:
     }
     if institution.lifecycle_status == LifecycleStatus.ACTIVE and published is not None:
         return {
-            "kind": "institution", "mode": "full", "institution": profile, "theme": theme_of(published),
+            "kind": "institution",
+            "mode": "full",
+            "institution": profile,
+            "theme": theme_of(published),
             "content": with_urls(published.content),
             "logo_url": asset_url(published.logo_id) if published.logo_id else None,
         }
@@ -58,9 +61,12 @@ def _institution_payload(institution) -> dict:
     hero = (look.content.get("sections") or [{}])[0] if look else {}
     title = hero.get("title") or institution.display_name
     return {
-        "kind": "institution", "mode": "opening_soon", "institution": profile,
-        "theme": theme_of(look) if look else {**DEFAULT_THEME, **derive(DEFAULT_THEME["primary_color"],
-                                                                         DEFAULT_THEME["secondary_color"])},
+        "kind": "institution",
+        "mode": "opening_soon",
+        "institution": profile,
+        "theme": theme_of(look)
+        if look
+        else {**DEFAULT_THEME, **derive(DEFAULT_THEME["primary_color"], DEFAULT_THEME["secondary_color"])},
         "content": {"sections": [{"id": "hero", "type": "hero", "visible": True, "title": title}]},
         "logo_url": asset_url(look.logo_id) if look and look.logo_id else None,
     }
@@ -72,14 +78,20 @@ class PublicSiteView(APIView):
     def get(self, request):
         if request.site_kind == "platform":
             theme = {**DEFAULT_THEME, **derive(DEFAULT_THEME["primary_color"], DEFAULT_THEME["secondary_color"])}
-            return Response({"kind": "platform", "theme": theme, "content": with_urls(eduma_content()),
-                             "logo_url": EDUMA_LOGO})
+            return Response(
+                {"kind": "platform", "theme": theme, "content": with_urls(eduma_content()), "logo_url": EDUMA_LOGO}
+            )
         institution = request.institution
         if institution is None or institution.lifecycle_status == LifecycleStatus.ARCHIVED:
             raise Http404
         if institution.lifecycle_status == LifecycleStatus.SUSPENDED:
-            return Response({"kind": "institution", "mode": "unavailable",
-                             "institution": {"display_name": institution.display_name}})
+            return Response(
+                {
+                    "kind": "institution",
+                    "mode": "unavailable",
+                    "institution": {"display_name": institution.display_name},
+                }
+            )
         return Response(_institution_payload(institution))
 
 

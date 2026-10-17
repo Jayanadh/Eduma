@@ -14,8 +14,12 @@ def publish(client) -> dict:
 
 def save(client, **changes) -> dict:
     draft = client.get("/api/v1/institution/site/draft").json()
-    body = {"version": draft["version"], "logo": draft["logo"] and draft["logo"]["id"], "content": draft["content"],
-            **{k: draft["theme"][k] for k in ("primary_color", "secondary_color", "heading_font", "body_font")}}
+    body = {
+        "version": draft["version"],
+        "logo": draft["logo"] and draft["logo"]["id"],
+        "content": draft["content"],
+        **{k: draft["theme"][k] for k in ("primary_color", "secondary_color", "heading_font", "body_font")},
+    }
     body.update(changes)
     response = client.put("/api/v1/institution/site/draft", body)
     assert response.status_code == 200, response.json()
@@ -53,8 +57,12 @@ def test_active_site_shows_published_not_draft(world, admin_a, client_for):
     assert body["content"]["sections"][0]["title"] == "Welcome to Aster School"
     assert body["theme"]["primary_color"] == "#4B5AE4"
     assert body["institution"] == {
-        "slug": "aster", "display_name": "Aster School", "category": "school",
-        "contact_email": world.a.contact_email, "contact_phone": world.a.contact_phone, "address": "",
+        "slug": "aster",
+        "display_name": "Aster School",
+        "category": "school",
+        "contact_email": world.a.contact_email,
+        "contact_phone": world.a.contact_phone,
+        "address": "",
     }
 
 

@@ -1,4 +1,5 @@
 """Settings used by pytest: development settings plus a fast password hasher, an in-memory cache and a test domain."""
+
 import tempfile
 from pathlib import Path
 

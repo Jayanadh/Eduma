@@ -23,7 +23,10 @@ class VersionConflict(Problem):
 
     def __init__(self, current_version: int):
         super().__init__(
-            409, "version_conflict", "Reload the latest record and review your changes.", current_version=current_version
+            409,
+            "version_conflict",
+            "Reload the latest record and review your changes.",
+            current_version=current_version,
         )
 
 

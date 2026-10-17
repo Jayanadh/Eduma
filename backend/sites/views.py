@@ -51,7 +51,9 @@ class PublishView(InstitutionScopedView):
     def post(self, request, **kwargs):
         serializer = VersionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return revision_response(services.publish(self.institution(), request.user, serializer.validated_data["version"]))
+        return revision_response(
+            services.publish(self.institution(), request.user, serializer.validated_data["version"])
+        )
 
 
 class RevisionsView(InstitutionScopedView):

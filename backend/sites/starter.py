@@ -52,13 +52,17 @@ def starter_content(display_name: str, category: str) -> dict:
     return {
         "sections": [
             {
-                "id": "hero", "type": "hero", "visible": True,
+                "id": "hero",
+                "type": "hero",
+                "visible": True,
                 "eyebrow": "Admissions open · 2027–28",
                 "title": f"Welcome to {display_name}",
                 "subtitle": (
-                    "Caring teachers, a safe campus and parents kept in the loop. Come and see where your child will learn."
-                    if school else
-                    "Programmes taught by dedicated faculty, with the support you need from your first day to your degree."
+                    "Caring teachers, a safe campus and parents kept in the loop. "
+                    "Come and see where your child will learn."
+                    if school
+                    else "Programmes taught by dedicated faculty, "
+                    "with the support you need from your first day to your degree."
                 ),
                 "primary_cta": {"label": "How admission works", "href": "#s-steps"},
                 "secondary_cta": {"label": "Common questions", "href": "#s-faq"},
@@ -67,7 +71,9 @@ def starter_content(display_name: str, category: str) -> dict:
                 "stickers": [],
             },
             {
-                "id": "offerings", "type": "offerings", "visible": True,
+                "id": "offerings",
+                "type": "offerings",
+                "visible": True,
                 "eyebrow": "What we offer",
                 "title": "Learning at every stage" if school else "Choose your programme",
                 "items": [
@@ -76,48 +82,71 @@ def starter_content(display_name: str, category: str) -> dict:
                 ],
             },
             {
-                "id": "steps", "type": "steps", "visible": True,
+                "id": "steps",
+                "type": "steps",
+                "visible": True,
                 "eyebrow": "Admissions, start to finish",
                 "title": "How admission works",
                 "items": [{"title": title, "text": blurb, "icon": icon} for title, blurb, icon in steps],
             },
             {
-                "id": "people", "type": "people", "visible": False,
+                "id": "people",
+                "type": "people",
+                "visible": False,
                 "eyebrow": "Our teachers" if school else "Our faculty",
                 "title": "The people you will learn with",
                 "items": [{"name": "Name", "role": "Subject", "photo": _image("Portrait"), "facts": ["A short fact"]}],
             },
             {
-                "id": "gallery", "type": "gallery", "visible": False,
-                "eyebrow": "Campus life", "title": "A look around",
+                "id": "gallery",
+                "type": "gallery",
+                "visible": False,
+                "eyebrow": "Campus life",
+                "title": "A look around",
                 "images": [_image("Campus photo") for _ in range(4)],
             },
             {
-                "id": "testimonials", "type": "testimonials", "visible": False,
-                "eyebrow": "In their words", "title": f"Notes from our {audience}",
-                "items": [{"quote": f"A few words from one of our {audience}.", "name": "Name", "relation": "Relation"}],
+                "id": "testimonials",
+                "type": "testimonials",
+                "visible": False,
+                "eyebrow": "In their words",
+                "title": f"Notes from our {audience}",
+                "items": [
+                    {"quote": f"A few words from one of our {audience}.", "name": "Name", "relation": "Relation"}
+                ],
             },
             {
-                "id": "visit", "type": "feature", "visible": True,
+                "id": "visit",
+                "type": "feature",
+                "visible": True,
                 "eyebrow": "Come and see us",
                 "title": "Visit the campus",
                 "text": "Our office is open on working days. Call or write to book a time to walk around the campus "
-                        "and meet our teachers.",
+                "and meet our teachers.",
                 "bullets": ["Meet the teachers", "See the classrooms and labs", "Ask about fees and transport"],
                 "image": _image("Our campus"),
             },
             {
-                "id": "faq", "type": "faq", "visible": True,
+                "id": "faq",
+                "type": "faq",
+                "visible": True,
                 "eyebrow": "FAQ",
                 "title": f"Questions {audience} ask",
                 "subtitle": "If yours isn't here, call or write to our office.",
                 "items": [
-                    {"q": "When do admissions open?",
-                     "a": "The admission schedule is announced by our office. Contact us to hear when forms are available."},
-                    {"q": "Can we visit before applying?",
-                     "a": "Yes. Call or write to the office to book a visit on a working day."},
-                    {"q": "Who do we contact with questions?",
-                     "a": "Our office, by phone or email. The details are at the bottom of this page."},
+                    {
+                        "q": "When do admissions open?",
+                        "a": "The admission schedule is announced by our office. "
+                        "Contact us to hear when forms are available.",
+                    },
+                    {
+                        "q": "Can we visit before applying?",
+                        "a": "Yes. Call or write to the office to book a visit on a working day.",
+                    },
+                    {
+                        "q": "Who do we contact with questions?",
+                        "a": "Our office, by phone or email. The details are at the bottom of this page.",
+                    },
                 ],
             },
         ]

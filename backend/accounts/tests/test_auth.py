@@ -53,7 +53,9 @@ def test_no_sign_in_on_unknown_host(world):
     assert login(host("nosuch"), world.a_admin.username).json()["detail"] == REFUSED
 
 
-@pytest.mark.parametrize("state,allowed", [("setup", True), ("active", True), ("suspended", False), ("archived", False)])
+@pytest.mark.parametrize(
+    "state,allowed", [("setup", True), ("active", True), ("suspended", False), ("archived", False)]
+)
 def test_sign_in_depends_on_institution_state(world, state, allowed):
     world.a.lifecycle_status = state
     world.a.save()

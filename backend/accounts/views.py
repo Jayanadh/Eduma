@@ -26,9 +26,10 @@ def may_sign_in_here(request, user: User) -> bool:
         return user.is_platform_admin
     if request.site_kind == "institution":
         institution = request.institution
-        return institution.lifecycle_status in SIGN_IN_STATES and institution.memberships.filter(
-            user=user, status=Membership.Status.ACTIVE
-        ).exists()
+        return (
+            institution.lifecycle_status in SIGN_IN_STATES
+            and institution.memberships.filter(user=user, status=Membership.Status.ACTIVE).exists()
+        )
     return False
 
 
@@ -101,6 +102,11 @@ class ChangePasswordView(APIView):
         # This browser stays signed in; every other one now has to sign in with the new password.
         update_session_auth_hash(request, user)
         request.session["site"] = request.site_key
-        audit.log(user, "auth.password_changed", user, f"{user.full_name} changed their password",
-                  institution=request.institution)
+        audit.log(
+            user,
+            "auth.password_changed",
+            user,
+            f"{user.full_name} changed their password",
+            institution=request.institution,
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)

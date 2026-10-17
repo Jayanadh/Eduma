@@ -1,0 +1,13 @@
+// Every font an institution can choose, bundled with the app (no font CDN), all under the SIL Open Font License 1.1.
+// Each file declares @font-face only; a browser downloads a font's files the first time a page uses that font.
+@use '@fontsource-variable/bricolage-grotesque/wght.css' as font-bricolage-grotesque;
+@use '@fontsource-variable/fredoka/wght.css' as font-fredoka;
+@use '@fontsource-variable/plus-jakarta-sans/wght.css' as font-plus-jakarta-sans;
+@use '@fontsource-variable/space-grotesk/wght.css' as font-space-grotesk;
+@use '@fontsource-variable/fraunces/wght.css' as font-fraunces;
+@use '@fontsource-variable/playfair-display/wght.css' as font-playfair-display;
+@use '@fontsource-variable/dm-sans/wght.css' as font-dm-sans;
+@use '@fontsource-variable/inter/wght.css' as font-inter;
+@use '@fontsource-variable/nunito/wght.css' as font-nunito;
+@use '@fontsource-variable/source-sans-3/wght.css' as font-source-sans-3;
+@use '@fontsource-variable/lora/wght.css' as font-lora;

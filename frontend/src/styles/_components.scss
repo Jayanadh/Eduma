@@ -1,0 +1,609 @@
+// Shared component classes for the console and the institution app. Public pages have their own look
+// (features/public/public.scss). Markup conventions are noted next to each block.
+
+// ---------------------------------------------------------------- layout
+.page {
+  width: 100%;
+  max-width: 1280px;
+  padding: 20px 16px 48px;
+
+  @media (min-width: 1024px) {
+    padding: 32px 32px 64px;
+  }
+}
+
+.page-title {
+  margin: 0;
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 800;
+}
+
+// A small label above a heading: <p class="eyebrow">Institutions</p>
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--brand-secondary);
+    box-shadow: 0 0 0 1.5px var(--ink);
+  }
+}
+
+.section {
+  margin-top: 28px;
+}
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+
+  h2 {
+    font-size: clamp(19px, 2.4vw, 24px);
+  }
+}
+
+// <div class="card">…</div>: white panel; .card-strong adds the ink border and hard shadow.
+.card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+
+  @media (min-width: 720px) {
+    padding: 24px;
+  }
+}
+
+.card-strong {
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-hard);
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.grid-2,
+.grid-4 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 720px) {
+  .grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 13.5px;
+}
+
+.error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+// --------------------------------------------------------------- buttons
+// <button class="btn btn-primary">. Primary: the brand colour with the hard ink shadow.
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: var(--shadow-hard-sm);
+  }
+
+  &:active:not(:disabled) {
+    transform: translate(1px, 1px);
+    box-shadow: none;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background: var(--brand-primary);
+  color: var(--brand-on-primary);
+  box-shadow: var(--shadow-hard-sm);
+
+  &:hover:not(:disabled) {
+    box-shadow: var(--shadow-hard);
+  }
+}
+
+.btn-dark {
+  background: var(--ink);
+  color: #ffffff;
+}
+
+.btn-secondary {
+  background: var(--surface);
+}
+
+.btn-ghost {
+  border-color: transparent;
+  background: transparent;
+
+  &:hover:not(:disabled) {
+    border-color: var(--border);
+    box-shadow: none;
+    transform: none;
+    background: var(--surface-2);
+  }
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+.btn-sm {
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 13.5px;
+}
+
+.btn-block {
+  display: flex;
+  width: 100%;
+}
+
+// Round icon button (works on <button> and <a>).
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+
+  &:hover:not(:disabled) {
+    background: var(--brand-primary-soft);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// Filter chips and tabs: <button class="chip" [class.active]="…">
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+
+  &.active,
+  &[aria-selected='true'] {
+    background: var(--ink);
+    color: #ffffff;
+  }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+// ---------------------------------------------------------------- badges
+// Always text and colour together: <span class="badge badge-success">Active</span>
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 11px;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+@each $tone,
+  $color,
+  $soft
+    in (
+      ('success', var(--success), var(--success-soft)),
+      ('warning', var(--warning), var(--warning-soft)),
+      ('danger', var(--danger), var(--danger-soft)),
+      ('info', var(--info), var(--info-soft))
+    )
+{
+  .badge-#{$tone} {
+    background: $soft;
+    color: $color;
+  }
+}
+
+.badge-muted {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.badge-dark {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #ffffff;
+}
+
+// ----------------------------------------------------------------- forms
+// <div class="field"><label for="x">Name</label><input id="x"><div class="field-hint">…</div></div>
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+
+  > label,
+  > .field-label {
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='color']),
+  select,
+  textarea {
+    width: 100%;
+    min-height: 46px;
+    padding: 0 14px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 16px;
+
+    &::placeholder {
+      color: #6e6985;
+    }
+
+    &:focus {
+      border-color: var(--ink);
+    }
+
+    &:disabled {
+      background: var(--surface-2);
+      color: var(--muted);
+    }
+
+    &[aria-invalid='true'],
+    &.ng-invalid.ng-touched {
+      border-color: var(--danger);
+    }
+  }
+
+  textarea {
+    min-height: 96px;
+    padding: 10px 14px;
+    resize: vertical;
+  }
+
+  select {
+    appearance: none;
+    padding-right: 42px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2317132B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 18px;
+  }
+}
+
+.field-hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+
+  > * {
+    min-width: 0;
+  }
+
+  @media (min-width: 720px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    > .full {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+// <div class="password-field"><input #pw type="password"><app-reveal [for]="pw" /></div>
+.password-field {
+  position: relative;
+
+  input {
+    width: 100%;
+    padding-right: 48px;
+  }
+
+  app-reveal {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+  }
+
+  .reveal {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+
+    &:hover,
+    &[aria-pressed='true'] {
+      color: var(--ink);
+    }
+  }
+}
+
+// A banner above a form or page: <div class="notice notice-warning" role="status">…</div>
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 14px 16px;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.notice-warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.notice-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.notice-info {
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+// ------------------------------------------------- figures, lists, tables
+// <div class="figure"><strong>12</strong><span>Active</span></div>
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+
+  strong {
+    font-family: var(--font-heading);
+    font-size: clamp(30px, 4vw, 40px);
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  span {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  color: inherit;
+  text-decoration: none;
+}
+
+li:first-child > .list-row {
+  padding-top: 0;
+}
+
+li:last-child > .list-row {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+a.list-row:hover .list-title {
+  text-decoration: underline;
+}
+
+.list-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.list-title {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+// Scrolls sideways inside its card, never the page. Give it a label: <div class="table-wrap" role="region" aria-label="…" tabindex="0">
+.table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+
+  th,
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  th {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .nowrap {
+    white-space: nowrap;
+  }
+}
+
+// A web address shown as text with a copy button beside it.
+.url {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+// Readiness checklist: <ul class="checklist"><li [class.done]="…"><app-icon …/> label</li></ul>
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-weight: 600;
+  }
+
+  .mark {
+    display: grid;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    place-items: center;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    background: var(--surface);
+  }
+
+  .done .mark {
+    background: var(--success);
+    border-color: var(--success);
+    color: #ffffff;
+  }
+}

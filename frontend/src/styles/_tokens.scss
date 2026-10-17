@@ -1,0 +1,54 @@
+// Design tokens. The --brand-* and --font-* values are Eduma's; on an institution's address the app replaces them at
+// start-up with that institution's theme (SiteStore.apply). The server guarantees --brand-on-* and --brand-*-text
+// reach WCAG AA on their backgrounds. Semantic colours are fixed: institutions cannot change what "error" looks like.
+:root {
+  --brand-primary: #4b5ae4;
+  --brand-on-primary: #ffffff;
+  --brand-primary-text: #4b5ae4;
+  --brand-secondary: #ffd43b;
+  --brand-on-secondary: #17132b;
+  --brand-secondary-text: #806300;
+  --font-heading: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  --font-body: 'DM Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  // Soft tints for tiles and backgrounds, made from whatever the brand colours are.
+  --brand-primary-soft: color-mix(in srgb, var(--brand-primary) 14%, white);
+  --brand-secondary-soft: color-mix(in srgb, var(--brand-secondary) 35%, white);
+  --brand-mix-soft: color-mix(in srgb, color-mix(in srgb, var(--brand-primary) 50%, var(--brand-secondary)) 22%, white);
+  --canvas: color-mix(in srgb, var(--brand-primary) 6%, white);
+
+  --ink: #17132b;
+  --muted: #4a4560;
+  --border: #e4e1ee;
+  --border-strong: #c9c4da;
+  --surface: #ffffff;
+  --surface-2: #f6f5fa;
+
+  --danger: #b91c1c;
+  --danger-soft: #fef2f2;
+  --warning: #92400e;
+  --warning-soft: #fffbeb;
+  --success: #166534;
+  --success-soft: #f0fdf4;
+  --info: #6d28d9;
+  --info-soft: #f5f3ff;
+
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+  --shadow-hard: 4px 4px 0 var(--ink);
+  --shadow-hard-sm: 2px 2px 0 var(--ink);
+  --shadow-float: 0 16px 40px rgba(23, 19, 43, 0.16);
+
+  // Names the components copied from Student Connect use.
+  --text: var(--ink);
+  --font: var(--font-body);
+  --font-display: var(--font-heading);
+  --primary: var(--brand-primary-text);
+  --on-primary: var(--brand-on-primary);
+  --accent-soft: var(--brand-primary-soft);
+  --accent-bright: var(--brand-secondary);
+  --nav-height: 0px;
+  --sidebar-width: 248px;
+}

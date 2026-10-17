@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { guestOnly, signedIn } from './core/guards';
+import { guestOnly, platformOnly, signedIn } from './core/guards';
 
 export const routes: Routes = [
   {
@@ -19,6 +19,31 @@ export const routes: Routes = [
     canActivate: [signedIn],
     loadComponent: () =>
       import('./features/auth/change-password-page').then((m) => m.ChangePasswordPage),
+  },
+  {
+    path: 'console',
+    loadComponent: () => import('./layout/shell').then((m) => m.Shell),
+    // canActivateChild, not canActivate: it must run on every navigation inside the shell.
+    canActivateChild: [signedIn, platformOnly],
+    children: [
+      {
+        path: '',
+        title: 'Overview',
+        loadComponent: () => import('./features/console/overview-page').then((m) => m.OverviewPage),
+      },
+      {
+        path: 'institutions',
+        title: 'Institutions',
+        loadComponent: () =>
+          import('./features/console/institutions-page').then((m) => m.InstitutionsPage),
+      },
+      {
+        path: 'institutions/new',
+        title: 'Add institution',
+        loadComponent: () =>
+          import('./features/console/onboarding-page').then((m) => m.OnboardingPage),
+      },
+    ],
   },
   {
     path: '**',

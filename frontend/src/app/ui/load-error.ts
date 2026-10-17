@@ -4,15 +4,17 @@ import { booleanAttribute, Component, input, output } from '@angular/core';
 @Component({
   selector: 'app-load-error',
   template: `
-    <p class="error" role="alert">{{ message() }}</p>
-    <button
-      type="button"
-      class="btn btn-secondary retry"
-      [class.btn-sm]="small()"
-      (click)="retry.emit()"
-    >
-      Try again
-    </button>
+    @if (message()) {
+      <p class="error" role="alert">{{ message() }}</p>
+      <button
+        type="button"
+        class="btn btn-secondary retry"
+        [class.btn-sm]="small()"
+        (click)="retry.emit()"
+      >
+        Try again
+      </button>
+    }
   `,
   styles: `
     :host {

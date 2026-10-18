@@ -8,17 +8,18 @@ from rest_framework.response import Response
 
 from accounts.role_views import holds_any
 from admissions import cycles
-from admissions.models import AdmissionCycle, Application
+from admissions.models import AdmissionCycle
 from common.pagination import Pages
 from configuration.gates import require_module
 from sites.permissions import member_with
 
-HOLDING_SEATS = [Application.Stage.OFFERED, Application.Stage.ACCEPTED, Application.Stage.ENROLLED]
-
 
 def place_in_use(place) -> int:
     """Seats taken: offers not yet expired, acceptances and enrollments."""
-    return place.applications.filter(stage__in=HOLDING_SEATS).count()
+    from accounts.permissions import today_for
+    from admissions.review import seats_in_use
+
+    return seats_in_use(place, today_for(place.cycle.institution))
 
 
 def cycle_item(cycle: AdmissionCycle) -> dict:

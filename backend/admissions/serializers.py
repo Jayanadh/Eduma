@@ -99,3 +99,62 @@ def applicant_item(application: Application) -> dict:
         else {},
         "allowed_actions": actions,
     }
+
+
+def staff_list_item(application: Application) -> dict:
+    return {
+        "id": str(application.id),
+        "number": application.number,
+        "stage": application.stage,
+        "stage_label": application.get_stage_display(),
+        "learner_name": application.learner_name,
+        "guardian_name": application.guardian_name,
+        "place": application.place.label,
+        "cycle": application.cycle.name,
+        "submitted_at": application.submitted_at,
+    }
+
+
+def staff_item(application: Application, viewer) -> dict:
+    from admissions.review import can_approve, can_review
+
+    item = applicant_item(application)
+    for applicant_only in ("missing", "allowed_actions"):
+        item.pop(applicant_only)
+    reviewer, approver = can_review(viewer, application), can_approve(viewer, application)
+    stage = application.stage
+    actions = []
+    if reviewer and stage == Stage.SUBMITTED:
+        actions.append("start_review")
+    if reviewer and stage in (Stage.SUBMITTED, Stage.UNDER_REVIEW):
+        actions.append("request_information")
+    if reviewer and stage == Stage.UNDER_REVIEW:
+        actions.append("eligible")
+    if reviewer and stage in (Stage.SUBMITTED, Stage.UNDER_REVIEW, Stage.ELIGIBLE):
+        actions.append("reject")
+    if approver and stage == Stage.ELIGIBLE:
+        actions.append("offer")
+    if approver and stage == Stage.ACCEPTED:
+        actions.append("enroll")
+    documents = application.documents.select_related("requirement").exclude(status=Document.Status.REPLACED)
+    return {
+        **item,
+        "information_request": application.information_request,
+        "decision_reason": application.decision_reason,
+        "offer_expires_on": application.offer_expires_on,
+        "owner": {"full_name": application.owner.full_name, "username": application.owner.username},
+        "decided_by_name": application.decided_by.full_name if application.decided_by else None,
+        "documents": [{**document_item(doc, True), "version": doc.version} for doc in documents],
+        "submissions": [
+            {"revision": s.revision, "submitted_at": s.submitted_at, "snapshot": s.snapshot}
+            for s in application.submissions.all()
+        ],
+        "notes": [
+            {"id": str(n.id), "author": n.author.full_name, "text": n.text, "created_at": n.created_at}
+            for n in application.notes.select_related("author")
+        ],
+        "student_id": None,
+        "actions": actions,
+        "can_review": reviewer,
+        "can_approve": approver,
+    }

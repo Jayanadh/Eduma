@@ -3,6 +3,8 @@ from django.contrib import admin
 from django.urls import include, path
 
 from accounts.views import ChangePasswordView, LoginView, LogoutView, SessionView
+from admissions.applicant_auth import SignupView
+from admissions.public import public_admissions
 from common.views import AuditEventList, health
 from institutions.urls import platform_patterns
 from institutions.views import OwnInstitutionView, module_catalogue, platform_overview
@@ -17,6 +19,8 @@ urlpatterns = [
     path("api/v1/session/change-password", ChangePasswordView.as_view(), name="session-change-password"),
     path("api/v1/public/site", PublicSiteView.as_view(), name="public-site"),
     path("api/v1/public/assets/<uuid:asset_id>", public_asset, name="public-asset"),
+    path("api/v1/public/admissions", public_admissions, name="public-admissions"),
+    path("api/v1/applicant/signup", SignupView.as_view(), name="applicant-signup"),
     path("api/v1/institution/site/", include(site_patterns)),
     path("api/v1/institution/", include("organization.urls")),
     path("api/v1/institution/", include("accounts.urls")),

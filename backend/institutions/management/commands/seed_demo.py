@@ -1,5 +1,6 @@
-"""Demo data for a laptop: the platform admin and four made-up institutions, one per category, each with its own look.
-Safe to run again: nothing is duplicated and the demo passwords are put back. Refuses to run with DEBUG off."""
+"""Demo data for a laptop: the platform admin and four made-up institutions, one per category, each with its own look,
+and at Aster a second campus, departments and staff with different roles. Safe to run again: nothing is duplicated
+and the demo passwords are put back. Refuses to run with DEBUG off."""
 
 import uuid
 
@@ -7,13 +8,23 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from accounts.models import User
+from accounts.models import CustomRole, Membership, RoleAssignment, User
+from accounts.permissions import today_for
 from institutions import services
 from institutions.models import Institution, LifecycleStatus
+from institutions.modules import default_modules
+from organization.models import Campus, Department
 from sites import services as site_services
 
 PASSWORD = "Demo-pass-2026"
 DEMO_DOMAIN = "www.meridiancollege.localhost"
+# Aster's staff: login ID, name, built-in role key or custom role name, scope code (None: the whole institution).
+ASTER_STAFF = [
+    ("aster.principal", "Aster Principal", "principal", None),
+    ("aster.campus", "Aster City Campus Admin", "campus_admin", "CITY"),
+    ("aster.teacher", "Aster Science Teacher", "teacher", "SCI"),
+    ("aster.office", "Aster Front Office", "Front office", "CITY"),
+]
 
 # slug, display name, legal name, category, active?, (primary, secondary, heading font, body font)
 DEMO = [
@@ -53,6 +64,10 @@ class Command(BaseCommand):
                     reason="Demo data",
                     version=institution.version,
                 )
+        for institution in Institution.objects.filter(modules=[]):
+            institution.modules = default_modules(institution.category)
+            institution.save(update_fields=["modules"])
+        self._aster_staff(platform_admin)
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -85,3 +100,45 @@ class Command(BaseCommand):
         })  # fmt: skip
         if publish:
             site_services.publish(institution, actor, draft.version)
+
+    def _aster_staff(self, actor) -> None:
+        aster = Institution.objects.get(slug="aster")
+
+        def place(model, code, **defaults):
+            return model.objects.get_or_create(institution=aster, code=code, defaults=defaults)[0]
+
+        main = place(Campus, "MAIN", name="Main campus")
+        city = place(Campus, "CITY", name="City campus")
+        sci = place(Department, "SCI", name="Science", campus=main)
+        place(Department, "PHY", name="Physics", campus=main, parent=sci)
+        place(Department, "LANG", name="Languages", campus=main)
+        front, _ = CustomRole.objects.get_or_create(
+            institution=aster, name="Front office", defaults={"permissions": ["membership.read"], "created_by": actor}
+        )
+        scopes = {"CITY": city, "SCI": sci}
+        for username, full_name, role, scope_code in ASTER_STAFF:
+            person, _ = User.objects.get_or_create(
+                username=username, defaults={"full_name": full_name, "created_by": actor}
+            )
+            person.set_password(PASSWORD)
+            person.must_change_password = False
+            person.last_login = person.last_login or timezone.now()
+            person.save()
+            membership, _ = Membership.objects.get_or_create(
+                institution=aster, user=person, defaults={"created_by": actor}
+            )
+            if membership.assignments.exists():
+                continue
+            scope = scopes.get(scope_code)
+            kind = "institution" if scope is None else "campus" if isinstance(scope, Campus) else "department"
+            RoleAssignment.objects.create(
+                membership=membership,
+                institution=aster,
+                role_key="" if role == front.name else role,
+                custom_role=front if role == front.name else None,
+                scope_type=kind,
+                campus=scope if kind == "campus" else None,
+                department=scope if kind == "department" else None,
+                starts_on=today_for(aster),
+                created_by=actor,
+            )

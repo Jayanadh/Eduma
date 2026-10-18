@@ -3,7 +3,7 @@ from django.db.models import Q
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView
 
 from accounts.models import RoleAssignment
-from accounts.permissions import today_for
+from accounts.permissions import live, today_for
 from common import audit
 from common.exceptions import Problem
 from common.pagination import Pages
@@ -17,11 +17,7 @@ def in_use(detail: str) -> Problem:
 
 
 def live_assignments(institution, **scope):
-    """Assignments that are in effect now or will be: what still relies on a campus or department."""
-    today = today_for(institution)
-    return RoleAssignment.objects.filter(status=RoleAssignment.Status.ACTIVE, **scope).filter(
-        Q(ends_on__isnull=True) | Q(ends_on__gte=today)
-    )
+    return live(RoleAssignment.objects.filter(**scope), today_for(institution))
 
 
 class OrgView:

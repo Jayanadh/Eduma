@@ -29,6 +29,13 @@ def in_effect(assignments: QuerySet, today: dt.date) -> QuerySet:
     )
 
 
+def live(assignments: QuerySet, today: dt.date) -> QuerySet:
+    """In effect now or starting later: what still relies on a role, campus or department."""
+    return assignments.filter(status=RoleAssignment.Status.ACTIVE).filter(
+        Q(ends_on__isnull=True) | Q(ends_on__gte=today)
+    )
+
+
 def active_membership(user, institution) -> Membership | None:
     if user is None or not user.is_authenticated or not user.is_active or institution is None:
         return None
@@ -69,7 +76,8 @@ def covers(institution, holder: Scope, target: Scope) -> bool:
     return False
 
 
-def _holds(held: Grants, institution, perm: str, scope: Scope) -> bool:
+def holds(held: Grants, institution, perm: str, scope: Scope) -> bool:
+    """Whether grants (from grants()) include `perm` at a scope covering `scope`."""
     return any(perm in perms and covers(institution, where, scope) for perms, where in held)
 
 
@@ -77,7 +85,7 @@ def has_perm(user, institution, perm: str, scope: Scope = WHOLE) -> bool:
     membership = active_membership(user, institution)
     if membership is None:
         return False
-    return perm == IMPLICIT or _holds(grants(membership), institution, perm, scope)
+    return perm == IMPLICIT or holds(grants(membership), institution, perm, scope)
 
 
 def perms_anywhere(user, institution) -> set[str]:
@@ -88,14 +96,15 @@ def perms_anywhere(user, institution) -> set[str]:
     return {IMPLICIT}.union(*(perms for perms, _ in grants(membership)))
 
 
-def _can_assign(held: Grants, institution, perms: frozenset[str], scope: Scope) -> bool:
-    return all(_holds(held, institution, perm, scope) for perm in {"membership.assign", *perms})
+def assign_allowed(held: Grants, institution, perms: frozenset[str], scope: Scope) -> bool:
+    """can_assign() for grants already loaded."""
+    return all(holds(held, institution, perm, scope) for perm in {"membership.assign", *perms})
 
 
 def can_assign(actor, institution, perms: frozenset[str], scope: Scope) -> bool:
     """The grant ceiling: giving (or ending) a role at a scope needs membership.assign there and every permission the
     role holds, there."""
-    return _can_assign(grants(active_membership(actor, institution)), institution, perms, scope)
+    return assign_allowed(grants(active_membership(actor, institution)), institution, perms, scope)
 
 
 def can_manage_person(actor, target: Membership) -> bool:
@@ -106,6 +115,6 @@ def can_manage_person(actor, target: Membership) -> bool:
     institution = target.institution
     held = grants(active_membership(actor, institution))
     roles = list(in_effect(target.assignments.select_related("custom_role"), today_for(institution)))
-    if not roles and not _holds(held, institution, "membership.assign", WHOLE):
+    if not roles and not holds(held, institution, "membership.assign", WHOLE):
         return False
-    return all(_can_assign(held, institution, row.permissions, row.scope) for row in roles)
+    return all(assign_allowed(held, institution, row.permissions, row.scope) for row in roles)

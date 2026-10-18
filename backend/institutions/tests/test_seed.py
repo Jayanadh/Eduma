@@ -13,7 +13,7 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     User.objects.filter(username="aster.admin").update(full_name="Changed")
     call_command("seed_demo")
     assert Institution.objects.count() == 4
-    assert User.objects.count() == 10
+    assert User.objects.count() == 14
     assert SiteRevision.objects.filter(status="published").count() == 3
     states = dict(Institution.objects.values_list("slug", "lifecycle_status"))
     assert states == {"aster": "active", "meridian": "active", "vector": "setup", "summit": "active"}
@@ -48,6 +48,17 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     assert setting(aster_inst, "access.role_approval") is False
     deputy = User.objects.get(username="aster.deputy")
     assert deputy.full_name == "Aster Deputy Admin" and deputy.check_password("Demo-pass-2026")
+    from admissions.models import AdmissionCycle, Application
+    from students.models import Student
+
+    cycle = AdmissionCycle.objects.get(institution=aster_inst)
+    assert cycle.status == "published" and [p.label for p in cycle.places.all()] == ["Class 1", "Class 6"]
+    stages = sorted(Application.objects.filter(owner__username="aster.parent").values_list("stage", flat=True))
+    assert stages == ["enrolled", "submitted"]
+    student = Student.objects.get(institution=aster_inst)
+    assert student.user.check_password("Demo-pass-2026") and not student.user.must_change_password
+    for username in ("aster.admissions", "aster.registrar", "aster.parent"):
+        assert User.objects.get(username=username).check_password("Demo-pass-2026")
 
 
 def test_seed_refuses_without_debug(db, settings):

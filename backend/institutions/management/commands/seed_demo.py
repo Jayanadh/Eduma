@@ -25,6 +25,8 @@ ASTER_STAFF = [
     ("aster.teacher", "Aster Science Teacher", "teacher", "SCI"),
     ("aster.office", "Aster Front Office", "Front office", "CITY"),
     ("aster.deputy", "Aster Deputy Admin", "institution_admin", None),
+    ("aster.admissions", "Aster Admissions Officer", "admissions_officer", None),
+    ("aster.registrar", "Aster Registrar", "registrar", None),
 ]
 
 # slug, display name, legal name, category, active?, (primary, secondary, heading font, body font)
@@ -70,6 +72,7 @@ class Command(BaseCommand):
             institution.save(update_fields=["modules"])
         self._aster_staff(platform_admin)
         self._aster_settings()
+        self._aster_admissions()
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -147,7 +150,6 @@ class Command(BaseCommand):
 
     def _aster_settings(self) -> None:
         """Aster has switched on Admissions and Students, through the same steps an admin takes."""
-        from accounts.permissions import today_for
         from configuration import services as settings_services
 
         aster = Institution.objects.get(slug="aster")
@@ -157,3 +159,72 @@ class Command(BaseCommand):
         draft = settings_services.open_draft(aster, admin, "modules.enabled")
         draft = settings_services.save_draft(aster, admin, "modules.enabled", draft.version, ["admissions", "students"])
         settings_services.submit(aster, admin, "modules.enabled", draft.version, today_for(aster), "Demo data")
+
+    def _aster_admissions(self) -> None:
+        """An open cycle, a parent with one submitted application and one child already enrolled, made through the
+        same steps families and staff take."""
+        import datetime as dt
+        import io
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+
+        from admissions import applications, cycles, documents, enrollment, review
+
+        aster = Institution.objects.get(slug="aster")
+        if aster.cycles.exists():
+            return
+        admin = User.objects.get(username="aster.admin")
+        registrar = User.objects.get(username="aster.registrar")
+        main = aster.campuses.get(code="MAIN")
+        today = today_for(aster)
+        cycle = cycles.save_cycle(aster, admin, None, {
+            "name": f"Admissions {today.year + 1}", "entry_year": today.year + 1, "opens_on": today,
+            "closes_on": today + dt.timedelta(days=60), "instructions": "Apply before the closing date.",
+            "places": [
+                {"code": "C1", "label": "Class 1", "campus": main, "seats": 40},
+                {"code": "C6", "label": "Class 6", "campus": main, "seats": 10},
+            ],
+            "questions": [
+                {"code": "LANG", "label": "Home language", "help": "", "kind": "text", "options": [], "required": True},
+                {"code": "BUS", "label": "Needs the school bus?", "help": "", "kind": "yes_no", "options": [],
+                 "required": True},
+            ],
+            "documents": [
+                {"code": "BIRTH", "label": "Birth certificate", "help": "", "required": True},
+                {"code": "PHOTO", "label": "Recent photo", "help": "", "required": True},
+            ],
+        })  # fmt: skip
+        cycle = cycles.publish(admin, cycle, cycle.version)
+        parent, _ = User.objects.get_or_create(username="aster.parent", defaults={"full_name": "Aster Demo Parent"})
+        parent.set_password(PASSWORD)
+        parent.save()
+        Membership.objects.get_or_create(institution=aster, user=parent, defaults={"kind": Membership.Kind.APPLICANT})
+        buffer = io.BytesIO()
+        Image.new("RGB", (60, 60), (91, 63, 217)).save(buffer, format="PNG")
+        files = {"BIRTH": (b"%PDF-1.4\n%%EOF\n", "birth-certificate.pdf"), "PHOTO": (buffer.getvalue(), "photo.png")}
+        made = []
+        for learner, place in (
+            ("Meera Demo", cycle.places.get(code="C1")),
+            ("Arjun Demo", cycle.places.get(code="C6")),
+        ):
+            application = applications.start(parent, aster, cycle.id, place.id)
+            application = applications.edit(parent, application, application.version, {
+                "learner_name": learner, "date_of_birth": dt.date(today.year - 6, 5, 17),
+                "guardian_name": parent.full_name,
+                "guardian_relationship": "Parent", "guardian_phone": "+91 90000 00009", "address": "1 Lake Road",
+                "answers": {"LANG": "Telugu", "BUS": True},
+            })  # fmt: skip
+            for code, (content, name) in files.items():
+                documents.upload(parent, application, code, SimpleUploadedFile(name, content))
+            application.refresh_from_db()
+            made.append(applications.submit(parent, application, application.version))
+        arjun = made[1]
+        for step in (review.start_review, review.mark_eligible):
+            arjun = step(registrar, arjun, arjun.version)
+        arjun = review.offer(registrar, arjun, arjun.version, today + dt.timedelta(days=14))
+        arjun = applications.accept(parent, arjun, arjun.version)
+        student = enrollment.enroll(registrar, arjun, arjun.version, PASSWORD)
+        student.user.must_change_password = False
+        student.user.last_login = timezone.now()
+        student.user.save()

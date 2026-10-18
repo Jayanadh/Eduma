@@ -7,14 +7,16 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from accounts.models import Membership
+from accounts.models import Membership, RoleAssignment
 from accounts.permissions import can_manage_person, today_for
 from accounts.role_views import holds_any
 from accounts.staff import (
+    approve_request,
     create_staff,
     end_assignment,
     give_role,
     own_membership,
+    reject_request,
     remove,
     reset_password,
     restore,
@@ -179,3 +181,32 @@ class Restore(ActionView):
         data.is_valid(raise_exception=True)
         membership = restore(request.user, found, data.validated_data["version"])
         return self.done(membership)
+
+
+class Decide(ActionView):
+    """Approve or turn down a role that waits for approval."""
+
+    def row(self, aid) -> RoleAssignment:
+        found = self.person().assignments.filter(pk=aid).select_related("institution", "membership__user").first()
+        if found is None:
+            raise NotFound()
+        return found
+
+
+class ApproveRole(Decide):
+    def post(self, request, pk, aid):
+        approve_request(request.user, self.row(aid))
+        return self.done(self.person())
+
+
+class RejectRole(Decide):
+    def post(self, request, pk, aid):
+        row = self.row(aid)
+        reason = self.data_reason()
+        reject_request(request.user, row, reason)
+        return self.done(self.person())
+
+    def data_reason(self) -> str:
+        data = ReasonInput(data=self.request.data)
+        data.is_valid(raise_exception=True)
+        return data.validated_data["reason"]

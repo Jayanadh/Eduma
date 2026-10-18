@@ -100,6 +100,8 @@ class RoleAssignment(VersionedModel):
 
     class Status(models.TextChoices):
         ACTIVE = "active", "Active"
+        # Given while role-change approval is on; grants nothing until someone else approves it (slice 3 S3-08).
+        PENDING = "pending", "Waiting for approval"
         ENDED = "ended", "Ended"
 
     class ScopeType(models.TextChoices):
@@ -127,6 +129,8 @@ class RoleAssignment(VersionedModel):
     ended_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
     ended_at = models.DateTimeField(null=True, blank=True)
     end_reason = models.CharField(max_length=300, blank=True)
+    decided_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    decided_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["starts_on", "created_at"]

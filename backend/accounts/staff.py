@@ -24,9 +24,10 @@ from accounts.permissions import (
     live,
     today_for,
 )
-from accounts.roles import BUILTIN_ROLES, PERMISSIONS, institution_only
+from accounts.roles import BUILTIN_ROLES, PERMISSIONS, institution_only, powerful
 from common import audit
 from common.exceptions import Problem
+from configuration.registry import setting
 
 
 def own_membership() -> Problem:
@@ -76,7 +77,9 @@ def check_assignment(actor, institution, data: dict) -> dict:
         raise ValidationError({"ends_on": ["End the role on or after the day it starts."]})
     if not can_assign(actor, institution, perms, scope):
         raise PermissionDenied("You can't give this role there.")
+    waits = powerful(perms) and setting(institution, "access.role_approval")
     return {
+        "status": RoleAssignment.Status.PENDING if waits else RoleAssignment.Status.ACTIVE,
         "role_key": role_key or "",
         "custom_role": custom,
         "scope_type": scope[0],
@@ -136,11 +139,15 @@ def create_staff(actor, institution, data: dict) -> Membership:
             actor,
             "staff.created",
             membership,
-            f"Added {person.full_name} as {row.role_label} ({row.scope_label})",
+            f"Added {person.full_name} as {row.role_label} ({row.scope_label}){_waiting_note(row)}",
             institution=institution,
             changes={"username": username, "role": row.role_label, "scope": row.scope_label},
         )
     return membership
+
+
+def _waiting_note(row: RoleAssignment) -> str:
+    return ", waiting for approval" if row.status == RoleAssignment.Status.PENDING else ""
 
 
 def _lock(institution) -> None:
@@ -174,11 +181,13 @@ def give_role(actor, membership: Membership, data: dict) -> RoleAssignment:
             raise Problem(409, "invalid_transition", "Restore this person before giving them a role.")
         fields = check_assignment(actor, institution, data)
         row = RoleAssignment.objects.create(membership=membership, institution=institution, created_by=actor, **fields)
+        requested = row.status == RoleAssignment.Status.PENDING
+        verb = "Asked to give" if requested else "Gave"
         audit.log(
             actor,
-            "assignment.given",
+            "assignment.requested" if requested else "assignment.given",
             membership,
-            f"Gave {membership.user.full_name} {row.role_label} ({row.scope_label})",
+            f"{verb} {membership.user.full_name} {row.role_label} ({row.scope_label})",
             institution=institution,
             changes={
                 "role": row.role_label,
@@ -258,7 +267,8 @@ def remove(actor, membership: Membership, reason: str, version: int) -> Membersh
             raise Problem(409, "invalid_transition", "This person has already been removed.")
         _check_rank(actor, membership)
         check_last_admin(institution, losing=membership)
-        for row in membership.assignments.filter(status=RoleAssignment.Status.ACTIVE):
+        waiting_or_active = (RoleAssignment.Status.ACTIVE, RoleAssignment.Status.PENDING)
+        for row in membership.assignments.filter(status__in=waiting_or_active):
             _end(actor, row, "Removed from staff")
         membership.status = Membership.Status.REVOKED
         membership.save()
@@ -287,3 +297,64 @@ def restore(actor, membership: Membership, version: int) -> Membership:
         summary = f"Restored {membership.user.full_name} to staff"
         audit.log(actor, "staff.restored", membership, summary, institution=institution)
     return membership
+
+
+def _decision(actor, assignment: RoleAssignment) -> RoleAssignment:
+    """The waiting request, locked, if the actor may decide on it: not their own, and within their grant ceiling."""
+    row = RoleAssignment.objects.select_for_update().get(pk=assignment.pk)
+    if row.status != RoleAssignment.Status.PENDING:
+        raise Problem(409, "invalid_transition", "This request has already been decided.")
+    if row.created_by_id == actor.id:
+        raise Problem(403, "own_request", "You asked for this role, so someone else must decide on it.")
+    if not can_assign(actor, row.institution, row.permissions, row.scope):
+        raise PermissionDenied("Deciding on this role is beyond your own.")
+    return row
+
+
+def can_decide(viewer, row: RoleAssignment) -> bool:
+    return (
+        row.status == RoleAssignment.Status.PENDING
+        and row.created_by_id != getattr(viewer, "id", None)
+        and can_assign(viewer, row.institution, row.permissions, row.scope)
+    )
+
+
+def approve_request(actor, assignment: RoleAssignment) -> RoleAssignment:
+    """The role takes effect: from its own start day, or today if that has passed while it waited."""
+    institution = assignment.institution
+    with transaction.atomic():
+        _lock(institution)
+        row = _decision(actor, assignment)
+        row.status = RoleAssignment.Status.ACTIVE
+        row.starts_on = max(row.starts_on, today_for(institution))
+        row.decided_by = actor
+        row.decided_at = timezone.now()
+        row.save()
+        audit.log(
+            actor,
+            "assignment.approved",
+            row.membership,
+            f"Approved {row.role_label} ({row.scope_label}) for {row.membership.user.full_name}",
+            institution=institution,
+        )
+    return row
+
+
+def reject_request(actor, assignment: RoleAssignment, reason: str) -> RoleAssignment:
+    institution = assignment.institution
+    with transaction.atomic():
+        _lock(institution)
+        row = _decision(actor, assignment)
+        _end(actor, row, reason)
+        row.decided_by = actor
+        row.decided_at = row.ended_at
+        row.save()
+        audit.log(
+            actor,
+            "assignment.rejected",
+            row.membership,
+            f"Turned down {row.role_label} ({row.scope_label}) for {row.membership.user.full_name}",
+            institution=institution,
+            changes={"reason": reason},
+        )
+    return row

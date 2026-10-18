@@ -30,10 +30,9 @@ def in_effect(assignments: QuerySet, today: dt.date) -> QuerySet:
 
 
 def live(assignments: QuerySet, today: dt.date) -> QuerySet:
-    """In effect now or starting later: what still relies on a role, campus or department."""
-    return assignments.filter(status=RoleAssignment.Status.ACTIVE).filter(
-        Q(ends_on__isnull=True) | Q(ends_on__gte=today)
-    )
+    """In effect now, starting later or waiting for approval: what still relies on a role, campus or department."""
+    statuses = (RoleAssignment.Status.ACTIVE, RoleAssignment.Status.PENDING)
+    return assignments.filter(status__in=statuses).filter(Q(ends_on__isnull=True) | Q(ends_on__gte=today))
 
 
 def active_membership(user, institution) -> Membership | None:

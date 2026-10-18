@@ -30,7 +30,7 @@ class DetailsInput(serializers.Serializer):
 
 
 def _assignments(membership: Membership):
-    return membership.assignments.select_related("custom_role", "campus", "department")
+    return membership.assignments.select_related("custom_role", "campus", "department", "created_by", "institution")
 
 
 def current_roles(today) -> Prefetch:
@@ -58,7 +58,10 @@ def staff_item(membership: Membership) -> dict:
 
 
 def phase(row: RoleAssignment, live_ids: set, today) -> str:
-    """ "now", "later" (starts after today) or "earlier" (ended or past), on the institution's own calendar."""
+    """One of: now; waiting (for approval); later (starts after today); earlier (ended or past). On the institution's
+    own calendar."""
+    if row.status == RoleAssignment.Status.PENDING:
+        return "waiting"
     if row.id in live_ids:
         return "now"
     if row.status == RoleAssignment.Status.ACTIVE and row.starts_on > today:
@@ -66,7 +69,9 @@ def phase(row: RoleAssignment, live_ids: set, today) -> str:
     return "earlier"
 
 
-def assignment_item(row: RoleAssignment, live_ids: set, today) -> dict:
+def assignment_item(row: RoleAssignment, live_ids: set, today, viewer) -> dict:
+    from accounts.staff import can_decide
+
     return {
         "id": str(row.id),
         "role_label": row.role_label,
@@ -78,6 +83,8 @@ def assignment_item(row: RoleAssignment, live_ids: set, today) -> dict:
         "end_reason": row.end_reason,
         "in_effect": row.id in live_ids,
         "phase": phase(row, live_ids, today),
+        "requested_by_name": row.created_by.full_name if row.created_by else None,
+        "can_decide": can_decide(viewer, row),
     }
 
 
@@ -93,7 +100,7 @@ def staff_detail(membership: Membership, viewer) -> dict:
         "last_login": user.last_login,
         "must_change_password": user.must_change_password,
         "version": membership.version,
-        "assignments": [assignment_item(row, live_ids, today) for row in rows],
+        "assignments": [assignment_item(row, live_ids, today, viewer) for row in rows],
         "can_manage": can_manage_person(viewer, membership),
         # The form to give a role: each role and scope is checked against the grant ceiling when it is sent.
         "can_give": membership.status == Membership.Status.ACTIVE

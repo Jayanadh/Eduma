@@ -95,5 +95,11 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
 }
 
 
+def powerful(perms: Iterable[str]) -> bool:
+    """A role that can change the institution or its staff: anything beyond seeing staff. These wait for approval while
+    the institution requires it."""
+    return bool(set(perms) - {"membership.read"})
+
+
 def institution_only(perms: Iterable[str]) -> list[str]:
     return sorted(name for name in perms if name in PERMISSIONS and PERMISSIONS[name].institution_only)

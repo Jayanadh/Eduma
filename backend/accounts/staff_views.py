@@ -2,7 +2,7 @@
 
 from django.db import transaction
 from django.db.models import Q
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -10,8 +10,17 @@ from rest_framework.response import Response
 from accounts.models import Membership
 from accounts.permissions import can_manage_person
 from accounts.role_views import holds_any
-from accounts.staff import create_staff, own_membership, visible_memberships
-from accounts.staff_serializers import DetailsInput, StaffInput, staff_detail, staff_item
+from accounts.staff import (
+    create_staff,
+    end_assignment,
+    give_role,
+    own_membership,
+    remove,
+    reset_password,
+    restore,
+    visible_memberships,
+)
+from accounts.staff_serializers import AssignmentInput, DetailsInput, StaffInput, staff_detail, staff_item
 from common import audit
 from common.pagination import Pages
 
@@ -28,12 +37,16 @@ class StaffView(GenericAPIView):
             raise NotFound()
         return found
 
-    def managed(self) -> Membership:
-        """The membership in the URL, for a change the caller must be allowed to make to that person."""
+    def target(self) -> Membership:
+        """The membership in the URL, refusing the caller's own."""
         found = Membership.objects.filter(institution=self.request.institution, pk=self.kwargs["pk"]).first()
         if found is not None and found.user_id == self.request.user.id:
             raise own_membership()
-        found = self.person()
+        return self.person()
+
+    def managed(self) -> Membership:
+        """The membership in the URL, for a change the caller must be allowed to make to that person."""
+        found = self.target()
         if not can_manage_person(self.request.user, found):
             raise PermissionDenied("You can't change this person: they hold roles beyond yours.")
         return found
@@ -81,3 +94,76 @@ class StaffDetail(StaffView):
                 summary = f"Changed {user.full_name}'s details"
                 audit.log(request.user, "staff.updated", membership, summary, changes=diff)
         return Response(staff_detail(membership, request.user))
+
+
+class ReasonInput(serializers.Serializer):
+    reason = serializers.CharField(max_length=300)
+
+
+class RemoveInput(ReasonInput):
+    version = serializers.IntegerField()
+
+
+class PasswordInput(serializers.Serializer):
+    password = serializers.CharField(trim_whitespace=False)
+
+
+class ActionView(StaffView):
+    """Changes to one person: always POST, and never to the caller's own membership."""
+
+    def get_permissions(self):
+        return [holds_any("membership.assign")()]
+
+    def done(self, membership: Membership, code: int = status.HTTP_200_OK) -> Response:
+        membership.refresh_from_db()
+        return Response(staff_detail(membership, self.request.user), status=code)
+
+
+class GiveRole(ActionView):
+    def post(self, request, pk):
+        data = AssignmentInput(data=request.data)
+        data.is_valid(raise_exception=True)
+        membership = self.target()
+        give_role(request.user, membership, data.validated_data)
+        return self.done(membership, status.HTTP_201_CREATED)
+
+
+class EndRole(ActionView):
+    def post(self, request, pk, aid):
+        data = ReasonInput(data=request.data)
+        data.is_valid(raise_exception=True)
+        membership = self.target()
+        row = membership.assignments.filter(pk=aid).select_related("institution", "membership__user").first()
+        if row is None:
+            raise NotFound()
+        end_assignment(request.user, row, data.validated_data["reason"])
+        return self.done(membership)
+
+
+class ResetPassword(ActionView):
+    def post(self, request, pk):
+        data = PasswordInput(data=request.data)
+        data.is_valid(raise_exception=True)
+        reset_password(request.user, self.managed(), data.validated_data["password"])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class Remove(ActionView):
+    def post(self, request, pk):
+        data = RemoveInput(data=request.data)
+        data.is_valid(raise_exception=True)
+        values = data.validated_data
+        membership = remove(request.user, self.managed(), values["reason"], values["version"])
+        return self.done(membership)
+
+
+class VersionInput(serializers.Serializer):
+    version = serializers.IntegerField()
+
+
+class Restore(ActionView):
+    def post(self, request, pk):
+        data = VersionInput(data=request.data)
+        data.is_valid(raise_exception=True)
+        membership = restore(request.user, self.target(), data.validated_data["version"])
+        return self.done(membership)

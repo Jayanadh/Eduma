@@ -6,6 +6,7 @@ import uuid
 from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from accounts.models import CustomRole, Membership, RoleAssignment, User, validate_username
@@ -17,6 +18,7 @@ from accounts.permissions import (
     covers,
     department_tree,
     grants,
+    has_perm,
     in_effect,
     today_for,
 )
@@ -131,4 +133,140 @@ def create_staff(actor, institution, data: dict) -> Membership:
             institution=institution,
             changes={"username": username, "role": row.role_label, "scope": row.scope_label},
         )
+    return membership
+
+
+def _lock(institution) -> None:
+    """Staff changes to one institution take turns, so two admins cannot each remove the other at once."""
+    type(institution).objects.select_for_update().filter(pk=institution.pk).first()
+
+
+def check_last_admin(institution, *, losing: RoleAssignment | Membership) -> None:
+    """Refuses to take away the last open-ended Institution Admin role of an active person."""
+    admins = in_effect(
+        RoleAssignment.objects.filter(
+            institution=institution,
+            role_key="institution_admin",
+            scope_type=RoleAssignment.ScopeType.INSTITUTION,
+            ends_on__isnull=True,
+            membership__status=Membership.Status.ACTIVE,
+            membership__user__is_active=True,
+        ),
+        today_for(institution),
+    )
+    mine = {"pk": losing.pk} if isinstance(losing, RoleAssignment) else {"membership": losing}
+    if admins.filter(**mine).exists() and not admins.exclude(**mine).exists():
+        raise Problem(409, "last_admin", "Add another Institution Admin first.")
+
+
+def give_role(actor, membership: Membership, data: dict) -> RoleAssignment:
+    institution = membership.institution
+    with transaction.atomic():
+        _lock(institution)
+        if membership.status != Membership.Status.ACTIVE:
+            raise Problem(409, "invalid_transition", "Restore this person before giving them a role.")
+        fields = check_assignment(actor, institution, data)
+        row = RoleAssignment.objects.create(membership=membership, institution=institution, created_by=actor, **fields)
+        audit.log(
+            actor,
+            "assignment.given",
+            membership,
+            f"Gave {membership.user.full_name} {row.role_label} ({row.scope_label})",
+            institution=institution,
+            changes={
+                "role": row.role_label,
+                "scope": row.scope_label,
+                "starts_on": str(row.starts_on),
+                "ends_on": str(row.ends_on) if row.ends_on else None,
+            },
+        )
+    return row
+
+
+def _end(actor, row: RoleAssignment, reason: str) -> None:
+    row.status = RoleAssignment.Status.ENDED
+    row.ended_by = actor
+    row.ended_at = timezone.now()
+    row.end_reason = reason
+    row.save()
+
+
+def end_assignment(actor, assignment: RoleAssignment, reason: str) -> RoleAssignment:
+    institution = assignment.institution
+    with transaction.atomic():
+        _lock(institution)
+        row = RoleAssignment.objects.select_for_update().get(pk=assignment.pk)
+        if row.status != RoleAssignment.Status.ACTIVE:
+            raise Problem(409, "invalid_transition", "This role has already ended.")
+        if not can_assign(actor, institution, row.permissions, row.scope):
+            raise PermissionDenied("You can't end this role: giving it is beyond your own.")
+        check_last_admin(institution, losing=row)
+        _end(actor, row, reason)
+        audit.log(
+            actor,
+            "assignment.ended",
+            row.membership,
+            f"Ended {row.membership.user.full_name}'s {row.role_label} ({row.scope_label})",
+            institution=institution,
+            changes={"reason": reason},
+        )
+    return row
+
+
+def reset_password(actor, membership: Membership, password: str) -> None:
+    person = membership.user
+    try:
+        password_validation.validate_password(password, person)
+    except DjangoValidationError as error:
+        raise ValidationError({"password": error.messages}) from error
+    person.set_password(password)
+    person.must_change_password = True
+    person.save()
+    audit.log(
+        actor,
+        "staff.password_reset",
+        membership,
+        f"Reset the password of {person.full_name}",
+        institution=membership.institution,
+    )
+
+
+def remove(actor, membership: Membership, reason: str, version: int) -> Membership:
+    """Ends every role and the membership; the person's sessions end on their next request."""
+    institution = membership.institution
+    with transaction.atomic():
+        _lock(institution)
+        membership = Membership.objects.select_for_update().get(pk=membership.pk)
+        membership.check_version(version)
+        if membership.status != Membership.Status.ACTIVE:
+            raise Problem(409, "invalid_transition", "This person has already been removed.")
+        check_last_admin(institution, losing=membership)
+        for row in membership.assignments.filter(status=RoleAssignment.Status.ACTIVE):
+            _end(actor, row, "Removed from staff")
+        membership.status = Membership.Status.REVOKED
+        membership.save()
+        audit.log(
+            actor,
+            "staff.removed",
+            membership,
+            f"Removed {membership.user.full_name} from staff",
+            institution=institution,
+            changes={"reason": reason},
+        )
+    return membership
+
+
+def restore(actor, membership: Membership, version: int) -> Membership:
+    institution = membership.institution
+    if not has_perm(actor, institution, "membership.assign"):
+        raise PermissionDenied("Only someone who adds staff for the whole institution can restore a person.")
+    with transaction.atomic():
+        membership = Membership.objects.select_for_update().get(pk=membership.pk)
+        membership.check_version(version)
+        if membership.status != Membership.Status.REVOKED:
+            raise Problem(409, "invalid_transition", "This person is already on the staff.")
+        membership.status = Membership.Status.ACTIVE
+        membership.save()
+        summary = f"Restored {membership.user.full_name} to staff"
+        audit.log(actor, "staff.restored", membership, summary, institution=institution)
     return membership

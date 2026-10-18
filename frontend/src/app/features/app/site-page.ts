@@ -15,7 +15,7 @@ import { SiteEditor } from '../editor/site-editor';
       <app-page-header title="Public site" subtitle="Your logo, colours, fonts and the page visitors see at your web address." />
       <app-load-error [message]="data.error()" (retry)="data.reload()" />
       @if (data.value(); as institution) {
-        <app-site-editor class="section" [scope]="{ kind: 'institution' }" [institution]="institution" />
+        <app-site-editor class="section" [institution]="institution" />
       }
     </div>
   `,

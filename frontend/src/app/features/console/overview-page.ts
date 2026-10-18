@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Api } from '../../core/api/api';
 import { LifecycleStatus, Overview } from '../../core/api/types';
@@ -6,6 +6,7 @@ import { load } from '../../core/load';
 import { EmptyState } from '../../ui/empty-state';
 import { LoadError } from '../../ui/load-error';
 import { PageHeader } from '../../ui/page-header';
+import { PAGE_SIZE, Pager } from '../../ui/pager';
 
 const STATES: { code: LifecycleStatus; label: string }[] = [
   { code: 'setup', label: 'Setting up' },
@@ -17,7 +18,7 @@ const STATES: { code: LifecycleStatus; label: string }[] = [
 /** The console's first page: how many institutions are in each state, and which ones still need setting up. */
 @Component({
   selector: 'app-overview-page',
-  imports: [EmptyState, LoadError, PageHeader, RouterLink],
+  imports: [EmptyState, LoadError, PageHeader, Pager, RouterLink],
   template: `
     <div class="page">
       <app-page-header eyebrow="Eduma platform" title="Overview">
@@ -37,7 +38,7 @@ const STATES: { code: LifecycleStatus; label: string }[] = [
           <div class="section-head"><h2>Needs action</h2></div>
           @if (overview.needs_action.length) {
             <ul class="list">
-              @for (item of overview.needs_action; track item.id) {
+              @for (item of needsAction(); track item.id) {
                 <li>
                   <a class="list-row" [routerLink]="['/console/institutions', item.id]">
                     <span class="list-main">
@@ -48,6 +49,7 @@ const STATES: { code: LifecycleStatus; label: string }[] = [
                 </li>
               }
             </ul>
+            <app-pager [page]="page()" [count]="overview.needs_action.length" (go)="page.set($event)" />
           } @else {
             <app-empty-state icon="check" title="Nothing needs action." text="Every institution being set up is ready." />
           }
@@ -73,4 +75,9 @@ export class OverviewPage {
   private readonly api = inject(Api);
   protected readonly states = STATES;
   protected readonly data = load(() => this.api.get<Overview>('platform/overview'));
+  protected readonly page = signal(1);
+  /** Few institutions are ever being set up at once, so they come in one answer and are paged here. */
+  protected readonly needsAction = computed(() =>
+    (this.data.value()?.needs_action ?? []).slice((this.page() - 1) * PAGE_SIZE, this.page() * PAGE_SIZE),
+  );
 }

@@ -78,7 +78,6 @@ describe('SiteEditor', () => {
     const fixture = TestBed.createComponent(SiteEditor);
     published = 0;
     fixture.componentInstance.published.subscribe(() => published++);
-    fixture.componentRef.setInput('scope', { kind: 'institution' });
     fixture.componentRef.setInput('institution', {
       slug: 'aster',
       display_name: 'Aster School',

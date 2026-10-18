@@ -147,6 +147,8 @@ export type InstitutionListItem = {
 export type InstitutionDetail = {
   id: string;
   slug: string;
+  /** A domain the institution owns, e.g. www.dps.edu.in; '' when it uses its Eduma address. */
+  custom_domain: string;
   legal_name: string;
   display_name: string;
   category: Category;

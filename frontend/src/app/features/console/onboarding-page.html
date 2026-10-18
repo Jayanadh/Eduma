@@ -72,17 +72,29 @@
             <textarea id="address" formControlName="address" rows="3"></textarea>
           </div>
           <div class="field">
-            <label for="country">Country code</label>
-            <input id="country" formControlName="country_code" maxlength="2" />
+            <label for="country">Country</label>
+            <select id="country" formControlName="country_code">
+              @for (option of countries; track option.code) {
+                <option [value]="option.code">{{ option.label }}</option>
+              }
+            </select>
           </div>
           <div class="field">
             <label for="timezone">Time zone</label>
-            <input id="timezone" formControlName="timezone" />
+            <select id="timezone" formControlName="timezone">
+              @for (option of timeZones; track option.code) {
+                <option [value]="option.code">{{ option.label }}</option>
+              }
+            </select>
             @if (problem('contacts', 'timezone'); as message) { <span class="field-error">{{ message }}</span> }
           </div>
           <div class="field">
             <label for="currency">Currency</label>
-            <input id="currency" formControlName="base_currency" maxlength="3" />
+            <select id="currency" formControlName="base_currency">
+              @for (option of currencies; track option.code) {
+                <option [value]="option.code">{{ option.label }}</option>
+              }
+            </select>
           </div>
         </div>
       }
@@ -90,8 +102,14 @@
         <div class="stack" formGroupName="address">
           <div class="field">
             <label for="slug">Web address</label>
-            <input id="slug" formControlName="slug" autocapitalize="none" spellcheck="false" [attr.aria-invalid]="!!problem('address', 'slug') || slugCheck()?.available === false" aria-describedby="slug-preview" />
-            <span class="field-hint">Lowercase letters, digits and dashes. It can be changed until the institution is activated.</span>
+            <div class="address-input">
+              <input id="slug" formControlName="slug" autocapitalize="none" spellcheck="false" [attr.aria-invalid]="!!problem('address', 'slug') || slugCheck()?.available === false" aria-describedby="slug-hint" />
+              <span class="address-suffix">.{{ baseHost }}</span>
+            </div>
+            <span id="slug-hint" class="field-hint">
+              Type just the name, such as dps. Lowercase letters, digits and dashes; it can be changed until the
+              institution is activated. If they buy a domain of their own later, add it in the institution's details.
+            </span>
             @if (problem('address', 'slug'); as message) {
               <span class="field-error">{{ message }}</span>
             } @else if (slugCheck(); as check) {
@@ -102,10 +120,6 @@
               }
             }
           </div>
-          <p id="slug-preview" class="address-preview">
-            <span class="muted small">Their address will be</span>
-            <strong class="url">{{ previewUrl() }}</strong>
-          </p>
         </div>
       }
       @case (3) {
@@ -155,8 +169,8 @@
           <div><dt>Login ID</dt><dd>{{ value('admin', 'username') }}</dd></div>
         </dl>
         <p class="notice notice-info">
-          Creating it sets the institution up with a starter page in Eduma's colours. Next you can add its logo, colours,
-          fonts and words, then activate it when it is ready.
+          Creating it sets the institution up with a starter page in Eduma's colours. Its Institution Admin adds the
+          logo, colours, fonts and words after signing in; activate the institution once its checklist is done.
         </p>
       }
     }

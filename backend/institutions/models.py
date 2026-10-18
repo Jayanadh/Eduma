@@ -60,9 +60,13 @@ SIGN_IN_STATES = frozenset({LifecycleStatus.SETUP, LifecycleStatus.ACTIVE})
 
 
 class Institution(VersionedModel):
-    """The tenant: every institution-owned record belongs to exactly one. Served at <slug>.<base host>."""
+    """The tenant: every institution-owned record belongs to exactly one. Served at <slug>.<base host>, and at its
+    custom domain when it has one."""
 
     slug = models.CharField(max_length=40, unique=True, validators=[validate_slug])
+    # A domain the institution bought and pointed at Eduma, e.g. www.dps.edu.in. When set, its links use it; the
+    # <slug> address keeps working.
+    custom_domain = models.CharField(max_length=253, blank=True)
     legal_name = models.CharField(max_length=200)
     display_name = models.CharField(max_length=120)
     category = models.CharField(max_length=30, choices=Category.choices)
@@ -91,6 +95,9 @@ class Institution(VersionedModel):
         constraints = [
             models.UniqueConstraint(fields=["udise_code"], condition=~Q(udise_code=""), name="unique_udise_when_set"),
             models.UniqueConstraint(fields=["aishe_code"], condition=~Q(aishe_code=""), name="unique_aishe_when_set"),
+            models.UniqueConstraint(
+                fields=["custom_domain"], condition=~Q(custom_domain=""), name="unique_custom_domain_when_set"
+            ),
         ]
 
     def __str__(self) -> str:

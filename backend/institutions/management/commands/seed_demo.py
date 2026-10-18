@@ -13,6 +13,7 @@ from institutions.models import Institution, LifecycleStatus
 from sites import services as site_services
 
 PASSWORD = "Demo-pass-2026"
+DEMO_DOMAIN = "www.meridiancollege.localhost"
 
 # slug, display name, legal name, category, active?, (primary, secondary, heading font, body font)
 DEMO = [
@@ -52,6 +53,8 @@ class Command(BaseCommand):
                     reason="Demo data",
                     version=institution.version,
                 )
+        # One institution on a domain of its own; browsers send any *.localhost name to this machine.
+        Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
 
     def _platform_admin(self) -> User:

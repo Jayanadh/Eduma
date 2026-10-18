@@ -23,6 +23,7 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     vector = User.objects.get(username="vector.admin")
     assert vector.must_change_password and vector.last_login is None
     assert User.objects.get(username="eduma.admin").is_platform_admin
+    assert Institution.objects.get(slug="meridian").custom_domain == "www.meridiancollege.localhost"
 
 
 def test_seed_refuses_without_debug(db, settings):

@@ -1,3 +1,5 @@
+import re
+from urllib.parse import urlsplit
 from zoneinfo import available_timezones
 
 from django.contrib.auth import password_validation
@@ -7,11 +9,13 @@ from rest_framework import serializers
 from accounts.models import User, validate_username
 from institutions.models import Institution, LifecycleStatus, validate_slug
 from institutions.services import first_admin, readiness
-from sites.hosts import institution_url
+from sites.hosts import institution_url, resolve
 
 PROFILE_FIELDS = ["contact_email", "contact_phone", "address"]
+DOMAIN_RE = re.compile(r"^(?=.{4,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]*[a-z0-9]$")
 EDITABLE_FIELDS = [
     "slug",
+    "custom_domain",
     "legal_name",
     "display_name",
     "category",
@@ -42,6 +46,23 @@ class InstitutionFieldsMixin:
         if clash.exists():
             raise serializers.ValidationError("This address is already taken.")
         return slug
+
+    def validate_custom_domain(self, value: str) -> str:
+        """A host name such as www.dps.edu.in; a pasted address (https://www.dps.edu.in/) is reduced to its host."""
+        value = value.strip().lower()
+        if not value:
+            return ""
+        domain = urlsplit(value if "//" in value else f"//{value}").hostname or ""
+        if not DOMAIN_RE.match(domain):
+            raise serializers.ValidationError("Enter a domain such as www.dps.edu.in.")
+        if resolve(domain)[0] != "unknown":
+            raise serializers.ValidationError("This is already an Eduma address; use the web address above.")
+        clash = Institution.objects.filter(custom_domain=domain)
+        if self.instance is not None:
+            clash = clash.exclude(pk=self.instance.pk)
+        if clash.exists():
+            raise serializers.ValidationError("Another institution already uses this domain.")
+        return domain
 
     def validate_timezone(self, value: str) -> str:
         if value not in available_timezones():
@@ -125,7 +146,7 @@ class InstitutionSerializer(InstitutionFieldsMixin, serializers.ModelSerializer)
         extra_kwargs = {"slug": {"validators": []}}
 
     def get_url(self, institution: Institution) -> str:
-        return institution_url(institution.slug)
+        return institution_url(institution)
 
     def get_readiness(self, institution: Institution) -> list[dict]:
         return readiness(institution)
@@ -160,7 +181,7 @@ class InstitutionListSerializer(serializers.ModelSerializer):
         fields = ["id", "display_name", "slug", "url", "category", "lifecycle_status", "created_at", "ready"]
 
     def get_url(self, institution: Institution) -> str:
-        return institution_url(institution.slug)
+        return institution_url(institution)
 
     def get_ready(self, institution: Institution) -> bool:
         return bool(institution.admin_ready and institution.site_published and institution.contacts)

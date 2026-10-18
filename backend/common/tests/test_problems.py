@@ -4,7 +4,7 @@ from rest_framework.exceptions import NotAuthenticated, Throttled, ValidationErr
 from common.exceptions import VersionConflict, problem_handler
 
 
-def test_health(api):
+def test_health(api, db):  # an unknown host is looked up as a custom domain
     assert api.get("/api/v1/health").json() == {"status": "ok"}
 
 

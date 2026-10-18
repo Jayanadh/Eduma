@@ -83,12 +83,12 @@ describe('OnboardingPage', () => {
     expect(wizard.step()).toBe(3);
   });
 
-  it('opens the new institution on its branding tab', async () => {
+  it('opens the new institution', async () => {
     const wizard = await open();
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     wizard.form.patchValue(VALUES);
     wizard.create();
     http.expectOne('/api/v1/platform/institutions').flush({ id: 'new-id' }, { status: 201, statusText: 'Created' });
-    expect(navigate).toHaveBeenCalledWith('/console/institutions/new-id?tab=branding');
+    expect(navigate).toHaveBeenCalledWith('/console/institutions/new-id');
   });
 });

@@ -2,21 +2,26 @@ from django.contrib.auth import logout
 
 from accounts.permissions import active_membership
 from institutions.models import SIGN_IN_STATES, Institution
-from sites.hosts import resolve
+from sites.hosts import host_name, resolve
 
 
 class SiteMiddleware:
     """Sets request.site_kind ("platform", "institution" or "unknown"), request.institution (any lifecycle state) and
-    request.site_key ("platform", the institution's id, or None), from the host."""
+    request.site_key ("platform", the institution's id, or None), from the host: the base host, <slug>.<base host> or
+    an institution's custom domain."""
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        kind, slug = resolve(request.get_host())
-        institution = Institution.objects.filter(slug=slug).first() if slug else None
-        if kind == "institution" and institution is None:
-            kind = "unknown"
+        host = request.get_host()
+        kind, slug = resolve(host)
+        institution = None
+        if kind == "institution":
+            institution = Institution.objects.filter(slug=slug).first()
+        elif kind == "unknown":
+            institution = Institution.objects.filter(custom_domain=host_name(host)).first()
+        kind = "platform" if kind == "platform" else "institution" if institution else "unknown"
         request.site_kind = kind
         request.institution = institution
         request.site_key = "platform" if kind == "platform" else str(institution.id) if institution else None

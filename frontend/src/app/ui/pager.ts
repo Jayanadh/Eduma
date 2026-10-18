@@ -1,7 +1,10 @@
 import { Component, computed, input, output } from '@angular/core';
 import { Icon } from './icon';
 
-/** Previous / next for a paged list (the API's 50 a page). */
+/** The API's page size (common.pagination.Pages): every list longer than this gets pages. */
+export const PAGE_SIZE = 5;
+
+/** Previous / next for a paged list. */
 @Component({
   selector: 'app-pager',
   imports: [Icon],
@@ -43,7 +46,7 @@ import { Icon } from './icon';
 export class Pager {
   readonly page = input.required<number>();
   readonly count = input.required<number>();
-  readonly pageSize = input(50);
+  readonly pageSize = input(PAGE_SIZE);
   readonly go = output<number>();
   protected readonly pages = computed(() => Math.max(1, Math.ceil(this.count() / this.pageSize())));
 }

@@ -201,6 +201,6 @@ def overview() -> dict:
             "slug": item.slug,
             "missing": [label for code, label in READINESS if not getattr(item, code)],
         }
-        for item in waiting[:20]
+        for item in waiting
     ]
     return {"counts": counts, "needs_action": needs_action}

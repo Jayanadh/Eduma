@@ -9,6 +9,7 @@ function institution(readiness: ReadinessItem[], status: InstitutionDetail['life
   return {
     id: 'i1',
     slug: 'vector',
+    custom_domain: '',
     legal_name: 'Vector Society',
     display_name: 'Vector Engineering College',
     category: 'engineering_college',

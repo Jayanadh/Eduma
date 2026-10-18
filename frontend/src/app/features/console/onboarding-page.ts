@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { apiErrorMessage, fieldErrors } from '../../core/api-error';
 import { CATEGORY_LABELS, InstitutionDetail } from '../../core/api/types';
+import { COUNTRIES, CURRENCIES, TIME_ZONES } from '../../core/locales';
 import { slugify } from '../../core/slug';
 import { Icon } from '../../ui/icon';
 import { PageHeader } from '../../ui/page-header';
@@ -52,6 +53,11 @@ export class OnboardingPage {
 
   protected readonly steps = STEPS;
   protected readonly categories = Object.entries(CATEGORY_LABELS);
+  protected readonly countries = COUNTRIES;
+  protected readonly timeZones = TIME_ZONES;
+  protected readonly currencies = CURRENCIES;
+  /** What follows the typed name: this site's own host, e.g. localhost:4201. */
+  protected readonly baseHost = window.location.host;
   readonly form = this.fb.group({
     identity: this.fb.group({
       legal_name: ['', Validators.required],
@@ -88,11 +94,10 @@ export class OnboardingPage {
   });
   protected readonly isSchool = computed(() => this.category() === 'school');
   protected readonly slug = toSignal(this.form.controls.address.controls.slug.valueChanges, { initialValue: '' });
-  /** The full address the slug gives, e.g. http://aster.localhost:4201, shown as it is typed. */
-  protected readonly previewUrl = computed(() => {
-    const { protocol, hostname, port } = window.location;
-    return `${protocol}//${this.slug() || 'your-address'}.${hostname}${port ? ':' + port : ''}`;
-  });
+  /** The full address the slug gives, e.g. http://aster.localhost:4201, for the review step. */
+  protected readonly previewUrl = computed(
+    () => `${window.location.protocol}//${this.slug() || 'your-address'}.${this.baseHost}`,
+  );
   protected readonly slugCheck = toSignal(
     this.form.controls.address.controls.slug.valueChanges.pipe(
       debounceTime(300),
@@ -184,7 +189,7 @@ export class OnboardingPage {
     this.http
       .post<InstitutionDetail>('/api/v1/platform/institutions', body, { headers: { 'Idempotency-Key': this.key } })
       .subscribe({
-        next: (created) => void this.router.navigateByUrl(`/console/institutions/${created.id}?tab=branding`),
+        next: (created) => void this.router.navigateByUrl(`/console/institutions/${created.id}`),
         error: (err) => {
           this.busy.set(false);
           const errors = fieldErrors(err);

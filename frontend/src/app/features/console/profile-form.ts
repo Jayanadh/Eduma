@@ -3,9 +3,13 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { Api } from '../../core/api/api';
 import { apiErrorMessage, fieldErrors, isProblem } from '../../core/api-error';
 import { CATEGORY_LABELS, InstitutionDetail } from '../../core/api/types';
+import { COUNTRIES, CURRENCIES, TIME_ZONES, withCurrent } from '../../core/locales';
 import { ToastService } from '../../ui/toast';
 
-/** The platform admin's edit of an institution's details. The web address can change only while it is being set up. */
+/**
+ * The platform admin's edit of an institution's details. The web address can change only while it is being set up; its
+ * own domain, any time.
+ */
 @Component({
   selector: 'app-institution-profile-form',
   imports: [ReactiveFormsModule],
@@ -44,6 +48,18 @@ import { ToastService } from '../../ui/toast';
             <span class="field-hint">Fixed once the institution is activated.</span>
           }
         </div>
+        <div class="field full">
+          <label for="p-domain">Own domain (optional)</label>
+          <input id="p-domain" formControlName="custom_domain" placeholder="www.dps.edu.in" autocapitalize="none" spellcheck="false" />
+          @if (errors()['custom_domain']; as message) {
+            <span class="field-error">{{ message }}</span>
+          } @else {
+            <span class="field-hint">
+              When the institution buys a domain, point it at Eduma and enter it here: its links, page and sign-in then
+              use it. Its Eduma address keeps working. Leave empty to use the Eduma address.
+            </span>
+          }
+        </div>
         <div class="field">
           <label for="p-email">Office email</label>
           <input id="p-email" type="email" formControlName="contact_email" />
@@ -72,9 +88,29 @@ import { ToastService } from '../../ui/toast';
           @if (errors()['aishe_code']; as message) { <span class="field-error">{{ message }}</span> }
         </div>
         <div class="field">
+          <label for="p-country">Country</label>
+          <select id="p-country" formControlName="country_code">
+            @for (option of choices(countries, 'country_code'); track option.code) {
+              <option [value]="option.code">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
           <label for="p-timezone">Time zone</label>
-          <input id="p-timezone" formControlName="timezone" />
+          <select id="p-timezone" formControlName="timezone">
+            @for (option of choices(timeZones, 'timezone'); track option.code) {
+              <option [value]="option.code">{{ option.label }}</option>
+            }
+          </select>
           @if (errors()['timezone']; as message) { <span class="field-error">{{ message }}</span> }
+        </div>
+        <div class="field">
+          <label for="p-currency">Currency</label>
+          <select id="p-currency" formControlName="base_currency">
+            @for (option of choices(currencies, 'base_currency'); track option.code) {
+              <option [value]="option.code">{{ option.label }}</option>
+            }
+          </select>
         </div>
       </div>
       <div class="form-actions">
@@ -93,18 +129,24 @@ export class InstitutionProfileForm {
   private readonly toasts = inject(ToastService);
 
   protected readonly categories = Object.entries(CATEGORY_LABELS);
+  protected readonly countries = COUNTRIES;
+  protected readonly timeZones = TIME_ZONES;
+  protected readonly currencies = CURRENCIES;
   protected readonly form = inject(NonNullableFormBuilder).group({
     display_name: ['', Validators.required],
     legal_name: ['', Validators.required],
     category: [''],
     slug: [''],
+    custom_domain: [''],
     contact_email: [''],
     contact_phone: [''],
     address: [''],
     board_affiliation_code: [''],
     udise_code: [''],
     aishe_code: [''],
+    country_code: [''],
     timezone: [''],
+    base_currency: [''],
   });
   protected readonly busy = signal(false);
   protected readonly conflict = signal(false);
@@ -123,6 +165,11 @@ export class InstitutionProfileForm {
       this.conflict.set(false);
       this.errors.set({});
     });
+  }
+
+  /** A list of choices that always holds the institution's saved value. */
+  protected choices(list: typeof COUNTRIES, field: 'country_code' | 'timezone' | 'base_currency') {
+    return withCurrent(list, this.institution()[field]);
   }
 
   protected save(): void {

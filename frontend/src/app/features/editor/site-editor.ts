@@ -1,9 +1,10 @@
-import { Component, computed, DestroyRef, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, computed, DestroyRef, inject, input, output, signal } from '@angular/core';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage, fieldErrors, problemOf } from '../../core/api-error';
 import {
   ImageSlot,
   LifecycleStatus,
+  Page,
   PublicInstitution,
   PublicSite,
   Revision,
@@ -19,20 +20,14 @@ import { UnsavedChanges } from '../../core/unsaved-changes';
 import { SiteView } from '../public/site-view';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { Icon } from '../../ui/icon';
+import { Pager } from '../../ui/pager';
 import { StatusBadge } from '../../ui/status-badge';
 import { ToastService } from '../../ui/toast';
 import { canAdd, SECTION_LABELS, withUrls } from './limits';
 import { SectionForm } from './section-form';
 import { ThemeForm } from './theme-form';
 
-/** Whose page is edited: any institution's from the console, or one's own from its workspace. */
-export type EditorScope = { kind: 'platform'; institutionId: string } | { kind: 'institution' };
 export type EditorInstitution = PublicInstitution & { lifecycle_status: LifecycleStatus };
-
-/** The site API's base under /api/v1/ for a scope. */
-export function siteBase(scope: EditorScope): string {
-  return scope.kind === 'platform' ? `platform/institutions/${scope.institutionId}/site` : 'institution/site';
-}
 
 /**
  * The page editor: look (logo, colours, fonts) and sections on one side, the real public page as a live preview on the
@@ -41,13 +36,12 @@ export function siteBase(scope: EditorScope): string {
  */
 @Component({
   selector: 'app-site-editor',
-  imports: [Icon, SectionForm, SiteView, StatusBadge, ThemeForm],
+  imports: [Icon, Pager, SectionForm, SiteView, StatusBadge, ThemeForm],
   templateUrl: './site-editor.html',
   styleUrl: './site-editor.scss',
   host: { '(window:beforeunload)': 'warnBeforeUnload($event)' },
 })
 export class SiteEditor {
-  readonly scope = input.required<EditorScope>();
   readonly institution = input.required<EditorInstitution>();
   /** After a publish, so the page around the editor can refresh its readiness checklist. */
   readonly published = output();
@@ -56,7 +50,8 @@ export class SiteEditor {
   private readonly toasts = inject(ToastService);
   private readonly unsaved = inject(UnsavedChanges);
 
-  protected readonly base = computed(() => siteBase(this.scope()));
+  /** The site API under /api/v1/: only an institution's own admins edit its page, on its own host. */
+  protected readonly base = 'institution/site';
   protected readonly labels = SECTION_LABELS;
   protected readonly dateTime = dateTime;
   readonly canAdd = canAdd;
@@ -82,7 +77,8 @@ export class SiteEditor {
   protected readonly open = signal<string | null>('hero');
   protected readonly view = signal<'edit' | 'preview'>('edit');
   protected readonly width = signal<'wide' | 'phone'>('wide');
-  protected readonly history = signal<RevisionListItem[] | null>(null);
+  protected readonly history = signal<Page<RevisionListItem> | null>(null);
+  protected readonly historyPage = signal(1);
 
   readonly previewStyle = computed(() => themeVariables(deriveTheme(this.theme())));
   protected readonly previewSite = computed<PublicSite>(() => {
@@ -98,17 +94,14 @@ export class SiteEditor {
   });
 
   constructor() {
-    effect(() => {
-      this.base();
-      untracked(() => this.load());
-    });
+    this.load();
     inject(DestroyRef).onDestroy(() => this.unsaved.dirty.set(false));
   }
 
   /** Loads the draft; with keepEdits, unsaved local edits stay and only the draft's identity and version are taken. */
   protected load(keepEdits = false): void {
     this.loadError.set('');
-    this.api.get<Revision>(`${this.base()}/draft`).subscribe({
+    this.api.get<Revision>(`${this.base}/draft`).subscribe({
       next: (draft) => (keepEdits && this.dirty() ? this.draft.set(draft) : this.accept(draft)),
       error: (err) => this.loadError.set(apiErrorMessage(err)),
     });
@@ -180,7 +173,7 @@ export class SiteEditor {
     this.problems.set([]);
     const sentAt = this.edits();
     this.api
-      .put<Revision>(`${this.base()}/draft`, {
+      .put<Revision>(`${this.base}/draft`, {
         version: version ?? draft.version,
         ...this.theme(),
         logo: this.logo()?.id ?? null,
@@ -227,7 +220,7 @@ export class SiteEditor {
 
   /** After a conflict: keep these edits, saving them over the newer draft. */
   protected keepMine(): void {
-    this.api.get<Revision>(`${this.base()}/draft`).subscribe({
+    this.api.get<Revision>(`${this.base}/draft`).subscribe({
       next: (latest) => this.save(undefined, latest.version),
       error: (err) => this.toasts.show(apiErrorMessage(err), 'danger'),
     });
@@ -247,7 +240,7 @@ export class SiteEditor {
       return;
     }
     this.saving.set(true);
-    this.api.post<Revision>(`${this.base()}/draft/publish`, { version: draft.version }).subscribe({
+    this.api.post<Revision>(`${this.base}/draft/publish`, { version: draft.version }).subscribe({
       next: () => {
         this.saving.set(false);
         const live = this.institution().lifecycle_status === 'active';
@@ -272,10 +265,17 @@ export class SiteEditor {
   protected toggleHistory(): void {
     if (this.history()) {
       this.history.set(null);
-      return;
+    } else {
+      this.showHistory(1);
     }
-    this.api.get<RevisionListItem[]>(`${this.base()}/revisions`).subscribe({
-      next: (revisions) => this.history.set(revisions),
+  }
+
+  protected showHistory(page: number): void {
+    this.api.get<Page<RevisionListItem>>(`${this.base}/revisions`, { page }).subscribe({
+      next: (revisions) => {
+        this.historyPage.set(page);
+        this.history.set(revisions);
+      },
       error: (err) => this.toasts.show(apiErrorMessage(err), 'danger'),
     });
   }
@@ -290,7 +290,7 @@ export class SiteEditor {
       return;
     }
     this.api
-      .post<Revision>(`${this.base()}/revisions/${revision.id}/restore`, { version: this.draft()?.version ?? null })
+      .post<Revision>(`${this.base}/revisions/${revision.id}/restore`, { version: this.draft()?.version ?? null })
       .subscribe({
         next: (draft) => {
           this.accept(draft);

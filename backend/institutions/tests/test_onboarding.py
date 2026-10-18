@@ -154,6 +154,22 @@ def test_slug_locked_after_setup(world, platform):
     assert renamed.json()["url"] == "http://aster-renamed.eduma.test"
 
 
+def test_custom_domain_is_cleaned_checked_and_shown_as_the_url(world, platform):
+    def patch(domain):
+        detail = platform.get(f"{URL}/{world.a.id}").json()
+        return platform.patch(f"{URL}/{world.a.id}", {"version": detail["version"], "custom_domain": domain})
+
+    saved = patch(" https://WWW.Aster.edu.in/admissions ").json()
+    assert saved["custom_domain"] == "www.aster.edu.in"
+    assert saved["url"] == "http://www.aster.edu.in"
+    for bad in ("not a domain", "localhost", "birch.eduma.test", "eduma.test"):
+        assert patch(bad).status_code == 422, bad
+    other = platform.get(f"{URL}/{world.b.id}").json()
+    clash = platform.patch(f"{URL}/{world.b.id}", {"version": other["version"], "custom_domain": "www.aster.edu.in"})
+    assert clash.json()["errors"][0]["field"] == "custom_domain"
+    assert patch("").json()["url"] == "http://aster.eduma.test"
+
+
 def test_reset_admin_password_forces_change(world, platform):
     response = platform.post(f"{URL}/{world.a.id}/admin-password", {"password": "Reset-pass-2026"})
     assert response.status_code == 204

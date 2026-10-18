@@ -81,7 +81,7 @@ site you are on (see `frontend/proxy.conf.json`).
 | http://localhost:4201 | The Eduma landing page. It has no sign-in link. |
 | http://localhost:4201/login | Platform sign-in. It is not linked from anywhere and only admits Eduma platform admins. |
 | http://aster.localhost:4201 | Aster School's public page, with its own **Sign in** for its members |
-| http://meridian.localhost:4201 | Meridian College |
+| http://www.meridiancollege.localhost:4201 | Meridian College, on a domain of its own (its http://meridian.localhost:4201 address works too) |
 | http://summit.localhost:4201 | Summit University |
 | http://vector.localhost:4201 | Vector Engineering College: still being set up, so its page says "Opening soon" |
 
@@ -94,7 +94,7 @@ Every demo login uses the password **`Demo-pass-2026`**.
 
 | Login ID | Sign in at | Things to try |
 |---|---|---|
-| `eduma.admin` | http://localhost:4201/login | Overview; Institutions (search as you type); **Add institution**, which gives the new institution its address and its admin's first password; an institution's page, where you can edit its branding and public page, publish, activate, suspend, archive and reset its admin's password; Audit log. |
+| `eduma.admin` | http://localhost:4201/login | Overview; Institutions (search as you type); **Add institution**, which gives the new institution its address and its admin's first password; an institution's page, where you can edit its details and own domain, activate, suspend, archive and reset its admin's password; Audit log. Branding is left to each institution's own admin. |
 | `aster.admin` | http://aster.localhost:4201/login | Home checklist; **Public site** (the same editor, for their own institution); Profile. |
 | `meridian.admin`, `summit.admin` | their own address | The same for their institutions. Signing in at another institution's address is refused. |
 | `vector.admin` | http://vector.localhost:4201/login | A first sign-in: the app asks for a new password before anything else. |
@@ -133,11 +133,11 @@ manager.
 
 | Variable | Development default | Purpose |
 |---|---|---|
-| `EDUMA_BASE_URL` | `http://localhost:4201` | The Eduma main site; institutions are served at `<slug>.<its host>` |
+| `EDUMA_BASE_URL` | `http://localhost:4201` | The Eduma main site; institutions are served at `<slug>.<its host>`, and at their own domain once one is set |
 | `EDUMA_CONTACT_EMAIL` | `hello@eduma.example` | Where the landing page's "Talk to us" sends email |
 | `DJANGO_SECRET_KEY` | a development key | Must be set when `DJANGO_DEBUG=0` |
 | `DJANGO_DEBUG` | `1` | `0` on a server |
-| `DJANGO_ALLOWED_HOSTS` | `localhost,.localhost,127.0.0.1` | On a server: `.eduma.app` |
+| `DJANGO_ALLOWED_HOSTS` | `localhost,.localhost,127.0.0.1` | On a server: `*`, so institutions' own domains reach Eduma; it serves only its base host, `<slug>.<base host>` and domains recorded on an institution |
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | `http://localhost:4201,http://*.localhost:4201` | On a server: `https://eduma.app,https://*.eduma.app` |
 | `DJANGO_PROXY_COUNT` | `0` | Number of reverse proxies in front of Django |
 | `DJANGO_MEDIA_ROOT` | `backend/media` | Where uploaded brand images are kept |

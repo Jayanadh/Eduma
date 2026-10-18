@@ -54,7 +54,7 @@
       <section class="card history" aria-label="Earlier versions">
         <h3 class="card-title">Versions</h3>
         <ul class="list">
-          @for (revision of revisions; track revision.id) {
+          @for (revision of revisions.results; track revision.id) {
             <li class="list-row">
               <span class="list-main">
                 <span class="list-title">Version {{ revision.number }}</span>
@@ -73,6 +73,7 @@
             </li>
           }
         </ul>
+        <app-pager [page]="historyPage()" [count]="revisions.count" (go)="showHistory($event)" />
       </section>
     }
 
@@ -80,7 +81,7 @@
       <div class="edit-pane">
         <section class="card stack">
           <h3 class="card-title">Look</h3>
-          <app-theme-form [theme]="theme()" [logo]="logo()" [base]="base()" (themeChange)="setTheme($event.name, $event.value)" (logoChange)="setLogo($event)" />
+          <app-theme-form [theme]="theme()" [logo]="logo()" [base]="base" (themeChange)="setTheme($event.name, $event.value)" (logoChange)="setLogo($event)" />
         </section>
         <section class="card">
           <h3 class="card-title">Sections</h3>
@@ -110,7 +111,7 @@
                   }
                 </div>
                 @if (open() === section.id) {
-                  <app-section-form [section]="section" [base]="base()" (changed)="changed()" />
+                  <app-section-form [section]="section" [base]="base" (changed)="changed()" />
                 }
               </li>
             }

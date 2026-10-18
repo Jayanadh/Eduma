@@ -112,27 +112,23 @@ def test_restore_copies_old_revision_into_draft(world, admin_a):
     assert restored["id"] == second["id"]
     assert restored["theme"]["primary_color"] == "#4B5AE4"
     history = admin_a.get("/api/v1/institution/site/revisions").json()
-    assert [item["number"] for item in history] == [2, 1]
+    assert history["count"] == 2
+    assert [item["number"] for item in history["results"]] == [2, 1]
     assert AuditEvent.objects.filter(action="site.restored").exists()
 
 
-def test_platform_admin_edits_any_institution_via_platform_path(world, client_for):
+def test_branding_is_the_institution_admins_not_the_platforms(world, client_for):
     client = client_for(None, world.platform_admin)
-    draft = client.get(platform_draft(world.b)).json()
-    assert draft["content"]["sections"][0]["title"] == "Welcome to Birch College"
-    assert client.put(platform_draft(world.b), payload(draft, body_font="lora")).status_code == 200
-    missing = f"/api/v1/platform/institutions/{uuid.uuid4()}/site/draft"
-    assert client.get(missing).status_code == 404
+    assert client.get(platform_draft(world.b)).status_code == 404
+    assert client.get(DRAFT).status_code == 404
 
 
 def test_wrong_host_is_404(world, client_for):
-    assert client_for(world.a.slug, world.platform_admin).get(platform_draft(world.a)).status_code == 404
     assert client_for(None, world.a_admin).get(DRAFT).status_code == 404
 
 
 def test_member_of_a_cannot_reach_b_draft_on_b_host(world, client_for):
     assert client_for(world.b.slug, world.a_admin).get(DRAFT).status_code == 403
-    assert client_for(world.a.slug, world.a_admin).get(platform_draft(world.a)).status_code == 404
 
 
 def test_revision_of_another_institution_is_not_found(world, client_for):

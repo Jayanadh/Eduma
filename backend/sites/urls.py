@@ -1,5 +1,5 @@
-"""The site-editing routes, included twice in config.urls: for platform admins under
-platform/institutions/<id>/site/ and for an institution's members under institution/site/ on its own host."""
+"""The site-editing routes, under institution/site/ on an institution's own host: its own admins brand and publish its
+page; the platform admin only onboards it."""
 
 from django.urls import path
 

@@ -78,14 +78,21 @@
   font-weight: 700;
 }
 
-.address-preview {
+// The address as one line: [ dps ].localhost:4201
+.address-input {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
-  border: 2px dashed var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
+  align-items: center;
+  gap: 6px;
+
+  input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.address-suffix {
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .review {

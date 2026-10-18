@@ -13,18 +13,17 @@ import { PageHeader } from '../../ui/page-header';
 import { StatusBadge } from '../../ui/status-badge';
 import { ToastService } from '../../ui/toast';
 import { UnsavedChanges } from '../../core/unsaved-changes';
-import { SiteEditor } from '../editor/site-editor';
 import { AuditList } from './audit-list';
 import { allowedMoves, lifecycleQuestion, Move } from './lifecycle';
 import { InstitutionProfileForm } from './profile-form';
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
-  { key: 'branding', label: 'Branding and public page' },
   { key: 'activity', label: 'Activity' },
 ];
 
-/** One institution, for the platform admin: its state and readiness, its details, its branding and its history. */
+/** One institution, for the platform admin: its state and readiness, its details and its history. Its branding is its
+ * own admin's to do. */
 @Component({
   selector: 'app-institution-page',
   imports: [
@@ -34,7 +33,6 @@ const TABS = [
     InstitutionProfileForm,
     LoadError,
     PageHeader,
-    SiteEditor,
     StatusBadge,
   ],
   templateUrl: './institution-page.html',

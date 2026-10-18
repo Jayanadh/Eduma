@@ -1,13 +1,14 @@
-from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import ListAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.pagination import Pages
 from institutions.models import Institution
 from sites import services
-from sites.permissions import PlatformAdmin, member_with
+from sites.permissions import member_with
 from sites.serializers import (
     DraftInputSerializer,
     RestoreSerializer,
@@ -19,17 +20,11 @@ from sites.serializers import (
 
 
 class InstitutionScopedView(APIView):
-    """Served twice: under /api/v1/platform/institutions/<id>/ for platform admins (any institution), and under
-    /api/v1/institution/ on an institution's own host for its members with the brand permission."""
+    """Under /api/v1/institution/site/ on an institution's own host, for its members with the brand permission."""
 
-    def get_permissions(self):
-        if "institution_id" in self.kwargs:
-            return [PlatformAdmin()]
-        return [member_with("institution_brand.update")()]
+    permission_classes = [member_with("institution_brand.update")]
 
     def institution(self) -> Institution:
-        if "institution_id" in self.kwargs:
-            return get_object_or_404(Institution, pk=self.kwargs["institution_id"])
         return self.request.institution
 
 
@@ -57,10 +52,12 @@ class PublishView(InstitutionScopedView):
         )
 
 
-class RevisionsView(InstitutionScopedView):
-    def get(self, request, **kwargs):
-        revisions = self.institution().site_revisions.select_related("published_by")
-        return Response(RevisionListSerializer(revisions, many=True).data)
+class RevisionsView(InstitutionScopedView, ListAPIView):
+    serializer_class = RevisionListSerializer
+    pagination_class = Pages
+
+    def get_queryset(self):
+        return self.institution().site_revisions.select_related("published_by")
 
 
 class RestoreView(InstitutionScopedView):

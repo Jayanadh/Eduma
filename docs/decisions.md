@@ -16,11 +16,13 @@ spec `docs/superpowers/specs/2026-10-17-foundation-onboarding-branding-design.md
 | S1-04 | Each institution has a subdomain: `<slug>.eduma.app` (locally `<slug>.localhost:4201`). Its page links to its own `/login`, for its members only. | Route prefix `/i/:institutionId` (04) |
 | S1-05 | The API takes the institution from the request host. Platform routes stay under `/api/v1/platform/`. | 09 §1 institutional base |
 | S1-06 | First sign-in uses a first password set by whoever creates the login, with a forced change before anything else. | 02 §7 and 03 WF-ONB step 6 (invitations) |
-| S1-07 | The System Admin may edit any institution's branding and public page at any time, audited; the Institution Admin edits its own. | 02 `institution_brand.update` ("System Admin during setup") |
+| S1-07 | Branding (logo, colours, fonts, public page) is the Institution Admin's alone; the System Admin only onboards the institution and activates it once its checklist is done. *Changed by the user on 18 Oct 2026; was: the System Admin could edit any institution's branding.* | 02 `institution_brand.update` ("System Admin during setup") |
 | S1-08 | Creating an institution is one atomic, idempotent request (institution, admin login, membership, starter page). | 03 WF-ONB `draft`/`provisioning` steps |
 | S1-09 | Lifecycle states now: `setup`, `active`, `suspended`, `archived`. `restricted` comes with module entitlements; `deletion_pending`/`deleted` with offboarding. | 03 WF-ONB (in part) |
 | S1-10 | Public pages are a fixed set of section types that can be edited, hidden and reordered (not a free-form builder). The Eduma page uses the same renderer with its content kept in code. | — |
-| S1-11 | Lists use page-number pagination, as in Student Connect. | 09 §1 cursors |
+| S1-11 | Lists use page-number pagination, as in Student Connect, 5 rows a page (the user's rule: any list over 5 records gets pages). | 09 §1 cursors |
+| S1-12 | An institution may have its own domain (e.g. `www.dps.edu.in`) as well as `<slug>.<base host>`, set by the System Admin in its details at any time. Its links use the own domain; the Eduma address keeps working. On a server `DJANGO_ALLOWED_HOSTS=*`, since Eduma serves only its base host, its subdomains and recorded domains. | — |
+| S1-13 | Country, time zone and currency are chosen from lists taken from the browser's Intl data (ISO countries, current ISO 4217 currencies, IANA zones). | — |
 
 ## Pack defaults accepted for local development
 

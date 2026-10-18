@@ -52,11 +52,11 @@ def test_upload_strips_exif(admin_a):
         assert dict(image.getexif()) == {}
 
 
-def test_platform_admin_uploads_for_any_institution(world, client_for):
+def test_platform_admin_cannot_upload_brand_images(world, client_for):
     client = client_for(None, world.platform_admin)
     response = upload(client, image_file(), f"/api/v1/platform/institutions/{world.b.id}/site/assets")
-    assert response.status_code == 201
-    assert BrandAsset.objects.get(pk=response.json()["id"]).institution == world.b
+    assert response.status_code == 404
+    assert not BrandAsset.objects.exists()
 
 
 @pytest.mark.parametrize(

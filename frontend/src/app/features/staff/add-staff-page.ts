@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,6 +7,7 @@ import { apiErrorMessage, fieldErrors } from '../../core/api-error';
 import { Campus, Department, Page, RoleItem, StaffDetail } from '../../core/api/types';
 import { load } from '../../core/load';
 import { slugify } from '../../core/slug';
+import { UnsavedChanges } from '../../core/unsaved-changes';
 import { PageHeader } from '../../ui/page-header';
 import { Reveal } from '../../ui/reveal';
 import { ToastService } from '../../ui/toast';
@@ -77,6 +78,7 @@ export class AddStaffPage {
   private readonly api = inject(Api);
   private readonly router = inject(Router);
   private readonly toasts = inject(ToastService);
+  private readonly unsaved = inject(UnsavedChanges);
 
   readonly form = inject(NonNullableFormBuilder).group({
     full_name: ['', Validators.required],
@@ -97,6 +99,9 @@ export class AddStaffPage {
   protected readonly error = signal('');
 
   constructor() {
+    // Leaving with something typed asks first (leaveGuard on the route).
+    this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.unsaved.dirty.set(this.form.dirty));
+    inject(DestroyRef).onDestroy(() => this.unsaved.dirty.set(false));
     // The login ID follows the name, "Ravi Kumar" → ravi.kumar, until it is typed by hand.
     this.form.controls.full_name.valueChanges.pipe(takeUntilDestroyed()).subscribe((name) => {
       if (!this.form.controls.username.dirty) {
@@ -114,6 +119,7 @@ export class AddStaffPage {
     this.error.set('');
     this.api.post<StaffDetail>('institution/staff', { ...this.form.getRawValue(), ...this.scope() }).subscribe({
       next: (person) => {
+        this.unsaved.dirty.set(false);
         this.toasts.show(`${person.full_name} added. Hand over their first password in person.`);
         void this.router.navigate(['/app/staff', person.id], { replaceUrl: true });
       },

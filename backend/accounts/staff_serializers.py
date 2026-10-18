@@ -2,7 +2,7 @@ from django.db.models import Prefetch
 from rest_framework import serializers
 
 from accounts.models import Membership, RoleAssignment
-from accounts.permissions import can_manage_person, in_effect, today_for
+from accounts.permissions import can_manage_person, in_effect, perms_anywhere, today_for
 
 
 class AssignmentInput(serializers.Serializer):
@@ -95,4 +95,8 @@ def staff_detail(membership: Membership, viewer) -> dict:
         "version": membership.version,
         "assignments": [assignment_item(row, live_ids, today) for row in rows],
         "can_manage": can_manage_person(viewer, membership),
+        # The form to give a role: each role and scope is checked against the grant ceiling when it is sent.
+        "can_give": membership.status == Membership.Status.ACTIVE
+        and membership.user_id != viewer.id
+        and "membership.assign" in perms_anywhere(viewer, membership.institution),
     }

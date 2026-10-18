@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { StaffDetail } from '../../core/api/types';
+import { UnsavedChanges } from '../../core/unsaved-changes';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { ToastService } from '../../ui/toast';
 import { AddStaffPage } from './add-staff-page';
@@ -38,6 +39,7 @@ function detail(overrides: Partial<StaffDetail> = {}): StaffDetail {
       },
     ],
     can_manage: true,
+    can_give: true,
     ...overrides,
   };
 }
@@ -148,5 +150,23 @@ describe('Staff pages', () => {
     expect(groups.now.map((row) => row.id)).toEqual(['a1']);
     expect(groups.later).toEqual([]);
     expect(groups.past.map((row) => row.id)).toEqual(['a2']);
+  });
+
+  it('offers to give a role whenever the server says the viewer may', async () => {
+    const fixture = await openDetail(detail({ can_manage: false, can_give: true }));
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('form.give')).not.toBeNull();
+    expect(root.textContent).not.toContain('Reset password');
+  });
+
+  it('asks before leaving a half-filled Add staff form', async () => {
+    const fixture = TestBed.createComponent(AddStaffPage);
+    await fixture.whenStable();
+    const page = fixture.componentInstance as unknown as { form: AddStaffPage['form'] };
+    // As typing does it: the field is marked dirty, then its value changes.
+    page.form.controls.full_name.markAsDirty();
+    page.form.controls.full_name.setValue('Ravi Kumar');
+    await fixture.whenStable();
+    expect(TestBed.inject(UnsavedChanges).dirty()).toBe(true);
   });
 });

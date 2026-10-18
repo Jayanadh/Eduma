@@ -125,6 +125,12 @@
       @case (3) {
         <p class="muted">What this institution's plan includes. The common ones for its category are ticked; none of these
           is built yet, so each will say it arrives in a later release.</p>
+        @if (catalogueFailed()) {
+          <p class="notice notice-warning" role="status">
+            The module list could not be loaded. The usual modules for this category will be set; you can change them
+            later on the institution's Modules tab.
+          </p>
+        }
         <app-module-picker [catalogue]="catalogue()" [selected]="modules()" (selectedChange)="chooseModules($event)" />
         @if (serverErrors()['modules']; as message) { <p class="field-error">{{ message }}</p> }
       }

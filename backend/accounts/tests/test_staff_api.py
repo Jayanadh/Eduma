@@ -157,3 +157,15 @@ def test_staff_list_queries_do_not_grow_with_staff(world, org, admin):
     for _ in range(20):
         factories.member(world.a, role="teacher", scope=org[2])
     assert queries() == few
+
+
+def test_detail_says_whether_the_viewer_may_give_roles(world, org, client_for):
+    """Giving a role follows the grant ceiling per role and scope, not rank over the person (final review #9)."""
+    city, sci = org[1], org[2]
+    boss = client_for(world.a.slug, factories.member(world.a, role="campus_admin", scope=city))
+    split = factories.member(world.a, role="teacher", scope=city)
+    factories.assign(Membership.objects.get(user=split), "teacher", sci)
+    detail = boss.get(f"{STAFF}/{staff_id(split, world.a)}").json()
+    assert (detail["can_manage"], detail["can_give"]) == (False, True)
+    reader = client_for(world.a.slug, factories.member(world.a, role="principal"))
+    assert reader.get(f"{STAFF}/{staff_id(split, world.a)}").json()["can_give"] is False

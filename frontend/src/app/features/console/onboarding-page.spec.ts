@@ -116,4 +116,12 @@ describe('OnboardingPage', () => {
     wizard.create();
     expect(http.expectOne('/api/v1/platform/institutions').request.body.modules).toEqual(['students']);
   });
+
+  it('leaves the modules to the server when the list could not be loaded', async () => {
+    const wizard = await open();
+    http.expectOne('/api/v1/platform/modules').flush(null, { status: 503, statusText: 'Unavailable' });
+    wizard.form.patchValue(VALUES);
+    wizard.create();
+    expect('modules' in http.expectOne('/api/v1/platform/institutions').request.body).toBe(false);
+  });
 });

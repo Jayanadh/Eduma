@@ -120,7 +120,7 @@ export function groupAssignments(rows: readonly Assignment[]) {
               <p class="muted">No roles yet.</p>
             }
 
-            @if (person.can_manage && person.status === 'active') {
+            @if (person.can_give) {
               <!-- A plain form (not a reactive one), so the native submit event is the one to handle. -->
               <form class="stack give" (submit)="$event.preventDefault(); give(person)" novalidate>
                 <h3 class="card-title">Give a role</h3>

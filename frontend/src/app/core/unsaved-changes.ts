@@ -15,7 +15,7 @@ export class UnsavedChanges {
     }
     const leave = await this.confirm.ask({
       title: 'Leave without saving?',
-      message: 'Your changes to the page have not been saved as a draft.',
+      message: 'What you changed here has not been saved yet.',
       confirmLabel: 'Leave and lose them',
       cancelLabel: 'Stay',
       tone: 'danger',

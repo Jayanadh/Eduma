@@ -71,6 +71,7 @@ export const routes: Routes = [
       {
         path: 'site',
         title: 'Public site',
+        canActivate: [requires('institution_brand.update')],
         canDeactivate: [leaveGuard],
         loadComponent: () => import('./features/app/site-page').then((m) => m.SitePage),
       },
@@ -84,6 +85,7 @@ export const routes: Routes = [
         path: 'staff/new',
         title: 'Add staff',
         canActivate: [requires('membership.assign')],
+        canDeactivate: [leaveGuard],
         loadComponent: () => import('./features/staff/add-staff-page').then((m) => m.AddStaffPage),
       },
       {

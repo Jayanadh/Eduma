@@ -75,6 +75,8 @@ export type StaffDetail = StaffItem & {
   version: number;
   assignments: Assignment[];
   can_manage: boolean;
+  /** The viewer may give this person roles (each role and place is checked when sent). */
+  can_give: boolean;
 };
 
 export type ModuleInfo = {

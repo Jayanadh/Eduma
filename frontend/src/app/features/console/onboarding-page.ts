@@ -91,6 +91,8 @@ export class OnboardingPage {
   readonly step = signal(0);
   /** Every module a plan can include, and the ones chosen: the category's defaults until the admin changes them. */
   protected readonly catalogue = signal<ModuleInfo[]>([]);
+  /** The list could not be loaded: the server then gives the category's usual modules. */
+  protected readonly catalogueFailed = signal(false);
   readonly modules = signal<string[]>([]);
   private modulesTouched = false;
   protected readonly busy = signal(false);
@@ -123,9 +125,12 @@ export class OnboardingPage {
 
   constructor() {
     const { identity, address, admin } = this.form.controls;
-    this.http.get<ModuleInfo[]>('/api/v1/platform/modules').subscribe((catalogue) => {
-      this.catalogue.set(catalogue);
-      this.resetModules();
+    this.http.get<ModuleInfo[]>('/api/v1/platform/modules').subscribe({
+      next: (catalogue) => {
+        this.catalogue.set(catalogue);
+        this.resetModules();
+      },
+      error: () => this.catalogueFailed.set(true),
     });
     identity.controls.category.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.resetModules());
     // Suggestions follow the name until the admin types their own.
@@ -211,7 +216,9 @@ export class OnboardingPage {
       return;
     }
     const { identity, contacts, address, admin } = this.form.getRawValue();
-    const body = { ...identity, ...contacts, slug: address.slug.trim().toLowerCase(), modules: this.modules(), admin };
+    const slug = address.slug.trim().toLowerCase();
+    const modules = this.catalogue().length ? { modules: this.modules() } : {};
+    const body = { ...identity, ...contacts, slug, ...modules, admin };
     this.busy.set(true);
     this.error.set('');
     this.serverErrors.set({});

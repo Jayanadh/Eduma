@@ -1,6 +1,7 @@
 import re
 
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -83,6 +84,8 @@ class Institution(VersionedModel):
     lifecycle_status = models.CharField(max_length=20, choices=LifecycleStatus.choices, default=LifecycleStatus.SETUP)
     status_reason = models.CharField(max_length=500, blank=True)
     activated_at = models.DateTimeField(null=True, blank=True)
+    # Module keys from institutions.modules that the institution's plan includes, set by the platform.
+    modules = ArrayField(models.CharField(max_length=40), default=list, blank=True)
     # The onboarding request's idempotency key and a hash of its details, so a retried create returns this institution.
     creation_key = models.UUIDField(unique=True, null=True, blank=True)
     creation_hash = models.CharField(max_length=64, blank=True)

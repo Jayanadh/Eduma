@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 from common.pagination import Pages
 from institutions import services
 from institutions.models import Institution, validate_slug
+from institutions.modules import MODULES
 from institutions.serializers import (
     InstitutionCreateSerializer,
     InstitutionListSerializer,
@@ -138,3 +139,22 @@ class OwnInstitutionView(APIView):
 @permission_classes([PlatformAdmin])
 def platform_overview(request):
     return Response(services.overview())
+
+
+@api_view(["GET"])
+@permission_classes([PlatformAdmin])
+def module_catalogue(request):
+    """Every module a plan can include, for the onboarding wizard and an institution's Modules tab."""
+    return Response(
+        [
+            {
+                "key": module.key,
+                "label": module.label,
+                "group": module.group,
+                "depends_on": list(module.depends_on),
+                "default_for": sorted(module.default_for),
+                "available": module.available,
+            }
+            for module in MODULES.values()
+        ]
+    )

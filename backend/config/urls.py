@@ -5,7 +5,7 @@ from django.urls import include, path
 from accounts.views import ChangePasswordView, LoginView, LogoutView, SessionView
 from common.views import AuditEventList, health
 from institutions.urls import platform_patterns
-from institutions.views import OwnInstitutionView, platform_overview
+from institutions.views import OwnInstitutionView, module_catalogue, platform_overview
 from sites.public import PublicSiteView, public_asset
 from sites.urls import site_patterns
 
@@ -21,6 +21,7 @@ urlpatterns = [
     path("api/v1/institution/", include("organization.urls")),
     path("api/v1/institution", OwnInstitutionView.as_view(), name="own-institution"),
     path("api/v1/platform/overview", platform_overview, name="platform-overview"),
+    path("api/v1/platform/modules", module_catalogue, name="platform-modules"),
     path("api/v1/platform/audit", AuditEventList.as_view(), name="platform-audit"),
     path("api/v1/platform/institutions/<uuid:institution_id>/audit", AuditEventList.as_view()),
     path("api/v1/platform/", include(platform_patterns)),

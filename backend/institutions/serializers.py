@@ -8,6 +8,7 @@ from rest_framework import serializers
 
 from accounts.models import User, validate_username
 from institutions.models import Institution, LifecycleStatus, validate_slug
+from institutions.modules import check_modules, default_modules
 from institutions.services import first_admin, readiness
 from sites.hosts import institution_url, resolve
 
@@ -26,6 +27,7 @@ EDITABLE_FIELDS = [
     "board_affiliation_code",
     "udise_code",
     "aishe_code",
+    "modules",
 ]
 
 
@@ -69,6 +71,9 @@ class InstitutionFieldsMixin:
             raise serializers.ValidationError("Choose a time zone such as Asia/Kolkata.")
         return value
 
+    def validate_modules(self, value: list[str]) -> list[str]:
+        return django_errors(check_modules, value)
+
     def validate_country_code(self, value: str) -> str:
         return value.upper()
 
@@ -105,6 +110,10 @@ class InstitutionCreateSerializer(InstitutionFieldsMixin, serializers.ModelSeria
         model = Institution
         fields = [*EDITABLE_FIELDS, "admin"]
         extra_kwargs = {"slug": {"validators": []}}  # checked in validate_slug, with a friendlier message
+
+    def validate(self, attrs):
+        attrs.setdefault("modules", default_modules(attrs["category"]))
+        return attrs
 
 
 def admin_summary(institution: Institution) -> dict | None:

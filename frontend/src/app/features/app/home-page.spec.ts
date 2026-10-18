@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { InstitutionDetail, ReadinessItem } from '../../core/api/types';
+import { makeMe, signInAs } from '../../core/test-data';
 import { HomePage } from './home-page';
 
 function institution(readiness: ReadinessItem[], status: InstitutionDetail['lifecycle_status']): InstitutionDetail {
@@ -38,10 +39,11 @@ const SITE = { code: 'site_published', label: 'Public page is published', done: 
 const CONTACTS = { code: 'contacts', label: 'Contact email and phone are filled in', done: true };
 
 describe('HomePage', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     });
+    await signInAs(makeMe());
   });
 
   async function render(detail: InstitutionDetail) {
@@ -67,5 +69,20 @@ describe('HomePage', () => {
   it('shows the public address', async () => {
     const page = await render(institution([ADMIN, SITE, CONTACTS], 'active'));
     expect(page.textContent).toContain('http://vector.localhost:4201');
+  });
+
+  it('lists the modules in the plan honestly', async () => {
+    const page = await render({ ...institution([ADMIN, SITE, CONTACTS], 'active'), modules: ['fees', 'students'] });
+    expect(page.textContent).toContain('Students and guardians');
+    expect(page.textContent).toContain('Fees');
+    expect(page.textContent).toContain('Arrives in a later release');
+  });
+
+  it('tells a member with no role whom to ask, without the setup checklist', async () => {
+    const noRole = { roles: [], permissions: ['institution.read'], restricted: false, status_reason: '' };
+    await signInAs(makeMe({ membership: noRole }));
+    const page = await render(institution([ADMIN, SITE, CONTACTS], 'active'));
+    expect(page.textContent).toContain('You have no role here yet. Ask your Institution Admin.');
+    expect(page.textContent).not.toContain('Public page is published');
   });
 });

@@ -36,3 +36,28 @@ export function defaultsFor(category: Category, catalogue: readonly ModuleInfo[]
     .map((module) => module.key)
     .sort();
 }
+
+/** Module names for the institution's own pages, which cannot read the platform's catalogue (backend
+ * institutions/modules.py; keep the two in step). */
+export const MODULE_LABELS: Readonly<Record<string, string>> = {
+  admissions: 'Admissions and enrollment',
+  students: 'Students and guardians',
+  academics: 'Academic structure and timetable',
+  attendance: 'Attendance',
+  exams: 'Assessment and results',
+  report_cards: 'Grades, sections, report cards and promotion',
+  course_registration: 'Course registration, credits and degree audit',
+  outcomes: 'Lab batches, projects and outcome evidence',
+  affiliations: 'Affiliated colleges and central examinations',
+  fees: 'Fees',
+  communication: 'Messages, calls and online classes',
+  reports: 'Reports',
+  library: 'Library',
+  transport: 'Transport',
+  hostel: 'Hostel and mess',
+  hr_payroll: 'HR and payroll',
+  assets: 'Assets, purchasing and labs',
+  services: 'Student services and cases',
+  placements: 'Placements, internships and alumni',
+  quality: 'Quality, accreditation and research',
+};

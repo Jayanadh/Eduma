@@ -4,6 +4,7 @@ import itertools
 
 from accounts.models import Membership, Role, User
 from institutions.models import Category, Institution, LifecycleStatus
+from organization.models import Campus, Department
 
 PASSWORD = "Test-pass-2026"
 _n = itertools.count(1)
@@ -41,3 +42,15 @@ def member(institution_: Institution, role: str = Role.INSTITUTION_ADMIN, **kw) 
     person = user(**kw)
     Membership.objects.create(institution=institution_, user=person, role=role)
     return person
+
+
+def campus(institution_: Institution, **kw) -> Campus:
+    n = next(_n)
+    return Campus.objects.create(**{"institution": institution_, "code": f"C{n}", "name": f"Campus {n}", **kw})
+
+
+def department(institution_: Institution, **kw) -> Department:
+    n = next(_n)
+    if kw.get("parent") is not None:
+        kw.setdefault("campus", kw["parent"].campus)
+    return Department.objects.create(**{"institution": institution_, "code": f"D{n}", "name": f"Department {n}", **kw})

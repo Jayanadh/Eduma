@@ -10,6 +10,7 @@ from accounts.models import Membership, Role, User
 from common import audit
 from common.exceptions import IdempotencyMismatch, InvalidTransition
 from institutions.models import Institution, LifecycleStatus
+from organization.models import Campus
 from sites.models import SiteRevision
 from sites.services import get_or_create_draft
 
@@ -87,6 +88,7 @@ def create_institution(actor, data: dict, key, digest: str) -> tuple[Institution
             user.set_password(admin["password"])
             user.save()
             Membership.objects.create(institution=institution, user=user, role=Role.INSTITUTION_ADMIN, created_by=actor)
+            Campus.objects.create(institution=institution, code="MAIN", name="Main campus")
             get_or_create_draft(institution, actor)
             audit.log(actor, "institution.created", institution, f"Created {institution.display_name}")
     except IntegrityError:

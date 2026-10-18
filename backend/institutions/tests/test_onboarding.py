@@ -55,6 +55,7 @@ def test_create_is_atomic_and_complete(world, platform):
     assert body["admin"]["username"] == "aster-school.admin"
     assert [item["done"] for item in body["readiness"]] == [False, False, True]
     assert AuditEvent.objects.filter(action="institution.created", institution=institution).exists()
+    assert list(institution.campuses.values_list("code", "name")) == [("MAIN", "Main campus")]
 
 
 def test_retry_with_same_key_returns_same_institution(platform):

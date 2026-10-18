@@ -26,7 +26,20 @@ export function makeMe(overrides: Partial<Me> = {}): Me {
     email: '',
     is_platform_admin: false,
     must_change_password: false,
-    membership: { role: 'INSTITUTION_ADMIN', permissions: ['institution_brand.update'] },
+    membership: {
+      roles: [{ label: 'Institution Admin', scope_label: 'Whole institution' }],
+      permissions: [
+        'institution.read',
+        'institution_brand.update',
+        'institution_profile.update',
+        'membership.assign',
+        'membership.read',
+        'organization.manage',
+        'role.manage',
+      ],
+      restricted: false,
+      status_reason: '',
+    },
     ...overrides,
   };
 }

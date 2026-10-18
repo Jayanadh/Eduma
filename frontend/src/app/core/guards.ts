@@ -37,6 +37,11 @@ export const memberOnly: CanActivateFn = () =>
     ? true
     : inject(Router).parseUrl('/');
 
+/** A workspace page that needs a permission: anyone without it goes to the workspace home. */
+export function requires(perm: string): CanActivateFn {
+  return () => (inject(AuthStore).can(perm) ? true : inject(Router).parseUrl('/app'));
+}
+
 /** The sign-in page: signed-in users go to their work; addresses where nobody can sign in go to their public page. */
 export const guestOnly: CanActivateFn = () => {
   const auth = inject(AuthStore);

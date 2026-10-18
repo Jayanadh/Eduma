@@ -18,6 +18,8 @@ describe('StatusBadge', () => {
     expect((await render('active')).classList).toContain('badge-success');
     expect((await render('setup')).classList).toContain('badge-info');
     expect((await render('suspended')).classList).toContain('badge-warning');
+    expect((await render('restricted')).classList).toContain('badge-warning');
+    expect((await render('restricted')).textContent).toBe('Restricted');
     expect((await render('archived')).classList).toContain('badge-muted');
     expect((await render('published')).classList).toContain('badge-success');
     expect((await render('something_new')).classList).toContain('badge-muted');

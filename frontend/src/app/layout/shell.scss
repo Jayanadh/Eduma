@@ -191,3 +191,10 @@
     white-space: nowrap;
   }
 }
+
+.restricted {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+}

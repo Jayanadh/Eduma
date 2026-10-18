@@ -2,7 +2,7 @@
 
 export type SiteKind = 'platform' | 'institution' | 'unknown';
 export type Category = 'school' | 'college' | 'engineering_college' | 'university';
-export type LifecycleStatus = 'setup' | 'active' | 'suspended' | 'archived';
+export type LifecycleStatus = 'setup' | 'active' | 'restricted' | 'suspended' | 'archived';
 
 export type Me = {
   id: string;
@@ -11,7 +11,77 @@ export type Me = {
   email: string;
   is_platform_admin: boolean;
   must_change_password: boolean;
-  membership: { role: string; permissions: string[] } | null;
+  membership: Membership | null;
+};
+
+/** The signed-in person's place in this address's institution. Permissions are for menus; the server checks scope. */
+export type Membership = {
+  roles: RoleLine[];
+  permissions: string[];
+  /** The institution is read-only for now; status_reason says why. */
+  restricted: boolean;
+  status_reason: string;
+};
+
+export type RoleLine = { label: string; scope_label: string };
+export type ScopeType = 'institution' | 'campus' | 'department';
+type Named = { id: string; name: string };
+
+export type Campus = { id: string; code: string; name: string; address: string; is_active: boolean; version: number };
+export type Department = {
+  id: string;
+  code: string;
+  name: string;
+  campus: Named | null;
+  parent: Named | null;
+  is_active: boolean;
+  version: number;
+};
+
+export type PermissionInfo = { name: string; label: string; institution_only: boolean };
+export type PermissionGroup = { group: string; permissions: PermissionInfo[] };
+
+/** A built-in role (id is its key, version null) or one of the institution's custom roles. */
+export type RoleItem = {
+  id: string;
+  builtin: boolean;
+  label: string;
+  description: string;
+  permissions: string[];
+  assigned_count: number;
+  is_active: boolean;
+  version: number | null;
+};
+
+export type StaffItem = { id: string; full_name: string; username: string; status: 'active' | 'revoked'; roles: RoleLine[] };
+export type Assignment = {
+  id: string;
+  role_label: string;
+  scope_type: ScopeType;
+  scope_label: string;
+  starts_on: string;
+  ends_on: string | null;
+  status: 'active' | 'ended';
+  end_reason: string;
+  in_effect: boolean;
+};
+export type StaffDetail = StaffItem & {
+  email: string;
+  mobile: string;
+  last_login: string | null;
+  must_change_password: boolean;
+  version: number;
+  assignments: Assignment[];
+  can_manage: boolean;
+};
+
+export type ModuleInfo = {
+  key: string;
+  label: string;
+  group: 'core' | 'operations';
+  depends_on: string[];
+  default_for: Category[];
+  available: boolean;
 };
 
 /** The four stored theme fields plus the readable colours the server derives from them. */
@@ -161,6 +231,8 @@ export type InstitutionDetail = {
   board_affiliation_code: string;
   udise_code: string;
   aishe_code: string;
+  /** Module keys the institution's plan includes. */
+  modules: string[];
   url: string;
   lifecycle_status: LifecycleStatus;
   status_reason: string;

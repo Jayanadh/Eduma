@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, CanActivateFn, provideRouter, Router, RouterStateSnapshot } from '@angular/router';
-import { guestOnly, memberOnly, platformOnly, signedIn } from './guards';
+import { guestOnly, memberOnly, platformOnly, requires, signedIn } from './guards';
 import { makeMe, makeSite, onSite, PLATFORM_ADMIN, signInAs } from './test-data';
 
 const route = {} as ActivatedRouteSnapshot;
@@ -71,5 +71,16 @@ describe('guards', () => {
     expect(run(guestOnly, '/login')).toBe('/');
     await onSite({ kind: 'institution', mode: 'unavailable', institution: { display_name: 'Aster School' } });
     expect(run(guestOnly, '/login')).toBe('/');
+  });
+
+  it('requires sends a member without the permission home', async () => {
+    await onSite(makeSite('institution'));
+    const teacher = makeMe({
+      membership: { roles: [], permissions: ['institution.read'], restricted: false, status_reason: '' },
+    });
+    await signInAs(teacher);
+    expect(run(requires('role.manage'), '/app/roles')).toBe('/app');
+    await signInAs(makeMe());
+    expect(run(requires('role.manage'), '/app/roles')).toBe(true);
   });
 });

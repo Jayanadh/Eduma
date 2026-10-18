@@ -9,6 +9,7 @@ const TONES: Readonly<Record<string, BadgeTone>> = {
   setup: 'info',
   draft: 'info',
   suspended: 'warning',
+  restricted: 'warning',
   archived: 'muted',
   superseded: 'muted',
 };

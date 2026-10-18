@@ -3,7 +3,8 @@ import { allowedMoves, lifecycleQuestion } from './lifecycle';
 describe('allowedMoves', () => {
   it('follows the lifecycle', () => {
     expect(allowedMoves('setup').map((move) => move.to)).toEqual(['active', 'archived']);
-    expect(allowedMoves('active').map((move) => move.to)).toEqual(['suspended', 'archived']);
+    expect(allowedMoves('active').map((move) => move.to)).toEqual(['restricted', 'suspended', 'archived']);
+    expect(allowedMoves('restricted').map((move) => move.to)).toEqual(['active', 'suspended', 'archived']);
     expect(allowedMoves('suspended').map((move) => move.to)).toEqual(['active', 'archived']);
     expect(allowedMoves('archived')).toEqual([]);
   });
@@ -11,13 +12,14 @@ describe('allowedMoves', () => {
   it('names each action', () => {
     expect(allowedMoves('setup')[0].label).toBe('Activate');
     expect(allowedMoves('suspended')[0].label).toBe('Reactivate');
-    expect(allowedMoves('active')[0].label).toBe('Suspend');
+    expect(allowedMoves('active').map((move) => move.label)).toEqual(['Restrict', 'Suspend', 'Archive']);
+    expect(allowedMoves('restricted').map((move) => move.label)).toEqual(['Lift restriction', 'Suspend', 'Archive']);
   });
 });
 
 describe('lifecycleQuestion', () => {
   it('asks for a reason naming the action and the institution', () => {
-    const [suspend] = allowedMoves('active');
+    const suspend = allowedMoves('active')[1];
     const question = lifecycleQuestion(suspend, 'Aster School', []);
     expect(question.title).toBe('Suspend Aster School?');
     expect(question.required).toBe(true);

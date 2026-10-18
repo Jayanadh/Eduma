@@ -10,6 +10,7 @@ function institution(readiness: ReadinessItem[], status: InstitutionDetail['life
     id: 'i1',
     slug: 'vector',
     custom_domain: '',
+    modules: [],
     legal_name: 'Vector Society',
     display_name: 'Vector Engineering College',
     category: 'engineering_college',

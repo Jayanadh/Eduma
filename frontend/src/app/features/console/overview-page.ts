@@ -11,6 +11,7 @@ import { PAGE_SIZE, Pager } from '../../ui/pager';
 const STATES: { code: LifecycleStatus; label: string }[] = [
   { code: 'setup', label: 'Setting up' },
   { code: 'active', label: 'Active' },
+  { code: 'restricted', label: 'Restricted' },
   { code: 'suspended', label: 'Suspended' },
   { code: 'archived', label: 'Archived' },
 ];

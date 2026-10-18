@@ -137,6 +137,7 @@ export class InstitutionPage {
     return {
       setup: 'being set up',
       active: 'active',
+      restricted: 'read-only for its members',
       suspended: 'suspended',
       archived: 'archived',
     }[status];

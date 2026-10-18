@@ -39,6 +39,7 @@ import { StatusBadge } from '../../ui/status-badge';
             <option value="">All states</option>
             <option value="setup" [selected]="status() === 'setup'">Setting up</option>
             <option value="active" [selected]="status() === 'active'">Active</option>
+            <option value="restricted" [selected]="status() === 'restricted'">Restricted</option>
             <option value="suspended" [selected]="status() === 'suspended'">Suspended</option>
             <option value="archived" [selected]="status() === 'archived'">Archived</option>
           </select>

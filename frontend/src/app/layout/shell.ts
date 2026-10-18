@@ -36,9 +36,16 @@ export class Shell {
   protected readonly isInstitution = computed(() => this.site.kind() === 'institution');
   /** No menu until a first password has been replaced: nothing else can open before then. */
   protected readonly items = computed(() =>
-    this.user()?.must_change_password ? [] : navFor(this.isInstitution() ? 'institution' : 'platform'),
+    this.user()?.must_change_password
+      ? []
+      : navFor(this.isInstitution() ? 'institution' : 'platform', (perm) => this.auth.can(perm)),
   );
-  protected readonly roleLabel = computed(() => (this.auth.isPlatformAdmin() ? 'Eduma platform admin' : 'Institution Admin'));
+  protected readonly roleLabel = this.auth.roleLabel;
+  /** Set while the platform has made this institution read-only. */
+  protected readonly restriction = computed(() => {
+    const membership = this.user()?.membership;
+    return membership?.restricted ? membership.status_reason : null;
+  });
   protected readonly initials = computed(() =>
     (this.user()?.full_name ?? '')
       .split(' ')

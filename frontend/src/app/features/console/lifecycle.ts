@@ -16,19 +16,31 @@ const ARCHIVE: Move = {
   effect: 'Its page and sign-in close for good. Its records are kept.',
 };
 
+const RESTRICT: Move = {
+  to: 'restricted',
+  label: 'Restrict',
+  tone: 'danger',
+  effect:
+    'Its members can still sign in and look, but every change is paused until you lift it. They see your reason.',
+};
+const SUSPEND: Move = {
+  to: 'suspended',
+  label: 'Suspend',
+  tone: 'danger',
+  effect: 'Its members are signed out and cannot sign in, and its page says it is unavailable. Nothing is deleted.',
+};
+
 /** The lifecycle actions open to an institution in each state (the server enforces the same table). */
 export function allowedMoves(status: LifecycleStatus): Move[] {
   switch (status) {
     case 'setup':
       return [ACTIVATE, ARCHIVE];
     case 'active':
+      return [RESTRICT, SUSPEND, ARCHIVE];
+    case 'restricted':
       return [
-        {
-          to: 'suspended',
-          label: 'Suspend',
-          tone: 'danger',
-          effect: 'Its members are signed out and cannot sign in, and its page says it is unavailable. Nothing is deleted.',
-        },
+        { to: 'active', label: 'Lift restriction', tone: 'primary', effect: 'Its members can make changes again.' },
+        SUSPEND,
         ARCHIVE,
       ];
     case 'suspended':

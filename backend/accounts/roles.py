@@ -30,6 +30,16 @@ PERMISSIONS: dict[str, Permission] = {
         Permission("role.manage", "Staff", "Create and change custom roles", True),
         Permission("configuration.edit", "Settings", "Draft changes to settings and send them for approval", True),
         Permission("configuration.publish", "Settings", "Publish and approve changes to settings", True),
+        Permission("admission_cycle.manage", "Admissions", "Set up admission cycles, their places and forms", True),
+        Permission(
+            "application.review",
+            "Admissions",
+            "Review applications: check documents, ask for information, mark eligible or reject",
+            False,
+        ),
+        Permission("admission.approve", "Admissions", "Offer places and enroll accepted applicants", False),
+        Permission("student.read", "Students", "See student records", False),
+        Permission("student.update", "Students", "Correct student details", False),
     )
 }
 
@@ -69,8 +79,9 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
         _role(
             "principal",
             "Principal / Director",
-            f"{TODAY} Sees staff and their roles. Approvals arrive with each module.",
+            f"{TODAY} Sees staff and their roles, and student records.",
             "membership.read",
+            "student.read",
         ),
         _role(
             "head_of_department",
@@ -78,12 +89,21 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             f"{TODAY} Sees the department's staff. Academic permissions arrive with the Academics module.",
             "membership.read",
         ),
-        _role("registrar", "Registrar", f"{TODAY} Student record permissions arrive with the Students module."),
+        _role(
+            "registrar",
+            "Registrar",
+            "Offers places, enrolls accepted applicants and keeps student records.",
+            "admission.approve",
+            "application.review",
+            "student.read",
+            "student.update",
+        ),
         _role("teacher", "Teacher / Faculty", f"{TODAY} Teaching permissions arrive with Academics and Attendance."),
         _role(
             "admissions_officer",
             "Admissions Officer",
-            f"{TODAY} Admissions permissions arrive with the Admissions module.",
+            "Reviews applications: checks documents, asks for information, marks eligible or rejects.",
+            "application.review",
         ),
         _role("accountant", "Accountant / Cashier", f"{TODAY} Fee permissions arrive with the Fees module."),
         _role(

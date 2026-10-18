@@ -64,6 +64,6 @@ def test_catalogue_is_platform_only(world, platform, client_for):
         "group": "core",
         "depends_on": ["students"],
         "default_for": ["college", "engineering_college", "school", "university"],
-        "available": False,
+        "available": True,
     }
     assert client_for(world.a.slug, world.a_admin).get("/api/v1/platform/modules").status_code == 404

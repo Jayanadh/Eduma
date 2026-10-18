@@ -109,7 +109,14 @@ def test_assignable_filter(world, client_for):
 
 def test_registry_and_who_may_read(world, admin, client_for):
     groups = admin.get("/api/v1/institution/permissions").json()
-    assert [g["group"] for g in groups] == ["Institution", "Organization", "Staff", "Settings"]
+    assert [g["group"] for g in groups] == [
+        "Institution",
+        "Organization",
+        "Staff",
+        "Settings",
+        "Admissions",
+        "Students",
+    ]
     assert groups[2]["permissions"][0] == {
         "name": "membership.read",
         "label": "See staff and their roles",

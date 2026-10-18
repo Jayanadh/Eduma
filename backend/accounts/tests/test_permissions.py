@@ -130,6 +130,7 @@ def test_me_lists_roles_permissions_and_restriction(world):
     client = host(world.a.slug)
     membership = login(client, "aster.campus").json()["user"]["membership"]
     assert membership == {
+        "kind": "staff",
         "roles": [{"label": "Campus Admin", "scope_label": "City campus"}],
         "permissions": ["institution.read", "membership.assign", "membership.read"],
         "restricted": False,

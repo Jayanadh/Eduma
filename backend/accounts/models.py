@@ -60,7 +60,14 @@ class Membership(VersionedModel):
         ACTIVE = "active", "Active"
         REVOKED = "revoked", "Revoked"
 
+    class Kind(models.TextChoices):
+        # Staff work in the institution's workspace; applicants and students have their own portals (slice 4a S4-01).
+        STAFF = "staff", "Staff"
+        APPLICANT = "applicant", "Applicant"
+        STUDENT = "student", "Student"
+
     institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="memberships")
+    kind = models.CharField(max_length=12, choices=Kind.choices, default=Kind.STAFF)
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="memberships")
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
     created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name="+")

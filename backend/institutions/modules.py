@@ -19,8 +19,8 @@ class Module:
     available: bool = False
 
 
-def _core(key, label, *depends_on, default_for=ALL) -> Module:
-    return Module(key, label, "core", depends_on, default_for)
+def _core(key, label, *depends_on, default_for=ALL, available=False) -> Module:
+    return Module(key, label, "core", depends_on, default_for, available)
 
 
 def _operations(key, label) -> Module:
@@ -30,8 +30,8 @@ def _operations(key, label) -> Module:
 MODULES: dict[str, Module] = {
     m.key: m
     for m in (
-        _core("admissions", "Admissions and enrollment", "students"),
-        _core("students", "Students and guardians"),
+        _core("admissions", "Admissions and enrollment", "students", available=True),
+        _core("students", "Students and guardians", available=True),
         _core("academics", "Academic structure and timetable"),
         _core("attendance", "Attendance", "academics"),
         _core("exams", "Assessment and results", "academics"),

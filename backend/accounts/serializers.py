@@ -25,6 +25,7 @@ class MeSerializer(serializers.ModelSerializer):
         roles = in_effect(rows, today_for(institution))
         restricted = institution.lifecycle_status == "restricted"
         return {
+            "kind": membership.kind,
             "roles": [{"label": row.role_label, "scope_label": row.scope_label} for row in roles],
             "permissions": sorted(perms_anywhere(user, institution)),
             "restricted": restricted,

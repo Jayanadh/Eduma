@@ -89,7 +89,9 @@ def has_perm(user, institution, perm: str, scope: Scope = WHOLE) -> bool:
     membership = active_membership(user, institution)
     if membership is None:
         return False
-    return perm == IMPLICIT or holds(grants(membership), institution, perm, scope)
+    if perm == IMPLICIT:
+        return membership.kind == Membership.Kind.STAFF
+    return holds(grants(membership), institution, perm, scope)
 
 
 def perms_anywhere(user, institution) -> set[str]:
@@ -97,7 +99,8 @@ def perms_anywhere(user, institution) -> set[str]:
     membership = active_membership(user, institution)
     if membership is None:
         return set()
-    return {IMPLICIT}.union(*(perms for perms, _ in grants(membership)))
+    implicit = {IMPLICIT} if membership.kind == Membership.Kind.STAFF else set()
+    return implicit.union(*(perms for perms, _ in grants(membership)))
 
 
 def assign_allowed(held: Grants, institution, perms: frozenset[str], scope: Scope) -> bool:

@@ -64,6 +64,8 @@ export type Assignment = {
   status: 'active' | 'ended';
   end_reason: string;
   in_effect: boolean;
+  /** On the institution's own calendar: in effect, starting later, or ended. */
+  phase: 'now' | 'later' | 'earlier';
 };
 export type StaffDetail = StaffItem & {
   email: string;

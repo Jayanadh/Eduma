@@ -17,17 +17,13 @@ import { ScopePicker, ScopeValue } from './scope-picker';
 const ALL = { page_size: 200 };
 const WHOLE: ScopeValue = { scope_type: 'institution', campus: null, department: null };
 
-/** Roles in three groups: doing now, starting later, and history. */
+/** Roles in three groups: doing now, starting later, and history, by the server's phase (the institution's day). */
 export function groupAssignments(rows: readonly Assignment[]) {
   return {
-    now: rows.filter((row) => row.in_effect),
-    later: rows.filter((row) => !row.in_effect && row.status === 'active' && !isPast(row)),
-    past: rows.filter((row) => !row.in_effect && (row.status === 'ended' || isPast(row))),
+    now: rows.filter((row) => row.phase === 'now'),
+    later: rows.filter((row) => row.phase === 'later'),
+    past: rows.filter((row) => row.phase === 'earlier'),
   };
-}
-
-function isPast(row: Assignment): boolean {
-  return row.ends_on !== null && row.ends_on < new Date().toISOString().slice(0, 10);
 }
 
 /** One member of staff: details, roles (give and end), password reset, removal and restore. What the viewer may not

@@ -48,7 +48,16 @@ def staff_item(membership: Membership) -> dict:
     }
 
 
-def assignment_item(row: RoleAssignment, live_ids: set) -> dict:
+def phase(row: RoleAssignment, live_ids: set, today) -> str:
+    """"now", "later" (starts after today) or "earlier" (ended or past), on the institution's own calendar."""
+    if row.id in live_ids:
+        return "now"
+    if row.status == RoleAssignment.Status.ACTIVE and row.starts_on > today:
+        return "later"
+    return "earlier"
+
+
+def assignment_item(row: RoleAssignment, live_ids: set, today) -> dict:
     return {
         "id": str(row.id),
         "role_label": row.role_label,
@@ -59,14 +68,15 @@ def assignment_item(row: RoleAssignment, live_ids: set) -> dict:
         "status": row.status,
         "end_reason": row.end_reason,
         "in_effect": row.id in live_ids,
+        "phase": phase(row, live_ids, today),
     }
 
 
 def staff_detail(membership: Membership, viewer) -> dict:
     user = membership.user
     rows = list(_assignments(membership))
-    live = in_effect(membership.assignments.all(), today_for(membership.institution))
-    live_ids = set(live.values_list("id", flat=True))
+    today = today_for(membership.institution)
+    live_ids = set(in_effect(membership.assignments.all(), today).values_list("id", flat=True))
     return {
         **staff_item(membership),
         "email": user.email,
@@ -74,6 +84,6 @@ def staff_detail(membership: Membership, viewer) -> dict:
         "last_login": user.last_login,
         "must_change_password": user.must_change_password,
         "version": membership.version,
-        "assignments": [assignment_item(row, live_ids) for row in rows],
+        "assignments": [assignment_item(row, live_ids, today) for row in rows],
         "can_manage": can_manage_person(viewer, membership),
     }

@@ -7,7 +7,7 @@ import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { ToastService } from '../../ui/toast';
 import { AddStaffPage } from './add-staff-page';
 import { ScopePicker } from './scope-picker';
-import { StaffDetailPage } from './staff-detail-page';
+import { groupAssignments, StaffDetailPage } from './staff-detail-page';
 
 const EMPTY_PAGE = { count: 0, next: null, previous: null, results: [] };
 
@@ -34,6 +34,7 @@ function detail(overrides: Partial<StaffDetail> = {}): StaffDetail {
         status: 'active',
         end_reason: '',
         in_effect: true,
+        phase: 'now',
       },
     ],
     can_manage: true,
@@ -138,5 +139,14 @@ describe('Staff pages', () => {
       starts_on: null,
       ends_on: null,
     });
+  });
+
+  it('groups roles by the phase the server gives, not the browser clock', () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const ended = { ...detail().assignments[0], id: 'a2', in_effect: false, ends_on: today, phase: 'earlier' as const };
+    const groups = groupAssignments([detail().assignments[0], ended]);
+    expect(groups.now.map((row) => row.id)).toEqual(['a1']);
+    expect(groups.later).toEqual([]);
+    expect(groups.past.map((row) => row.id)).toEqual(['a2']);
   });
 });

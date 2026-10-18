@@ -117,3 +117,23 @@ def test_principal_reads_but_cannot_add(world, org, client_for):
     assert principal.post(STAFF, ravi(org[2]), format="json").status_code == 403
     teacher = client_for(world.a.slug, factories.member(world.a, role="teacher"))
     assert teacher.get(STAFF).status_code == 403
+
+
+def test_roles_come_with_their_phase_on_the_institutions_calendar(world, org, admin):
+    """The app groups roles by this, so an ended role never shows as starting later (final review #8)."""
+    import datetime as dt
+
+    from accounts.permissions import today_for
+
+    today = today_for(world.a)
+    person = factories.member(world.a, role="teacher", scope=org[2])
+    membership = Membership.objects.get(user=person)
+    factories.assign(membership, "principal", None, starts_on=today + dt.timedelta(days=3))
+    week_ago, yesterday = today - dt.timedelta(days=9), today - dt.timedelta(days=1)
+    factories.assign(membership, "registrar", None, starts_on=week_ago, ends_on=yesterday)
+    rows = admin.get(f"{STAFF}/{membership.id}").json()["assignments"]
+    assert {row["role_label"]: row["phase"] for row in rows} == {
+        "Teacher / Faculty": "now",
+        "Principal / Director": "later",
+        "Registrar": "earlier",
+    }

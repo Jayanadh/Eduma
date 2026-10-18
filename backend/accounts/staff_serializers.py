@@ -49,7 +49,7 @@ def staff_item(membership: Membership) -> dict:
 
 
 def phase(row: RoleAssignment, live_ids: set, today) -> str:
-    """"now", "later" (starts after today) or "earlier" (ended or past), on the institution's own calendar."""
+    """ "now", "later" (starts after today) or "earlier" (ended or past), on the institution's own calendar."""
     if row.id in live_ids:
         return "now"
     if row.status == RoleAssignment.Status.ACTIVE and row.starts_on > today:

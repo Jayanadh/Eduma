@@ -82,3 +82,11 @@ def test_platform_host_is_unaffected(world, platform, restricted):
     detail = platform.get(f"{URL}/{world.a.id}").json()
     saved = platform.patch(f"{URL}/{world.a.id}", {"version": detail["version"], "contact_phone": "+91 1"})
     assert saved.status_code == 200
+
+
+def test_lifting_the_restriction_restores_writes(world, platform, restricted, client_for):
+    """Spec §9.7: after the platform lifts it, members can change things again."""
+    admin = client_for(world.a.slug, world.a_admin)
+    assert admin.post("/api/v1/institution/campuses", {"code": "CITY", "name": "City"}).status_code == 403
+    assert post_transition(platform, world.a, "active", reason="Paid").status_code == 200
+    assert admin.post("/api/v1/institution/campuses", {"code": "CITY", "name": "City"}).status_code == 201

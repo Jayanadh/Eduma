@@ -82,7 +82,8 @@ def test_campus_admin_sees_and_adds_only_within_campus(world, org, client_for):
     assert client.get(f"{STAFF}/{staff_id(main_teacher, world.a)}").status_code == 404
     assert client.post(STAFF, ravi(sci), format="json").status_code == 403
     admin_at_city = ravi(sci, role="institution_admin", scope_type="campus", campus=str(city.id), department=None)
-    assert client.post(STAFF, admin_at_city, format="json").status_code in (403, 422)
+    refused = client.post(STAFF, admin_at_city, format="json")
+    assert refused.status_code == 422 and refused.json()["errors"][0]["field"] == "scope_type"
     teacher_at_city = ravi(sci, scope_type="campus", campus=str(city.id), department=None)
     assert client.post(STAFF, teacher_at_city, format="json").status_code == 201
 
@@ -109,6 +110,7 @@ def test_edit_details_needs_can_manage_and_version(world, org, admin, client_for
     assert stale.status_code == 409
     own = admin.patch(f"{STAFF}/{staff_id(world.a_admin, world.a)}", {"version": 1, "full_name": "Me"}, format="json")
     assert own.status_code == 403 and own.json()["code"] == "own_membership"
+    assert "Change password" in own.json()["detail"]
 
 
 def test_principal_reads_but_cannot_add(world, org, client_for):

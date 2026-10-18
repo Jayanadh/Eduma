@@ -1,14 +1,16 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage, fieldErrors, isProblem } from '../../core/api-error';
 import { CATEGORY_LABELS, InstitutionDetail } from '../../core/api/types';
+import { AuthStore } from '../../core/auth-store';
 import { load } from '../../core/load';
 import { LoadError } from '../../ui/load-error';
 import { PageHeader } from '../../ui/page-header';
 import { ToastService } from '../../ui/toast';
 
-/** The institution's contact details, which its admin keeps up to date. Names and codes are set by the Eduma team. */
+/** The institution's contact details, which its admin keeps up to date; other members see them read-only. Names and
+ * codes are set by the Eduma team. */
 @Component({
   selector: 'app-profile-page',
   imports: [LoadError, PageHeader, ReactiveFormsModule],
@@ -39,11 +41,15 @@ import { ToastService } from '../../ui/toast';
               <label for="office-address">Address</label>
               <textarea id="office-address" rows="3" formControlName="address"></textarea>
             </div>
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary" [disabled]="busy() || form.pristine">
-                {{ busy() ? 'Saving…' : 'Save' }}
-              </button>
-            </div>
+            @if (canEdit()) {
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary" [disabled]="busy() || form.pristine">
+                  {{ busy() ? 'Saving…' : 'Save' }}
+                </button>
+              </div>
+            } @else {
+              <p class="muted small">Only your Institution Admin can change these.</p>
+            }
           </form>
           <section class="card">
             <h2 class="card-title">Set by the Eduma team</h2>
@@ -82,6 +88,8 @@ import { ToastService } from '../../ui/toast';
 export class ProfilePage {
   private readonly api = inject(Api);
   private readonly toasts = inject(ToastService);
+  private readonly auth = inject(AuthStore);
+  protected readonly canEdit = computed(() => this.auth.can('institution_profile.update'));
   protected readonly categories = CATEGORY_LABELS;
   protected readonly data = load(() => this.api.get<InstitutionDetail>('institution'));
   protected readonly form = inject(NonNullableFormBuilder).group({
@@ -99,6 +107,11 @@ export class ProfilePage {
       if (institution) {
         this.form.reset(institution);
         this.conflict.set(false);
+      }
+      if (this.canEdit()) {
+        this.form.enable();
+      } else {
+        this.form.disable();
       }
     });
   }

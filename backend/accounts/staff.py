@@ -29,7 +29,12 @@ from common.exceptions import Problem
 
 
 def own_membership() -> Problem:
-    return Problem(403, "own_membership", "Change your own details and password from your profile.")
+    return Problem(
+        403,
+        "own_membership",
+        "You can't change your own roles or details here. Use Change password in the menu for your password, and ask "
+        "another admin for anything else.",
+    )
 
 
 def resolve_role(institution, role: str) -> tuple[str | None, CustomRole | None, frozenset[str]]:

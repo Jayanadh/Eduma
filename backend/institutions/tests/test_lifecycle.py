@@ -132,7 +132,7 @@ def test_overview_counts_and_needs_action(world, platform):
     newer = factories.institution(lifecycle_status="setup", display_name="Newer", contact_phone="")
     factories.institution(lifecycle_status="suspended")
     body = platform.get("/api/v1/platform/overview").json()
-    assert body["counts"] == {"setup": 2, "active": 2, "suspended": 1, "archived": 0}
+    assert body["counts"] == {"setup": 2, "active": 2, "suspended": 1, "archived": 0, "restricted": 0}
     assert [item["display_name"] for item in body["needs_action"]] == ["Older", "Newer"]
     assert body["needs_action"][0]["id"] == str(older.id)
     assert body["needs_action"][1]["missing"] == [

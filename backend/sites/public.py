@@ -47,7 +47,7 @@ def _institution_payload(institution) -> dict:
         "contact_phone": institution.contact_phone,
         "address": institution.address,
     }
-    if institution.lifecycle_status == LifecycleStatus.ACTIVE and published is not None:
+    if institution.lifecycle_status in (LifecycleStatus.ACTIVE, LifecycleStatus.RESTRICTED) and published is not None:
         return {
             "kind": "institution",
             "mode": "full",

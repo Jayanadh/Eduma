@@ -157,6 +157,10 @@ def reset_admin_password(institution: Institution, actor, password: str) -> User
 TRANSITIONS = {
     (LifecycleStatus.SETUP, LifecycleStatus.ACTIVE): "institution.activated",
     (LifecycleStatus.ACTIVE, LifecycleStatus.SUSPENDED): "institution.suspended",
+    (LifecycleStatus.ACTIVE, LifecycleStatus.RESTRICTED): "institution.restricted",
+    (LifecycleStatus.RESTRICTED, LifecycleStatus.ACTIVE): "institution.restriction_lifted",
+    (LifecycleStatus.RESTRICTED, LifecycleStatus.SUSPENDED): "institution.suspended",
+    (LifecycleStatus.RESTRICTED, LifecycleStatus.ARCHIVED): "institution.archived",
     (LifecycleStatus.SUSPENDED, LifecycleStatus.ACTIVE): "institution.reactivated",
     (LifecycleStatus.SETUP, LifecycleStatus.ARCHIVED): "institution.archived",
     (LifecycleStatus.ACTIVE, LifecycleStatus.ARCHIVED): "institution.archived",
@@ -191,7 +195,7 @@ def transition(institution_id, actor, *, to: str, reason: str, version: int, ove
                         ]
                     }
                 )
-        if action == "institution.reactivated" and first_admin(institution) is None:
+        if action in ("institution.reactivated", "institution.restriction_lifted") and first_admin(institution) is None:
             raise InvalidTransition("Add an active Institution Admin before reactivating.")
         institution.lifecycle_status = to
         institution.status_reason = reason

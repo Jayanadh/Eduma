@@ -52,12 +52,13 @@ class Category(models.TextChoices):
 class LifecycleStatus(models.TextChoices):
     SETUP = "setup", "Setting up"
     ACTIVE = "active", "Active"
+    RESTRICTED = "restricted", "Restricted"
     SUSPENDED = "suspended", "Suspended"
     ARCHIVED = "archived", "Archived"
 
 
-# Members may sign in only while their institution is being set up or is active.
-SIGN_IN_STATES = frozenset({LifecycleStatus.SETUP, LifecycleStatus.ACTIVE})
+# Members may sign in only while their institution is being set up, active or restricted (read-only).
+SIGN_IN_STATES = frozenset({LifecycleStatus.SETUP, LifecycleStatus.ACTIVE, LifecycleStatus.RESTRICTED})
 
 
 class Institution(VersionedModel):

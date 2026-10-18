@@ -150,6 +150,36 @@ export const routes: Routes = [
         loadComponent: () => import('./features/settings/setting-editor-page').then((m) => m.SettingEditorPage),
       },
       {
+        path: 'admissions/cycles',
+        title: 'Admission cycles',
+        canActivate: [requires(['admission_cycle.manage', 'application.review', 'admission.approve'])],
+        loadComponent: () => import('./features/admissions/cycles-page').then((m) => m.CyclesPage),
+      },
+      {
+        path: 'admissions/cycles/new',
+        title: 'New cycle',
+        canActivate: [requires('admission_cycle.manage')],
+        loadComponent: () => import('./features/admissions/cycle-editor-page').then((m) => m.CycleEditorPage),
+      },
+      {
+        path: 'admissions/cycles/:id',
+        title: 'Admission cycle',
+        canActivate: [requires(['admission_cycle.manage', 'application.review', 'admission.approve'])],
+        loadComponent: () => import('./features/admissions/cycle-editor-page').then((m) => m.CycleEditorPage),
+      },
+      {
+        path: 'admissions/applications',
+        title: 'Applications',
+        canActivate: [requires(['application.review', 'admission.approve'])],
+        loadComponent: () => import('./features/admissions/applications-page').then((m) => m.StaffApplicationsPage),
+      },
+      {
+        path: 'admissions/applications/:id',
+        title: 'Application',
+        canActivate: [requires(['application.review', 'admission.approve'])],
+        loadComponent: () => import('./features/admissions/application-review-page').then((m) => m.ApplicationReviewPage),
+      },
+      {
         path: 'organization',
         title: 'Organization',
         canActivate: [requires('organization.manage')],

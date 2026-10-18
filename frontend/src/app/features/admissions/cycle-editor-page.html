@@ -1,0 +1,162 @@
+<div class="page">
+  <app-page-header eyebrow="Admissions" [title]="data.value()?.name || 'New cycle'" backLink="/app/admissions/cycles" />
+  <app-load-error [message]="data.error()" (retry)="data.reload()" />
+
+  @if (data.value(); as cycle) {
+    @if (cycle.status !== 'draft') {
+      <section class="card stack section">
+        <p><strong>{{ cycle.status === 'published' ? 'Open for applications.' : 'Closed.' }}</strong> Its form is fixed.</p>
+        <ul class="chips">
+          @for (place of cycle.places; track place.code) {
+            <li class="chip">{{ place.label }}: {{ place.in_use }} of {{ place.seats }} taken</li>
+          }
+        </ul>
+        @if (cycle.status === 'published') {
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="move('close')">Close the cycle</button>
+          </div>
+        }
+      </section>
+    }
+  }
+
+  <fieldset class="stack section" [disabled]="!draft()">
+    <section class="card stack">
+      <h2 class="card-title">The cycle</h2>
+      <div class="form-grid">
+        <div class="field full">
+          <label for="cycle-name">Name</label>
+          <input id="cycle-name" [value]="name()" (input)="name.set(value($event))" placeholder="Admissions 2027" />
+          @if (problem('name'); as m) { <span class="field-error">{{ m }}</span> }
+        </div>
+        <div class="field">
+          <label for="cycle-year">Admits into the year starting in</label>
+          <input id="cycle-year" type="number" [value]="entryYear()" (input)="entryYear.set(+value($event))" />
+        </div>
+        <div class="field">
+          <label for="cycle-opens">Opens on</label>
+          <input id="cycle-opens" type="date" [value]="opensOn()" (input)="opensOn.set(value($event))" />
+        </div>
+        <div class="field">
+          <label for="cycle-closes">Closes on</label>
+          <input id="cycle-closes" type="date" [value]="closesOn()" (input)="closesOn.set(value($event))" />
+          @if (problem('closes_on'); as m) { <span class="field-error">{{ m }}</span> }
+        </div>
+        <div class="field full">
+          <label for="cycle-instructions">Instructions for families</label>
+          <textarea id="cycle-instructions" rows="3" (input)="instructions.set(value($event))">{{ instructions() }}</textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="card stack">
+      <h2 class="card-title">Places</h2>
+      @if (problem('places'); as m) { <p class="field-error">{{ m }}</p> }
+      @for (row of places(); track $index; let i = $index) {
+        <div class="row place-row">
+          <div class="field">
+            <label [for]="'place-code-' + i">Code</label>
+            <input [id]="'place-code-' + i" [value]="row.code" (input)="set(places, i, { code: value($event) })" />
+            @if (problem('places.' + i + '.code'); as m) { <span class="field-error">{{ m }}</span> }
+          </div>
+          <div class="field grow">
+            <label [for]="'place-label-' + i">Name</label>
+            <input [id]="'place-label-' + i" [value]="row.label" (input)="set(places, i, { label: value($event) })" placeholder="Class 1" />
+          </div>
+          <div class="field">
+            <label [for]="'place-campus-' + i">Campus</label>
+            <select [id]="'place-campus-' + i" (change)="set(places, i, { campus: value($event) })">
+              <option value="">Any</option>
+              @for (campus of campuses.value()?.results ?? []; track campus.id) {
+                <option [value]="campus.id" [selected]="campus.id === row.campus">{{ campus.name }}</option>
+              }
+            </select>
+            @if (problem('places.' + i + '.campus'); as m) { <span class="field-error">{{ m }}</span> }
+          </div>
+          <div class="field narrow">
+            <label [for]="'place-seats-' + i">Seats</label>
+            <input [id]="'place-seats-' + i" type="number" min="1" [value]="row.seats" (input)="set(places, i, { seats: +value($event) })" />
+          </div>
+          @if (draft()) {
+            <button type="button" class="btn-icon" [attr.aria-label]="'Remove place ' + (i + 1)" (click)="remove(places, i)"><app-icon name="x" [size]="18" /></button>
+          }
+        </div>
+      }
+      @if (draft()) {
+        <button type="button" class="btn btn-secondary btn-sm add" (click)="addPlace()">Add a place</button>
+      }
+    </section>
+
+    <section class="card stack">
+      <h2 class="card-title">Questions</h2>
+      @for (row of questions(); track $index; let i = $index) {
+        <div class="row">
+          <div class="field">
+            <label [for]="'q-code-' + i">Code</label>
+            <input [id]="'q-code-' + i" [value]="row.code" (input)="set(questions, i, { code: value($event) })" />
+          </div>
+          <div class="field grow">
+            <label [for]="'q-label-' + i">Question</label>
+            <input [id]="'q-label-' + i" [value]="row.label" (input)="set(questions, i, { label: value($event) })" />
+            @if (problem('questions.' + i + '.label'); as m) { <span class="field-error">{{ m }}</span> }
+          </div>
+          <div class="field">
+            <label [for]="'q-kind-' + i">Answer</label>
+            <select [id]="'q-kind-' + i" (change)="set(questions, i, { kind: $any(value($event)) })">
+              @for (kind of kinds; track kind[0]) {
+                <option [value]="kind[0]" [selected]="kind[0] === row.kind">{{ kind[1] }}</option>
+              }
+            </select>
+          </div>
+          @if (row.kind === 'choice') {
+            <div class="field grow">
+              <label [for]="'q-options-' + i">Options, separated by commas</label>
+              <input [id]="'q-options-' + i" [value]="row.options.join(', ')" (input)="set(questions, i, { options: value($event).split(',').map(o => o.trim()).filter(o => o) })" />
+              @if (problem('questions.' + i + '.options'); as m) { <span class="field-error">{{ m }}</span> }
+            </div>
+          }
+          <label class="check"><input type="checkbox" [checked]="row.required" (change)="set(questions, i, { required: $any($event.target).checked })" /> Required</label>
+          @if (draft()) {
+            <button type="button" class="btn-icon" [attr.aria-label]="'Remove question ' + (i + 1)" (click)="remove(questions, i)"><app-icon name="x" [size]="18" /></button>
+          }
+        </div>
+      }
+      @if (draft()) {
+        <button type="button" class="btn btn-secondary btn-sm add" (click)="addQuestion()">Add a question</button>
+      }
+    </section>
+
+    <section class="card stack">
+      <h2 class="card-title">Documents</h2>
+      @for (row of documents(); track $index; let i = $index) {
+        <div class="row">
+          <div class="field">
+            <label [for]="'d-code-' + i">Code</label>
+            <input [id]="'d-code-' + i" [value]="row.code" (input)="set(documents, i, { code: value($event) })" />
+          </div>
+          <div class="field grow">
+            <label [for]="'d-label-' + i">Document</label>
+            <input [id]="'d-label-' + i" [value]="row.label" (input)="set(documents, i, { label: value($event) })" placeholder="Birth certificate" />
+          </div>
+          <label class="check"><input type="checkbox" [checked]="row.required" (change)="set(documents, i, { required: $any($event.target).checked })" /> Required</label>
+          @if (draft()) {
+            <button type="button" class="btn-icon" [attr.aria-label]="'Remove document ' + (i + 1)" (click)="remove(documents, i)"><app-icon name="x" [size]="18" /></button>
+          }
+        </div>
+      }
+      @if (draft()) {
+        <button type="button" class="btn btn-secondary btn-sm add" (click)="addDocument()">Add a document</button>
+      }
+    </section>
+  </fieldset>
+
+  @if (error()) { <p class="field-error section" role="alert">{{ error() }}</p> }
+  @if (draft()) {
+    <div class="form-actions section">
+      <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="save()">Save cycle</button>
+      @if (data.value()) {
+        <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="move('publish')">Open for applications</button>
+      }
+    </div>
+  }
+</div>

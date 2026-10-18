@@ -14,7 +14,14 @@ def test_applicant_and_student_memberships_get_no_workspace(world):
     assert not has_perm(applicant, world.a, "institution.read")
     client = host(world.a.slug)
     me = login(client, "a.parent").json()["user"]["membership"]
-    assert me == {"kind": "applicant", "roles": [], "permissions": [], "restricted": False, "status_reason": ""}
+    assert me == {
+        "kind": "applicant",
+        "modules_enabled": [],
+        "roles": [],
+        "permissions": [],
+        "restricted": False,
+        "status_reason": "",
+    }
     assert client.get("/api/v1/institution").status_code == 403
 
 
@@ -38,3 +45,13 @@ def test_modules_admissions_and_students_are_available():
 
     assert MODULES["admissions"].available and MODULES["students"].available
     assert not MODULES["fees"].available
+
+
+def test_me_says_which_modules_are_on(world):
+    from admissions.tests.conftest import switch_on
+
+    client = host(world.a.slug)
+    assert login(client, world.a_admin.username).json()["user"]["membership"]["modules_enabled"] == []
+    switch_on(world.a)
+    me = client.get("/api/v1/session").json()["user"]["membership"]
+    assert me["modules_enabled"] == ["admissions", "students"]

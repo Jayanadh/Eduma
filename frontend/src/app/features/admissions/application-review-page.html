@@ -1,0 +1,106 @@
+<div class="page">
+  <app-load-error [message]="data.error()" (retry)="data.reload()" />
+  @if (data.value(); as a) {
+    <app-page-header eyebrow="Admissions" [title]="a.number + ' · ' + a.learner_name" backLink="/app/admissions/applications">
+      <span class="badge badge-info">{{ a.stage_label }}</span>
+    </app-page-header>
+    <p class="muted">{{ a.cycle.name }} · {{ a.place.label }}{{ a.place.campus_name ? ' · ' + a.place.campus_name : '' }} · sent {{ dateTime(a.submitted_at) }} by {{ a.owner.full_name }} ({{ a.owner.username }})</p>
+
+    @if (a.actions.length) {
+      <div class="form-actions section">
+        @if (a.actions.includes('start_review')) {
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="step(a, 'start-review', 'Review started.')">Start review</button>
+        }
+        @if (a.actions.includes('eligible')) {
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="step(a, 'eligible', 'Marked eligible.')">Mark eligible</button>
+        }
+        @if (a.actions.includes('offer')) {
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="offer(a)">Offer a place</button>
+        }
+        @if (a.actions.includes('enroll')) {
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="enroll(a)">Enroll</button>
+        }
+        @if (a.actions.includes('request_information')) {
+          <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="requestInformation(a)">Ask for more information</button>
+        }
+        @if (a.actions.includes('reject')) {
+          <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="reject(a)">Do not offer a place</button>
+        }
+      </div>
+    }
+    @if (a.stage === 'needs_information') {
+      <p class="notice notice-warning">Waiting for the family: {{ a.information_request }}</p>
+    }
+    @if (a.stage === 'offered' || a.stage === 'offer_expired') {
+      <p class="notice notice-info">Offer {{ a.stage === 'offered' ? 'open until' : 'expired on' }} {{ date(a.offer_expires_on) }}.</p>
+    }
+    @if (a.student_id) {
+      <p class="notice notice-info">Enrolled. <a [routerLink]="['/app/students', a.student_id]">Open the student record</a></p>
+    }
+
+    <div class="grid-2 section">
+      <section class="card stack">
+        <h2 class="card-title">Learner and family</h2>
+        <dl class="facts">
+          <div><dt>Learner</dt><dd>{{ a.learner_name }} · born {{ date(a.date_of_birth) }}</dd></div>
+          <div><dt>Previous school</dt><dd>{{ a.previous_school || '—' }}</dd></div>
+          <div><dt>Parent or guardian</dt><dd>{{ a.guardian_name }} ({{ a.guardian_relationship }})</dd></div>
+          <div><dt>Contact</dt><dd>{{ a.guardian_phone }}{{ a.guardian_email ? ' · ' + a.guardian_email : '' }}</dd></div>
+          <div><dt>Address</dt><dd>{{ a.address }}</dd></div>
+          @for (q of a.questions; track q.code) {
+            <div><dt>{{ q.label }}</dt><dd>{{ answerText(a.answers[q.code]) }}</dd></div>
+          }
+        </dl>
+      </section>
+      <section class="card stack">
+        <h2 class="card-title">Documents</h2>
+        @for (doc of a.documents; track doc.id) {
+          <div class="doc">
+            <a [href]="download(a, doc)">{{ doc.label }}: {{ doc.original_name }}</a>
+            <span class="muted small">
+              @if (doc.status === 'verified') { Checked } @else if (doc.status === 'rejected') { Needs replacing: {{ doc.review_note }} } @else { Not checked yet }
+            </span>
+            @if (a.can_review && doc.status !== 'verified') {
+              <div class="form-actions">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="reviewDocument(a, doc, true)">Checked</button>
+                @if (doc.status !== 'rejected') {
+                  <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="reviewDocument(a, doc, false)">Needs replacing</button>
+                }
+              </div>
+            }
+          </div>
+        } @empty {
+          <p class="muted">No documents.</p>
+        }
+      </section>
+    </div>
+
+    <div class="grid-2 section">
+      <section class="card stack">
+        <h2 class="card-title">Internal notes</h2>
+        <p class="muted small">Only staff see these.</p>
+        <div class="field">
+          <label for="new-note">Add a note</label>
+          <textarea id="new-note" rows="2" [value]="note()" (input)="note.set($any($event.target).value)"></textarea>
+        </div>
+        <div class="form-actions"><button type="button" class="btn btn-secondary btn-sm" (click)="addNote(a)">Add note</button></div>
+        <ul class="list">
+          @for (n of a.notes; track n.id) {
+            <li class="list-row"><span class="list-main"><span>{{ n.text }}</span><span class="muted small">{{ n.author }} · {{ dateTime(n.created_at) }}</span></span></li>
+          }
+        </ul>
+      </section>
+      <section class="card stack">
+        <h2 class="card-title">Submissions</h2>
+        <ul class="list">
+          @for (s of a.submissions; track s.revision) {
+            <li class="list-row"><span class="list-main"><span>Version {{ s.revision }}</span><span class="muted small">{{ dateTime(s.submitted_at) }}</span></span></li>
+          }
+        </ul>
+        @if (a.decided_by_name) { <p class="muted small">Last step by {{ a.decided_by_name }}</p> }
+      </section>
+    </div>
+  } @else if (data.loading()) {
+    <p class="muted" role="status">Loading…</p>
+  }
+</div>

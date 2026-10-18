@@ -38,7 +38,11 @@ export class Shell {
   protected readonly items = computed(() =>
     this.user()?.must_change_password
       ? []
-      : navFor(this.isInstitution() ? 'institution' : 'platform', (perm) => this.auth.can(perm)),
+      : navFor(
+          this.isInstitution() ? 'institution' : 'platform',
+          (perm) => this.auth.can(perm),
+          (module) => this.user()?.membership?.modules_enabled?.includes(module) ?? false,
+        ),
   );
   protected readonly roleLabel = this.auth.roleLabel;
   /** Set while the platform has made this institution read-only. */

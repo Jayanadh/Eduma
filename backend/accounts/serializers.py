@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from accounts.models import User
 from accounts.permissions import active_membership, in_effect, perms_anywhere, today_for
+from configuration.registry import setting
 
 
 class MeSerializer(serializers.ModelSerializer):
@@ -26,6 +27,8 @@ class MeSerializer(serializers.ModelSerializer):
         restricted = institution.lifecycle_status == "restricted"
         return {
             "kind": membership.kind,
+            # For menus: which modules this institution has switched on (the server gates every module route too).
+            "modules_enabled": setting(institution, "modules.enabled"),
             "roles": [{"label": row.role_label, "scope_label": row.scope_label} for row in roles],
             "permissions": sorted(perms_anywhere(user, institution)),
             "restricted": restricted,

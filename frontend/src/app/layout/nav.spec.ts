@@ -41,4 +41,12 @@ describe('navFor', () => {
   it('opens Settings to someone who only approves setting changes', () => {
     expect(navFor('institution', holding('configuration.publish')).map((item) => item.label)).toContain('Settings');
   });
+
+  it('shows the Admissions pages only when the module is switched on', () => {
+    const can = holding('admission_cycle.manage', 'application.review', 'student.read');
+    expect(navFor('institution', can, () => false).map((item) => item.label)).not.toContain('Applications');
+    const on = navFor('institution', can, (module) => ['admissions', 'students'].includes(module));
+    expect(on.filter((item) => item.group === 'Admissions').map((item) => item.label)).toEqual(['Cycles', 'Applications']);
+    expect(on.map((item) => item.label)).toContain('Students');
+  });
 });

@@ -18,6 +18,8 @@ export type Me = {
 export type Membership = {
   /** Staff work in /app; applicants and students have their own portals. */
   kind: 'staff' | 'applicant' | 'student';
+  /** Modules switched on here, for menus; the server gates every module route too. */
+  modules_enabled?: string[];
   roles: RoleLine[];
   permissions: string[];
   /** The institution is read-only for now; status_reason says why. */
@@ -413,4 +415,56 @@ export type ApplicantApplication = {
   /** What still stops it being submitted: field → message. */
   missing: Record<string, string>;
   allowed_actions: ('edit' | 'upload' | 'submit' | 'withdraw' | 'accept')[];
+};
+
+export type CyclePlace = {
+  id?: string;
+  code: string;
+  label: string;
+  campus: { id: string; name: string } | null;
+  seats: number;
+  in_use?: number;
+};
+export type CycleQuestion = { code: string; label: string; help: string; kind: QuestionKind; options: string[]; required: boolean };
+export type CycleDocument = { code: string; label: string; help: string; required: boolean };
+
+/** An admission cycle as staff see it. */
+export type AdmissionCycle = {
+  id: string;
+  name: string;
+  entry_year: number;
+  academic_year: string;
+  opens_on: string;
+  closes_on: string;
+  instructions: string;
+  status: 'draft' | 'published' | 'closed';
+  version: number;
+  places: CyclePlace[];
+  questions: CycleQuestion[];
+  documents: CycleDocument[];
+  counts: Partial<Record<ApplicationStage, number>>;
+};
+
+export type StaffApplicationItem = {
+  id: string;
+  number: string;
+  stage: ApplicationStage;
+  stage_label: string;
+  learner_name: string;
+  guardian_name: string;
+  place: string;
+  cycle: string;
+  submitted_at: string | null;
+};
+
+/** An application as reviewing staff see it, with what they may do next. */
+export type StaffApplication = Omit<ApplicantApplication, 'missing' | 'allowed_actions'> & {
+  owner: { full_name: string; username: string };
+  decided_by_name: string | null;
+  submissions: { revision: number; submitted_at: string; snapshot: Record<string, unknown> }[];
+  notes: { id: string; author: string; text: string; created_at: string }[];
+  student_id: string | null;
+  actions: ('start_review' | 'request_information' | 'eligible' | 'reject' | 'offer' | 'enroll')[];
+  can_review: boolean;
+  can_approve: boolean;
 };

@@ -1,10 +1,11 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Api } from '../../core/api/api';
-import { InstitutionDetail } from '../../core/api/types';
+import { Approvals, InstitutionDetail } from '../../core/api/types';
 import { AuthStore } from '../../core/auth-store';
 import { load } from '../../core/load';
 import { MODULE_LABELS } from '../../core/modules';
+import { date } from '../../core/format';
 import { CopyUrl } from '../../ui/copy-url';
 import { Icon } from '../../ui/icon';
 import { LoadError } from '../../ui/load-error';
@@ -25,6 +26,38 @@ const FIX_AT: Readonly<Record<string, string>> = { site_published: '/app/site', 
         <app-page-header [eyebrow]="'Hello, ' + auth.firstName()" [title]="institution.display_name">
           <app-status-badge [status]="institution.lifecycle_status" />
         </app-page-header>
+        @if (institution.academic_year; as year) {
+          <p class="muted section">Academic year {{ year.label }} ({{ date(year.starts_on) }} – {{ date(year.ends_on) }})</p>
+        }
+        @if (approvals.value(); as waiting) {
+          @if (waiting.roles.length || waiting.settings.length) {
+            <section class="card card-strong stack section">
+              <h2 class="card-title">Waiting for your approval</h2>
+              <ul class="list">
+                @for (item of waiting.roles; track item.assignment_id) {
+                  <li>
+                    <a class="list-row" [routerLink]="['/app/staff', item.staff_id]">
+                      <span class="list-main">
+                        <span class="list-title">{{ item.person }}: {{ item.role_label }} · {{ item.scope_label }}</span>
+                        <span class="muted small">Requested by {{ item.requested_by_name }}</span>
+                      </span>
+                    </a>
+                  </li>
+                }
+                @for (item of waiting.settings; track item.revision_id) {
+                  <li>
+                    <a class="list-row" [routerLink]="['/app/settings', item.key]">
+                      <span class="list-main">
+                        <span class="list-title">{{ item.label }}: {{ item.description }}</span>
+                        <span class="muted small">Sent by {{ item.submitted_by_name }}</span>
+                      </span>
+                    </a>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+        }
         @if (!roleCount()) {
           <p class="notice notice-info section" role="status">You have no role here yet. Ask your Institution Admin.</p>
         }
@@ -61,10 +94,13 @@ const FIX_AT: Readonly<Record<string, string>> = { site_published: '/app/site', 
           <section class="card stack">
             <h2 class="card-title">Modules in your plan</h2>
             @if (institution.modules.length) {
-              <p class="muted small">None is open yet: each arrives in a later release.</p>
+              <p class="muted small">None is open yet: each arrives in a later release. Switched-on modules are marked.</p>
               <ul class="chips modules">
                 @for (key of institution.modules; track key) {
-                  <li class="chip">{{ moduleLabels[key] ?? key }}</li>
+                  <li class="chip module" [class.on]="enabled().includes(key)">
+                    @if (enabled().includes(key)) { <app-icon name="check" [size]="14" /><span class="sr-only">Switched on: </span> }
+                    {{ moduleLabels[key] ?? key }}
+                  </li>
                 }
               </ul>
             } @else {
@@ -80,6 +116,12 @@ const FIX_AT: Readonly<Record<string, string>> = { site_published: '/app/site', 
   styles: `
     .btn {
       align-self: flex-start;
+    }
+
+    .module.on {
+      border-color: var(--success);
+      color: var(--success);
+      gap: 6px;
     }
 
     .modules {
@@ -98,6 +140,9 @@ export class HomePage {
   protected readonly fixAt = FIX_AT;
   protected readonly data = load(() => this.api.get<InstitutionDetail>('institution'));
   protected readonly moduleLabels = MODULE_LABELS;
+  protected readonly date = date;
+  protected readonly approvals = load(() => this.api.get<Approvals>('institution/approvals'));
+  protected readonly enabled = computed(() => this.data.value()?.modules_enabled ?? []);
   protected readonly roleCount = computed(() => this.auth.user()?.membership?.roles.length ?? 0);
   protected readonly allDone = computed(() => this.data.value()?.readiness.every((item) => item.done) ?? false);
 }

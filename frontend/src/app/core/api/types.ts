@@ -61,11 +61,28 @@ export type Assignment = {
   scope_label: string;
   starts_on: string;
   ends_on: string | null;
-  status: 'active' | 'ended';
+  status: 'active' | 'pending' | 'ended';
   end_reason: string;
   in_effect: boolean;
-  /** On the institution's own calendar: in effect, starting later, or ended. */
-  phase: 'now' | 'later' | 'earlier';
+  /** On the institution's own calendar: in effect, waiting for approval, starting later, or ended. */
+  phase: 'now' | 'waiting' | 'later' | 'earlier';
+  requested_by_name: string | null;
+  /** The viewer may approve or reject this waiting role. */
+  can_decide: boolean;
+};
+
+/** What waits for the signed-in member's decision. */
+export type Approvals = {
+  roles: {
+    staff_id: string;
+    assignment_id: string;
+    person: string;
+    role_label: string;
+    scope_label: string;
+    requested_by_name: string | null;
+    requested_at: string;
+  }[];
+  settings: { key: string; label: string; revision_id: string; submitted_by_name: string | null; description: string }[];
 };
 export type StaffDetail = StaffItem & {
   email: string;
@@ -237,6 +254,9 @@ export type InstitutionDetail = {
   aishe_code: string;
   /** Module keys the institution's plan includes. */
   modules: string[];
+  /** Of those, the ones switched on in its settings (institution's own view only). */
+  modules_enabled?: string[];
+  academic_year?: { label: string; starts_on: string; ends_on: string };
   url: string;
   lifecycle_status: LifecycleStatus;
   status_reason: string;

@@ -12,6 +12,8 @@ function institution(readiness: ReadinessItem[], status: InstitutionDetail['life
     slug: 'vector',
     custom_domain: '',
     modules: [],
+    modules_enabled: [],
+    academic_year: { label: '2026–27', starts_on: '2026-06-01', ends_on: '2027-05-31' },
     legal_name: 'Vector Society',
     display_name: 'Vector Engineering College',
     category: 'engineering_college',
@@ -84,5 +86,44 @@ describe('HomePage', () => {
     const page = await render(institution([ADMIN, SITE, CONTACTS], 'active'));
     expect(page.textContent).toContain('You have no role here yet. Ask your Institution Admin.');
     expect(page.textContent).not.toContain('Public page is published');
+  });
+
+  it('shows what waits for the viewer, which modules are on, and the academic year', async () => {
+    const fixture = TestBed.createComponent(HomePage);
+    await fixture.whenStable();
+    const http = TestBed.inject(HttpTestingController);
+    const detail = { ...institution([ADMIN, SITE, CONTACTS], 'active'), modules: ['admissions', 'students', 'fees'] };
+    http.expectOne('/api/v1/institution').flush({ ...detail, modules_enabled: ['admissions', 'students'] });
+    http.expectOne('/api/v1/institution/approvals').flush({
+      roles: [
+        {
+          staff_id: 'm1',
+          assignment_id: 'a1',
+          person: 'Ravi Kumar',
+          role_label: 'Campus Admin',
+          scope_label: 'City campus',
+          requested_by_name: 'Aster City Campus Admin',
+          requested_at: '2026-10-19T04:00:00Z',
+        },
+      ],
+      settings: [],
+    });
+    await fixture.whenStable();
+    const page = fixture.nativeElement as HTMLElement;
+    expect(page.textContent).toContain('Waiting for your approval');
+    expect(page.querySelector('a[href="/app/staff/m1"]')?.textContent).toContain('Ravi Kumar');
+    expect(page.textContent).toContain('Academic year 2026–27 (01 Jun 2026 – 31 May 2027)');
+    const on = [...page.querySelectorAll('.module.on')].map((item) => item.textContent?.replace(/\s+/g, ' ').trim());
+    expect(on).toEqual(['Switched on: Admissions and enrollment', 'Switched on: Students and guardians']);
+  });
+
+  it('shows no approvals card when nothing waits', async () => {
+    const fixture = TestBed.createComponent(HomePage);
+    await fixture.whenStable();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/v1/institution').flush(institution([ADMIN, SITE, CONTACTS], 'active'));
+    http.expectOne('/api/v1/institution/approvals').flush({ roles: [], settings: [] });
+    await fixture.whenStable();
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Waiting for your approval');
   });
 });

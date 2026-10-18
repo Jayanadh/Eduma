@@ -36,6 +36,8 @@ function detail(overrides: Partial<StaffDetail> = {}): StaffDetail {
         end_reason: '',
         in_effect: true,
         phase: 'now',
+        requested_by_name: null,
+        can_decide: false,
       },
     ],
     can_manage: true,
@@ -168,5 +170,28 @@ describe('Staff pages', () => {
     page.form.controls.full_name.setValue('Ravi Kumar');
     await fixture.whenStable();
     expect(TestBed.inject(UnsavedChanges).dirty()).toBe(true);
+  });
+
+  it('lets an approver decide on a role that waits', async () => {
+    const waiting = {
+      ...detail().assignments[0],
+      id: 'a9',
+      role_label: 'Campus Admin',
+      status: 'pending' as const,
+      in_effect: false,
+      phase: 'waiting' as const,
+      requested_by_name: 'Aster City Campus Admin',
+      can_decide: true,
+    };
+    const fixture = await openDetail(detail({ assignments: [detail().assignments[0], waiting] }));
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.textContent).toContain('Waiting for approval');
+    expect(root.textContent).toContain('Requested by Aster City Campus Admin');
+    const reject = [...root.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Reject')!;
+    expect([...root.querySelectorAll('button')].some((button) => button.textContent?.trim() === 'Approve')).toBe(true);
+    reject.click();
+    await fixture.whenStable();
+    const request = http.expectOne('/api/v1/institution/staff/m1/assignments/a9/reject');
+    expect(request.request.body).toEqual({ reason: 'Moved' });
   });
 });

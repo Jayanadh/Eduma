@@ -20,6 +20,7 @@ const WHOLE: ScopeValue = { scope_type: 'institution', campus: null, department:
 /** Roles in three groups: doing now, starting later, and history, by the server's phase (the institution's day). */
 export function groupAssignments(rows: readonly Assignment[]) {
   return {
+    waiting: rows.filter((row) => row.phase === 'waiting'),
     now: rows.filter((row) => row.phase === 'now'),
     later: rows.filter((row) => row.phase === 'later'),
     past: rows.filter((row) => row.phase === 'earlier'),
@@ -106,9 +107,13 @@ export function groupAssignments(rows: readonly Assignment[]) {
                         <span class="muted small">
                           {{ row.scope_label }} · from {{ date(row.starts_on) }}{{ row.ends_on ? ' until ' + date(row.ends_on) : '' }}
                           @if (row.end_reason) { · {{ row.end_reason }} }
+                          @if (row.phase === 'waiting') { · Requested by {{ row.requested_by_name }} }
                         </span>
                       </span>
-                      @if (person.can_manage && row.status === 'active') {
+                      @if (row.can_decide) {
+                        <button type="button" class="btn btn-primary btn-sm" [disabled]="busy()" (click)="decide(person, row, true)">Approve</button>
+                        <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="decide(person, row, false)">Reject</button>
+                      } @else if (person.can_manage && row.status === 'active') {
                         <button type="button" class="btn btn-secondary btn-sm" (click)="end(person, row)">End</button>
                       }
                     </li>
@@ -191,8 +196,9 @@ export class StaffDetailPage {
   );
 
   protected readonly groups = computed(() => {
-    const { now, later, past } = groupAssignments(this.data.value()?.assignments ?? []);
+    const { waiting, now, later, past } = groupAssignments(this.data.value()?.assignments ?? []);
     return [
+      { label: 'Waiting for approval', rows: waiting },
       { label: 'Now', rows: now },
       { label: 'Starts later', rows: later },
       { label: 'Earlier', rows: past },
@@ -289,6 +295,36 @@ export class StaffDetailPage {
     this.busy.set(true);
     this.api.post<StaffDetail>(`institution/staff/${person.id}/assignments/${row.id}/end`, { reason }).subscribe({
       next: (updated) => this.apply(updated, 'Role ended.'),
+      error: (err) => this.refused(err),
+    });
+  }
+
+  protected async decide(person: StaffDetail, row: Assignment, approve: boolean): Promise<void> {
+    const url = `institution/staff/${person.id}/assignments/${row.id}`;
+    if (approve) {
+      this.busy.set(true);
+      this.api.post<StaffDetail>(`${url}/approve`, {}).subscribe({
+        next: (updated) => this.apply(updated, `${row.role_label} approved.`),
+        error: (err) => this.refused(err),
+      });
+      return;
+    }
+    const reason = await this.confirm.prompt({
+      title: `Turn down ${row.role_label} (${row.scope_label})?`,
+      message: `${person.full_name} will not get this role. ${row.requested_by_name ?? 'The requester'} sees your reason.`,
+      label: 'Reason',
+      type: 'textarea',
+      required: true,
+      hint: 'Kept in the audit log.',
+      confirmLabel: 'Reject',
+      tone: 'danger',
+    });
+    if (reason === null) {
+      return;
+    }
+    this.busy.set(true);
+    this.api.post<StaffDetail>(`${url}/reject`, { reason }).subscribe({
+      next: (updated) => this.apply(updated, 'Request turned down.'),
       error: (err) => this.refused(err),
     });
   }

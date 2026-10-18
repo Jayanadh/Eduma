@@ -1,3 +1,5 @@
+from zoneinfo import ZoneInfo
+
 from django.db import migrations
 
 
@@ -11,7 +13,8 @@ def assign_admins(apps, schema_editor):
             institution_id=membership.institution_id,
             role_key="institution_admin",
             scope_type="institution",
-            starts_on=membership.created_at.date(),
+            # The institution's own calendar day, as everywhere else that starts or ends a role.
+            starts_on=membership.created_at.astimezone(ZoneInfo(membership.institution.timezone)).date(),
             status="ended" if membership.status == "revoked" else "active",
             created_by_id=membership.created_by_id,
         )

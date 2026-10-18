@@ -59,6 +59,7 @@ describe('SiteView', () => {
   it('shows Sign in for an institution but not for the platform or in a preview', async () => {
     const institution = await render(makeSite('institution'));
     expect(institution.querySelector('a[href="/login"]')?.textContent).toContain('Sign in');
+    expect(institution.querySelector('a[href="/apply"]')?.textContent).toContain('Apply');
     const platform = await render(makeSite('platform'));
     expect(platform.querySelector('a[href="/login"]')).toBeNull();
     const preview = await render(makeSite('institution'), true);

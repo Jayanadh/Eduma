@@ -38,7 +38,7 @@ describe('ProfilePage', () => {
   });
 
   it('shows other members the contacts without a form they cannot save', async () => {
-    const noRole = { roles: [], permissions: ['institution.read'], restricted: false, status_reason: '' };
+    const noRole = { kind: 'staff' as const, roles: [], permissions: ['institution.read'], restricted: false, status_reason: '' };
     await signInAs(makeMe({ membership: noRole }));
     const page = await render();
     expect(page.querySelector('button[type=submit]')).toBeNull();

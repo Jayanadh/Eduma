@@ -35,8 +35,15 @@ export class AuthStore {
   readonly roleLabel = computed(() =>
     this.isPlatformAdmin() ? 'Eduma platform admin' : (this.current()?.membership?.roles[0]?.label ?? 'Staff'),
   );
-  /** Where this user works: the console on Eduma's address, the app on their institution's. */
-  readonly home = computed(() => (this.isPlatformAdmin() ? '/console' : '/app'));
+  /** Where this user works: the console on Eduma's address; on an institution's, the workspace for staff, the
+   * applications for applicants and the portal for students. */
+  readonly home = computed(() => {
+    if (this.isPlatformAdmin()) {
+      return '/console';
+    }
+    const kind = this.current()?.membership?.kind;
+    return kind === 'applicant' ? '/apply/applications' : kind === 'student' ? '/student' : '/app';
+  });
   /** The first word of the name longer than two letters, so "K. Lakshmi" greets as "Lakshmi". */
   readonly firstName = computed(() => {
     const name = this.current()?.full_name ?? '';
@@ -55,6 +62,11 @@ export class AuthStore {
   /** Whether the signed-in member holds a permission somewhere. For showing things only; the server decides. */
   can(perm: string): boolean {
     return this.permissions().has(perm);
+  }
+
+  /** Someone just signed up and was signed in by the server. */
+  signedUp(user: Me): void {
+    this.current.set(user);
   }
 
   /** Asks the server who is signed in. At start-up a failed call counts as signed out; it never rejects. */

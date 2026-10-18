@@ -59,6 +59,17 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'apply',
+    title: 'Admissions',
+    loadComponent: () => import('./features/apply/apply-page').then((m) => m.ApplyPage),
+  },
+  {
+    path: 'apply/signup',
+    title: 'Create an account',
+    canActivate: [guestOnly],
+    loadComponent: () => import('./features/apply/signup-page').then((m) => m.SignupPage),
+  },
+  {
     path: 'app',
     loadComponent: () => import('./layout/shell').then((m) => m.Shell),
     canActivateChild: [signedIn, memberOnly],

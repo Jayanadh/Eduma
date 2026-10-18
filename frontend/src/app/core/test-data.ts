@@ -27,6 +27,7 @@ export function makeMe(overrides: Partial<Me> = {}): Me {
     is_platform_admin: false,
     must_change_password: false,
     membership: {
+      kind: 'staff',
       roles: [{ label: 'Institution Admin', scope_label: 'Whole institution' }],
       permissions: [
         'institution.read',
@@ -137,3 +138,12 @@ export const MODULE_CATALOGUE: ModuleInfo[] = (
   default_for: [...default_for],
   available: false,
 }));
+
+/** A signed-in member of another kind (applicant or student), with no staff permissions. */
+export function makeMember(kind: 'applicant' | 'student'): Me {
+  return makeMe({
+    username: `${kind}.one`,
+    full_name: kind === 'applicant' ? 'Asha Parent' : 'Meera Rao',
+    membership: { kind, roles: [], permissions: [], restricted: false, status_reason: '' },
+  });
+}

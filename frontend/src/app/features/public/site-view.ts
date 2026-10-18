@@ -58,6 +58,7 @@ const NAV_LABELS: Readonly<Record<Section['type'], string>> = {
           }
           <div class="site-header-actions">
             @if (site().kind === 'institution' && !preview()) {
+              <a class="cta cta-outline cta-small" routerLink="/apply">Apply</a>
               <a class="cta cta-outline cta-small" routerLink="/login">Sign in</a>
             }
             @if (hero(); as hero) {

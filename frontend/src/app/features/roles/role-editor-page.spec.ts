@@ -39,6 +39,7 @@ describe('RoleEditorPage', () => {
     http = TestBed.inject(HttpTestingController);
     const manager = makeMe({
       membership: {
+        kind: 'staff',
         roles: [],
         permissions: ['institution.read', 'membership.read', 'role.manage'],
         restricted: false,

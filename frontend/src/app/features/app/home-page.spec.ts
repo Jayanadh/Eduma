@@ -81,7 +81,7 @@ describe('HomePage', () => {
   });
 
   it('tells a member with no role whom to ask, without the setup checklist', async () => {
-    const noRole = { roles: [], permissions: ['institution.read'], restricted: false, status_reason: '' };
+    const noRole = { kind: 'staff' as const, roles: [], permissions: ['institution.read'], restricted: false, status_reason: '' };
     await signInAs(makeMe({ membership: noRole }));
     const page = await render(institution([ADMIN, SITE, CONTACTS], 'active'));
     expect(page.textContent).toContain('You have no role here yet. Ask your Institution Admin.');

@@ -2,8 +2,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, CanActivateFn, provideRouter, Router, RouterStateSnapshot } from '@angular/router';
+import { AuthStore } from './auth-store';
 import { guestOnly, memberOnly, platformOnly, requires, signedIn } from './guards';
-import { makeMe, makeSite, onSite, PLATFORM_ADMIN, signInAs } from './test-data';
+import { makeMe, makeMember, makeSite, onSite, PLATFORM_ADMIN, signInAs } from './test-data';
 
 const route = {} as ActivatedRouteSnapshot;
 const at = (url: string) => ({ url }) as RouterStateSnapshot;
@@ -76,7 +77,7 @@ describe('guards', () => {
   it('requires sends a member without the permission home', async () => {
     await onSite(makeSite('institution'));
     const teacher = makeMe({
-      membership: { roles: [], permissions: ['institution.read'], restricted: false, status_reason: '' },
+      membership: { kind: 'staff', roles: [], permissions: ['institution.read'], restricted: false, status_reason: '' },
     });
     await signInAs(teacher);
     expect(run(requires('role.manage'), '/app/roles')).toBe('/app');
@@ -87,9 +88,20 @@ describe('guards', () => {
   it('requires accepts any one of several permissions', async () => {
     await onSite(makeSite('institution'));
     const approver = makeMe({
-      membership: { roles: [], permissions: ['configuration.publish'], restricted: false, status_reason: '' },
+      membership: { kind: 'staff', roles: [], permissions: ['configuration.publish'], restricted: false, status_reason: '' },
     });
     await signInAs(approver);
     expect(run(requires(['configuration.edit', 'configuration.publish']), '/app/settings')).toBe(true);
+  });
+
+  it('sends each kind of member to its own home', async () => {
+    await onSite(makeSite('institution'));
+    await signInAs(makeMember('applicant'));
+    expect(TestBed.inject(AuthStore).home()).toBe('/apply/applications');
+    expect(run(memberOnly, '/app')).toBe('/');
+    await signInAs(makeMember('student'));
+    expect(TestBed.inject(AuthStore).home()).toBe('/student');
+    await signInAs(makeMe());
+    expect(TestBed.inject(AuthStore).home()).toBe('/app');
   });
 });

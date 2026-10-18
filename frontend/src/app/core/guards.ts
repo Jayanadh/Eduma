@@ -31,11 +31,17 @@ export const platformOnly: CanActivateFn = () =>
     ? true
     : inject(Router).parseUrl('/');
 
-/** An institution's workspace: its own address, its members only. */
-export const memberOnly: CanActivateFn = () =>
-  inject(SiteStore).kind() === 'institution' && inject(AuthStore).isMember()
-    ? true
-    : inject(Router).parseUrl('/');
+/** An institution's workspace: its own address, its staff only. */
+export const memberOnly: CanActivateFn = () => kindOnly('staff');
+
+/** A portal for one kind of member (applicants, students) on the institution's own address. */
+export function kindOnly(kind: 'staff' | 'applicant' | 'student'): boolean | ReturnType<Router['parseUrl']> {
+  const ok = inject(SiteStore).kind() === 'institution' && inject(AuthStore).user()?.membership?.kind === kind;
+  return ok ? true : inject(Router).parseUrl('/');
+}
+
+export const applicantOnly: CanActivateFn = () => kindOnly('applicant');
+export const studentOnly: CanActivateFn = () => kindOnly('student');
 
 /** A workspace page that needs a permission (or any one of several): anyone without it goes to the workspace home. */
 export function requires(perm: string | string[]): CanActivateFn {

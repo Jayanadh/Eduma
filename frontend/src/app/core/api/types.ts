@@ -16,6 +16,8 @@ export type Me = {
 
 /** The signed-in person's place in this address's institution. Permissions are for menus; the server checks scope. */
 export type Membership = {
+  /** Staff work in /app; applicants and students have their own portals. */
+  kind: 'staff' | 'applicant' | 'student';
   roles: RoleLine[];
   permissions: string[];
   /** The institution is read-only for now; status_reason says why. */
@@ -339,4 +341,19 @@ export type SettingDetail = SettingSummary & {
   preview: string[];
   choices: { key: string; label: string; group: 'core' | 'operations'; depends_on: string[] }[];
   history: { count: number; results: SettingRevisionItem[] };
+};
+
+/** What anyone may see of an institution's admissions. */
+export type PublicAdmissions = {
+  open: boolean;
+  cycles: {
+    id: string;
+    name: string;
+    academic_year: string;
+    opens_on: string;
+    closes_on: string;
+    instructions: string;
+    places: { id: string; label: string; campus_name: string | null }[];
+    documents: { code: string; label: string; required: boolean }[];
+  }[];
 };

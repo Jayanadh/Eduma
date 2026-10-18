@@ -2,7 +2,7 @@ from django.contrib.auth import password_validation
 from rest_framework import serializers
 
 from accounts.models import User
-from accounts.permissions import ROLE_PERMISSIONS, active_membership
+from accounts.permissions import active_membership, in_effect, perms_anywhere, today_for
 
 
 class MeSerializer(serializers.ModelSerializer):
@@ -20,7 +20,16 @@ class MeSerializer(serializers.ModelSerializer):
         membership = active_membership(user, request.institution) if request.site_kind == "institution" else None
         if membership is None:
             return None
-        return {"role": membership.role, "permissions": sorted(ROLE_PERMISSIONS.get(membership.role, ()))}
+        institution = request.institution
+        rows = membership.assignments.select_related("custom_role", "campus", "department")
+        roles = in_effect(rows, today_for(institution))
+        restricted = institution.lifecycle_status == "restricted"
+        return {
+            "roles": [{"label": row.role_label, "scope_label": row.scope_label} for row in roles],
+            "permissions": sorted(perms_anywhere(user, institution)),
+            "restricted": restricted,
+            "status_reason": institution.status_reason if restricted else "",
+        }
 
 
 class LoginSerializer(serializers.Serializer):

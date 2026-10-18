@@ -2,9 +2,12 @@ import re
 import uuid
 
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 
+from accounts.roles import BUILTIN_ROLES
 from common.models import VersionedModel
 
 USERNAME_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{2,39}$")
@@ -48,12 +51,9 @@ class User(AbstractUser):
         super().save(*args, **kwargs)
 
 
-class Role(models.TextChoices):
-    INSTITUTION_ADMIN = "INSTITUTION_ADMIN", "Institution Admin"
-
-
 class Membership(VersionedModel):
-    """A user's authority in one institution. Revoked memberships stay as history."""
+    """A user's place in one institution. What they may do there comes from its role assignments. Revoked
+    memberships stay as history."""
 
     class Status(models.TextChoices):
         ACTIVE = "active", "Active"
@@ -61,7 +61,6 @@ class Membership(VersionedModel):
 
     institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="memberships")
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="memberships")
-    role = models.CharField(max_length=30, choices=Role.choices)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
     created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
 
@@ -69,4 +68,101 @@ class Membership(VersionedModel):
         constraints = [models.UniqueConstraint(fields=["institution", "user"], name="one_membership_per_institution")]
 
     def __str__(self) -> str:
-        return f"{self.user} in {self.institution_id} ({self.role})"
+        return f"{self.user} in {self.institution_id}"
+
+
+class CustomRole(VersionedModel):
+    """A role an institution names itself, from the permission registry. Archived roles grant nothing."""
+
+    institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="custom_roles")
+    name = models.CharField(max_length=60)
+    description = models.CharField(max_length=300, blank=True)
+    permissions = ArrayField(models.CharField(max_length=60), default=list, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+
+    class Meta:
+        ordering = ["-is_active", "name"]
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class RoleAssignment(VersionedModel):
+    """One role for one person, over the whole institution, a campus or a department, from starts_on to ends_on.
+    Never edited: a change ends it and gives another, so the history shows who could do what, when."""
+
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        ENDED = "ended", "Ended"
+
+    class ScopeType(models.TextChoices):
+        INSTITUTION = "institution", "Whole institution"
+        CAMPUS = "campus", "Campus"
+        DEPARTMENT = "department", "Department"
+
+    membership = models.ForeignKey(Membership, on_delete=models.PROTECT, related_name="assignments")
+    institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="+")
+    role_key = models.CharField(max_length=40, blank=True)
+    custom_role = models.ForeignKey(
+        CustomRole, null=True, blank=True, on_delete=models.PROTECT, related_name="assignments"
+    )
+    scope_type = models.CharField(max_length=20, choices=ScopeType.choices)
+    campus = models.ForeignKey(
+        "organization.Campus", null=True, blank=True, on_delete=models.PROTECT, related_name="assignments"
+    )
+    department = models.ForeignKey(
+        "organization.Department", null=True, blank=True, on_delete=models.PROTECT, related_name="assignments"
+    )
+    starts_on = models.DateField()
+    ends_on = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
+    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    ended_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    ended_at = models.DateTimeField(null=True, blank=True)
+    end_reason = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        ordering = ["starts_on", "created_at"]
+        constraints = [
+            models.CheckConstraint(
+                condition=(Q(role_key="") & Q(custom_role__isnull=False))
+                | (~Q(role_key="") & Q(custom_role__isnull=True)),
+                name="assignment_one_role",
+            ),
+            models.CheckConstraint(
+                condition=Q(scope_type="institution", campus__isnull=True, department__isnull=True)
+                | Q(scope_type="campus", campus__isnull=False, department__isnull=True)
+                | Q(scope_type="department", campus__isnull=True, department__isnull=False),
+                name="assignment_scope_matches",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.role_label} · {self.scope_label}"
+
+    @property
+    def permissions(self) -> frozenset[str]:
+        if self.custom_role_id is None:
+            role = BUILTIN_ROLES.get(self.role_key)
+            return role.permissions if role else frozenset()
+        return frozenset(self.custom_role.permissions) if self.custom_role.is_active else frozenset()
+
+    @property
+    def scope(self) -> tuple:
+        return (self.scope_type, self.campus_id or self.department_id)
+
+    @property
+    def role_label(self) -> str:
+        if self.custom_role_id is not None:
+            return self.custom_role.name
+        role = BUILTIN_ROLES.get(self.role_key)
+        return role.label if role else self.role_key
+
+    @property
+    def scope_label(self) -> str:
+        if self.campus_id:
+            return self.campus.name
+        if self.department_id:
+            return self.department.name
+        return "Whole institution"

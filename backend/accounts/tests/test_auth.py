@@ -39,7 +39,7 @@ def test_member_signs_in_only_on_own_institution_host(world):
     response = login(client, "ASTER.admin")
     assert response.status_code == 200
     membership = response.json()["user"]["membership"]
-    assert membership["role"] == "INSTITUTION_ADMIN"
+    assert membership["roles"] == [{"label": "Institution Admin", "scope_label": "Whole institution"}]
     assert "institution_brand.update" in membership["permissions"]
     assert login(host(world.b.slug), world.a_admin.username).json()["detail"] == REFUSED
     assert login(host(None), world.a_admin.username).json()["detail"] == REFUSED

@@ -6,7 +6,8 @@ from django.db.models import BooleanField, Count, Exists, ExpressionWrapper, Out
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from accounts.models import Membership, Role, User
+from accounts.models import Membership, RoleAssignment, User
+from accounts.permissions import in_effect, today_for
 from common import audit
 from common.exceptions import IdempotencyMismatch, InvalidTransition
 from institutions.models import Institution, LifecycleStatus
@@ -21,17 +22,25 @@ READINESS = (
 )
 
 
-def _admins(institution_ref):
+def _admins(institution_ref, today):
+    """Active memberships holding Institution Admin for the whole institution on `today`."""
+    roles = in_effect(RoleAssignment.objects.all(), today).filter(
+        membership=OuterRef("pk"), role_key="institution_admin", scope_type="institution"
+    )
     return Membership.objects.filter(
-        institution=institution_ref, role=Role.INSTITUTION_ADMIN, status=Membership.Status.ACTIVE, user__is_active=True
+        Exists(roles), institution=institution_ref, status=Membership.Status.ACTIVE, user__is_active=True
     )
 
 
 def with_readiness(queryset):
     """Annotates each institution with one boolean per readiness check (see READINESS)."""
     return queryset.annotate(
+        # shortcut: one calendar day (the server's) for every institution in the list; the checklist may lag a few
+        # hours around midnight in another time zone. Authorization itself uses each institution's own day.
         admin_ready=Exists(
-            _admins(OuterRef("pk")).filter(user__last_login__isnull=False, user__must_change_password=False)
+            _admins(OuterRef("pk"), timezone.localdate()).filter(
+                user__last_login__isnull=False, user__must_change_password=False
+            )
         ),
         site_published=Exists(SiteRevision.objects.filter(institution=OuterRef("pk"), status="published")),
         contacts=ExpressionWrapper(~Q(contact_email="") & ~Q(contact_phone=""), output_field=BooleanField()),
@@ -44,7 +53,7 @@ def readiness(institution: Institution) -> list[dict]:
 
 
 def first_admin(institution: Institution) -> User | None:
-    membership = _admins(institution).select_related("user").order_by("created_at").first()
+    membership = _admins(institution, today_for(institution)).select_related("user").order_by("created_at").first()
     return membership.user if membership else None
 
 
@@ -87,7 +96,15 @@ def create_institution(actor, data: dict, key, digest: str) -> tuple[Institution
             )
             user.set_password(admin["password"])
             user.save()
-            Membership.objects.create(institution=institution, user=user, role=Role.INSTITUTION_ADMIN, created_by=actor)
+            membership = Membership.objects.create(institution=institution, user=user, created_by=actor)
+            RoleAssignment.objects.create(
+                membership=membership,
+                institution=institution,
+                role_key="institution_admin",
+                scope_type=RoleAssignment.ScopeType.INSTITUTION,
+                starts_on=today_for(institution),
+                created_by=actor,
+            )
             Campus.objects.create(institution=institution, code="MAIN", name="Main campus")
             get_or_create_draft(institution, actor)
             audit.log(actor, "institution.created", institution, f"Created {institution.display_name}")

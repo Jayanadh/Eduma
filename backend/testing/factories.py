@@ -2,7 +2,8 @@
 
 import itertools
 
-from accounts.models import Membership, Role, User
+from accounts.models import CustomRole, Membership, RoleAssignment, User
+from accounts.permissions import today_for
 from institutions.models import Category, Institution, LifecycleStatus
 from organization.models import Campus, Department
 
@@ -38,10 +39,47 @@ def institution(**kw) -> Institution:
     )
 
 
-def member(institution_: Institution, role: str = Role.INSTITUTION_ADMIN, **kw) -> User:
+def member(
+    institution_: Institution,
+    role: str | None = "institution_admin",
+    scope=None,
+    *,
+    custom_role: CustomRole | None = None,
+    starts_on=None,
+    ends_on=None,
+    **kw,
+) -> User:
+    """A login in the institution with one role (none if role and custom_role are None). scope: None for the whole
+    institution, or a Campus or Department."""
     person = user(**kw)
-    Membership.objects.create(institution=institution_, user=person, role=role)
+    membership = Membership.objects.create(institution=institution_, user=person)
+    if role is not None or custom_role is not None:
+        assign(membership, role, scope, custom_role=custom_role, starts_on=starts_on, ends_on=ends_on)
     return person
+
+
+def assign(
+    membership: Membership, role: str | None = "teacher", scope=None, *, custom_role=None, starts_on=None, ends_on=None
+) -> RoleAssignment:
+    kind = "institution" if scope is None else "campus" if isinstance(scope, Campus) else "department"
+    return RoleAssignment.objects.create(
+        membership=membership,
+        institution_id=membership.institution_id,
+        role_key="" if custom_role is not None else role,
+        custom_role=custom_role,
+        scope_type=kind,
+        campus=scope if kind == "campus" else None,
+        department=scope if kind == "department" else None,
+        starts_on=starts_on or today_for(membership.institution),
+        ends_on=ends_on,
+    )
+
+
+def custom_role(institution_: Institution, permissions=(), **kw) -> CustomRole:
+    n = next(_n)
+    return CustomRole.objects.create(
+        **{"institution": institution_, "name": f"Role {n}", "permissions": sorted(permissions), **kw}
+    )
 
 
 def campus(institution_: Institution, **kw) -> Campus:

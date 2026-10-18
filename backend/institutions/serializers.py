@@ -172,9 +172,15 @@ class OwnInstitutionSerializer(InstitutionSerializer):
         fields = [name for name in InstitutionSerializer.Meta.fields if name != "admin"]
 
     def to_representation(self, institution: Institution) -> dict:
+        from accounts.permissions import today_for
+        from configuration.registry import academic_year, setting
+
         body = super().to_representation(institution)
         if institution.lifecycle_status != LifecycleStatus.RESTRICTED:
             body["status_reason"] = ""
+        body["modules_enabled"] = setting(institution, "modules.enabled")
+        label, starts_on, ends_on = academic_year(setting(institution, "academic.year_start"), today_for(institution))
+        body["academic_year"] = {"label": label, "starts_on": starts_on, "ends_on": ends_on}
         return body
 
 

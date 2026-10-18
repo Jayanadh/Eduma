@@ -20,6 +20,7 @@ urlpatterns = [
     path("api/v1/institution/site/", include(site_patterns)),
     path("api/v1/institution/", include("organization.urls")),
     path("api/v1/institution/", include("accounts.urls")),
+    path("api/v1/institution/", include("configuration.urls")),
     path("api/v1/institution", OwnInstitutionView.as_view(), name="own-institution"),
     path("api/v1/platform/overview", platform_overview, name="platform-overview"),
     path("api/v1/platform/modules", module_catalogue, name="platform-modules"),

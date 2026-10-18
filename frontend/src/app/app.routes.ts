@@ -93,6 +93,24 @@ export const routes: Routes = [
         loadComponent: () => import('./features/staff/staff-detail-page').then((m) => m.StaffDetailPage),
       },
       {
+        path: 'roles',
+        title: 'Roles',
+        canActivate: [requires('role.manage')],
+        loadComponent: () => import('./features/roles/roles-page').then((m) => m.RolesPage),
+      },
+      {
+        path: 'roles/new',
+        title: 'New role',
+        canActivate: [requires('role.manage')],
+        loadComponent: () => import('./features/roles/role-editor-page').then((m) => m.RoleEditorPage),
+      },
+      {
+        path: 'roles/:id',
+        title: 'Change role',
+        canActivate: [requires('role.manage')],
+        loadComponent: () => import('./features/roles/role-editor-page').then((m) => m.RoleEditorPage),
+      },
+      {
         path: 'organization',
         title: 'Organization',
         canActivate: [requires('organization.manage')],

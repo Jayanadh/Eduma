@@ -277,3 +277,46 @@ export const CATEGORY_LABELS: Readonly<Record<Category, string>> = {
   engineering_college: 'Engineering college',
   university: 'University',
 };
+
+export type SettingKind = 'modules' | 'bool' | 'month';
+
+/** One version of a setting: a draft, a change waiting for approval, or history. */
+export type SettingRevisionItem = {
+  id: string;
+  number: number;
+  status: 'draft' | 'pending' | 'published' | 'superseded' | 'withdrawn';
+  version: number;
+  value: unknown;
+  description: string;
+  effective_from: string | null;
+  reason: string;
+  return_note: string;
+  created_by_name: string | null;
+  submitted_by_name: string | null;
+  submitted_at: string | null;
+  approved_by_name: string | null;
+  published_at: string | null;
+  /** The viewer sent this change. */
+  mine: boolean;
+  can_approve: boolean;
+};
+
+export type SettingSummary = {
+  key: string;
+  label: string;
+  help: string;
+  kind: SettingKind;
+  needs_approval: boolean;
+  value_now: unknown;
+  description_now: string;
+  scheduled: { effective_from: string; description: string } | null;
+  open: { id: string; status: 'draft' | 'pending'; version: number } | null;
+};
+
+export type SettingDetail = SettingSummary & {
+  draft: SettingRevisionItem | null;
+  pending: SettingRevisionItem | null;
+  preview: string[];
+  choices: { key: string; label: string; group: 'core' | 'operations'; depends_on: string[] }[];
+  history: { count: number; results: SettingRevisionItem[] };
+};

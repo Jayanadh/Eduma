@@ -19,7 +19,10 @@
     </a>
 
     <nav class="side-nav" aria-label="Main">
-      @for (item of items(); track item.link) {
+      @for (item of items(); track item.link; let i = $index) {
+        @if (item.group && item.group !== items()[i - 1]?.group) {
+          <span class="nav-group">{{ item.group }}</span>
+        }
         <a
           class="nav-row"
           [routerLink]="item.link"

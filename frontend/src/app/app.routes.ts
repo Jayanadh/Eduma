@@ -113,6 +113,19 @@ export const routes: Routes = [
         loadComponent: () => import('./features/roles/role-editor-page').then((m) => m.RoleEditorPage),
       },
       {
+        path: 'settings',
+        title: 'Settings',
+        canActivate: [requires('configuration.edit')],
+        loadComponent: () => import('./features/settings/settings-page').then((m) => m.SettingsPage),
+      },
+      {
+        path: 'settings/:key',
+        title: 'Settings',
+        canActivate: [requires('configuration.edit')],
+        canDeactivate: [leaveGuard],
+        loadComponent: () => import('./features/settings/setting-editor-page').then((m) => m.SettingEditorPage),
+      },
+      {
         path: 'organization',
         title: 'Organization',
         canActivate: [requires('organization.manage')],

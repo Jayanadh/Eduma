@@ -55,6 +55,7 @@ def revision_item(revision: SettingRevision, viewer) -> dict:
         "submitted_at": revision.submitted_at,
         "approved_by_name": _name(revision.approved_by),
         "published_at": revision.published_at,
+        "mine": revision.submitted_by_id == viewer.id,
         "can_approve": revision.status == SettingRevision.Status.PENDING
         and revision.submitted_by_id != viewer.id
         and has_perm(viewer, institution, "configuration.publish"),
@@ -107,7 +108,12 @@ def detail(institution, key: str, viewer, history: dict) -> dict:
     body["preview"] = found.preview(institution, body["value_now"], open_one.value, starts) if open_one else []
     body["choices"] = (
         [
-            {"key": key_, "label": MODULES[key_].label, "depends_on": list(MODULES[key_].depends_on)}
+            {
+                "key": key_,
+                "label": MODULES[key_].label,
+                "group": MODULES[key_].group,
+                "depends_on": list(MODULES[key_].depends_on),
+            }
             for key_ in sorted(institution.modules)
         ]
         if found.kind == "modules"

@@ -70,3 +70,26 @@ def test_own_institution_carries_modules_and_year(world, admin):
     assert body["modules_enabled"] == []
     assert body["academic_year"]["label"].count("–") == 1
     assert body["academic_year"]["starts_on"].endswith("-06-01")
+
+
+def test_editor_hints(world, admin, client_for):
+    """Module choices carry their group; a waiting change says whether it is the viewer's own."""
+    world.a.modules = ["admissions", "students"]
+    world.a.save()
+    choices = admin.get(f"{BASE}/modules.enabled").json()["choices"]
+    admissions = {
+        "key": "admissions",
+        "label": "Admissions and enrollment",
+        "group": "core",
+        "depends_on": ["students"],
+    }
+    assert admissions in choices
+    deputy = factories.member(world.a, role="institution_admin")
+    draft = admin.post(f"{BASE}/access.role_approval/draft").json()["draft"]
+    saved = admin.put(f"{BASE}/access.role_approval/draft", {"version": draft["version"], "value": True}, format="json")
+    version = saved.json()["draft"]["version"]
+    body = {"version": version, "effective_from": str(today_for(world.a)), "reason": "Two admins now"}
+    pending = admin.post(f"{BASE}/access.role_approval/draft/submit", body, format="json").json()["pending"]
+    assert (pending["mine"], pending["can_approve"]) == (True, False)
+    other = client_for(world.a.slug, deputy).get(f"{BASE}/access.role_approval").json()["pending"]
+    assert (other["mine"], other["can_approve"]) == (False, True)

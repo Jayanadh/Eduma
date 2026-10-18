@@ -15,20 +15,22 @@ describe('navFor', () => {
     ]);
   });
 
-  it('gives an Institution Admin every workspace page, in order', () => {
+  it('gives an Institution Admin every workspace page, grouped, in order', () => {
     const admin = holding(
       'membership.read',
       'role.manage',
       'organization.manage',
+      'configuration.edit',
       'institution_brand.update',
     );
-    expect(navFor('institution', admin).map((item) => item.link)).toEqual([
-      '/app',
-      '/app/staff',
-      '/app/roles',
-      '/app/organization',
-      '/app/site',
-      '/app/profile',
+    expect(navFor('institution', admin).map((item) => [item.group ?? '', item.label])).toEqual([
+      ['', 'Home'],
+      ['People', 'Staff'],
+      ['People', 'Roles'],
+      ['Administration', 'Organization'],
+      ['Administration', 'Settings'],
+      ['Administration', 'Public site'],
+      ['Administration', 'Profile'],
     ]);
   });
 

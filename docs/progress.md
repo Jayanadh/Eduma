@@ -20,12 +20,25 @@ what comes next. Read this first when continuing.
 | `restricted` state: read-only for members with the reason shown; public page stays up | `backend/sites/middleware.py` |
 | Workspace menu by permission; restricted banner | `frontend/src/app/layout/` |
 
-Checks on 18 Oct 2026: backend `pytest` 231 passed; `ruff check --select F,E,W,I --line-length 120 --exclude
-'.venv,*/migrations' .` and `ruff format --check` (same options) clean; frontend `ng test` 117 passed; `ng build` clean.
+Checks on 18 Oct 2026 (after the final review's fixes): backend `pytest` 235 passed; `ruff check --select F,E,W,I --line-length 120 --exclude
+'.venv,*/migrations' .` and `ruff format --check` (same options) clean; frontend `ng test` 120 passed; `ng build` clean.
 Browser (built-in, Chromium): as `aster.admin` added a campus, a member of staff with a first password, gave and ended a
 role, created a custom role; as `aster.campus` saw only City staff, Roles redirected home; as `eduma.admin` restricted
 Aster (banner shown, a write refused with the reason) and lifted it; onboarding Modules step and the Modules tab;
 Home and a staff page at 390 px with no sideways scroll.
+
+Final review (fresh reviewer, 18 Oct 2026), fixed with a failing test first: a role starting later now counts when
+deciding who may reset or remove a person (it was a way for a Campus Admin to take over a future Institution Admin's
+account); department loops can no longer form through two moves at once nor hang a permission check; roles are grouped
+by the server's phase on the institution's calendar; Profile is read-only for members who cannot change it. Deferred
+minor items are listed under "Known limits".
+
+Known limits (slice 2, deferred minor items): `?campus=` with a malformed id on the departments list is a 500;
+un-archiving a custom role skips the name check (no screen does it); two identical creates at the same instant can 500;
+`status_reason` is readable by every member; `/app/site` has no route guard; the restriction-lifted audit line reads
+"Restriction_lifted"; onboarding sends no modules if the catalogue fails to load; the role-migration start date uses
+UTC and the migration cannot be rolled back past the role removal; staff lists re-query permissions and roles per row;
+the roles list has no search.
 
 ## Slice 1 (17 October 2026)
 

@@ -50,8 +50,15 @@ def grants(membership: Membership | None) -> Grants:
     return [(row.permissions, row.scope) for row in rows]
 
 
-def covers(institution, holder: Scope, target: Scope) -> bool:
-    """Whether authority held at `holder` reaches `target` (spec §4.3 scope coverage)."""
+def department_tree(institution) -> dict:
+    """{department id: (parent id, campus id)} for the whole institution, from one query."""
+    rows = institution.departments.values_list("id", "parent_id", "campus_id")
+    return {pk: (parent_id, campus_id) for pk, parent_id, campus_id in rows}
+
+
+def covers(institution, holder: Scope, target: Scope, tree: dict | None = None) -> bool:
+    """Whether authority held at `holder` reaches `target` (spec §4.3 scope coverage). Pass `tree` when checking
+    many scopes at once."""
     if holder[0] == "institution":
         return True
     if target[0] == "institution":
@@ -60,10 +67,7 @@ def covers(institution, holder: Scope, target: Scope) -> bool:
         return holder[1] == target[1]
     if holder[0] == "department" and target[0] == "campus":
         return False
-    tree = dict(
-        (pk, (parent_id, campus_id))
-        for pk, parent_id, campus_id in institution.departments.values_list("id", "parent_id", "campus_id")
-    )
+    tree = department_tree(institution) if tree is None else tree
     if target[1] not in tree:
         return False
     if holder[0] == "campus":

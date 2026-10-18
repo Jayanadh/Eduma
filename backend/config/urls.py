@@ -18,6 +18,7 @@ urlpatterns = [
     path("api/v1/public/site", PublicSiteView.as_view(), name="public-site"),
     path("api/v1/public/assets/<uuid:asset_id>", public_asset, name="public-asset"),
     path("api/v1/institution/site/", include(site_patterns)),
+    path("api/v1/institution/", include("organization.urls")),
     path("api/v1/institution", OwnInstitutionView.as_view(), name="own-institution"),
     path("api/v1/platform/overview", platform_overview, name="platform-overview"),
     path("api/v1/platform/audit", AuditEventList.as_view(), name="platform-audit"),

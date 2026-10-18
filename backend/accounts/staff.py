@@ -20,6 +20,7 @@ from accounts.permissions import (
     grants,
     has_perm,
     in_effect,
+    live,
     today_for,
 )
 from accounts.roles import BUILTIN_ROLES, PERMISSIONS, institution_only
@@ -81,8 +82,8 @@ def check_assignment(actor, institution, data: dict) -> dict:
 
 
 def visible_memberships(actor, institution):
-    """Whole-institution readers see everyone, removed people included; others see people with an in-effect role
-    inside one of their membership.read scopes."""
+    """Whole-institution readers see everyone, removed people included; others see people with a role in effect or
+    starting later inside one of their membership.read scopes."""
     held = grants(active_membership(actor, institution))
     scopes = [where for perms, where in held if "membership.read" in perms]
     everyone = institution.memberships.all()
@@ -91,7 +92,7 @@ def visible_memberships(actor, institution):
     tree = department_tree(institution)
     seen = {
         row.membership_id
-        for row in in_effect(RoleAssignment.objects.filter(institution=institution), today_for(institution))
+        for row in live(RoleAssignment.objects.filter(institution=institution), today_for(institution))
         if any(covers(institution, scope, row.scope, tree) for scope in scopes)
     }
     return everyone.filter(pk__in=seen, status=Membership.Status.ACTIVE)

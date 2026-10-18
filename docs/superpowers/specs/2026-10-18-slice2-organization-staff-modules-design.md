@@ -137,12 +137,13 @@ only); the API refuses otherwise with a field error naming those permissions.
   the role, `has_perm(actor, p, scope)`. This one rule is the grant ceiling: only someone holding every Institution Admin
   permission institution-wide can create another Institution Admin.
 - **can_manage_person(actor, target membership).** True iff the target is not the actor, and either the actor holds
-  `membership.assign` for the whole institution and `can_assign` holds for each of the target's in-effect assignments,
-  or the target has at least one in-effect assignment and `can_assign` holds for every one of them. (So a Campus Admin
+  `membership.assign` for the whole institution and `can_assign` holds for each of the target's in-effect and future assignments,
+  or the target has at least one in-effect or future assignment and `can_assign` holds for every one of them (a role
+  starting later counts now, so a reset today cannot hand over tomorrow's authority; corrected after final review). (So a Campus Admin
   can reset a City teacher's password but not that of someone who is also a Science teacher outside City, nor of a
   Principal.)
 - **Visibility of staff** (`membership.read`): a whole-institution holder sees every membership, including people with
-  no role and removed people; otherwise you see memberships with at least one in-effect assignment covered by one of
+  no role and removed people; otherwise you see memberships with at least one in-effect or future assignment covered by one of
   your `membership.read` scopes. Anything else is 404, never 403, so existence does not leak (02 §2).
 - **Custom roles** (`role.manage`, whole institution): a role's permissions must be registry names (unknown names are a
   field error) and a subset of the editor's whole-institution permissions; an edit is refused if the role currently

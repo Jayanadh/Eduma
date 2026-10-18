@@ -113,12 +113,14 @@ def can_assign(actor, institution, perms: frozenset[str], scope: Scope) -> bool:
 
 def can_manage_person(actor, target: Membership) -> bool:
     """Whether the actor may reset the target's password, change their details or remove them: only if the actor could
-    have given every role the target holds. Someone with no role is managed only by a whole-institution assigner."""
+    have given every role the target holds or will hold (a role starting tomorrow counts today, or resetting the
+    password now would hand over tomorrow's authority). Someone with no role is managed only by a whole-institution
+    assigner."""
     if target.user_id == getattr(actor, "id", None):
         return False
     institution = target.institution
     held = grants(active_membership(actor, institution))
-    roles = list(in_effect(target.assignments.select_related("custom_role"), today_for(institution)))
+    roles = list(live(target.assignments.select_related("custom_role"), today_for(institution)))
     if not roles and not holds(held, institution, "membership.assign", WHOLE):
         return False
     return all(assign_allowed(held, institution, row.permissions, row.scope) for row in roles)

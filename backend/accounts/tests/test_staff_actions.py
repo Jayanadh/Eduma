@@ -141,3 +141,30 @@ def test_remove_ends_roles_and_session_restore_gives_none(world, org, admin, cli
     assert restored.status_code == 200
     assert restored.json()["status"] == "active" and restored.json()["roles"] == []
     assert User.objects.get(username="ravi.k").is_active
+
+
+def test_roles_that_start_later_count_for_rank_and_visibility(world, org, admin, client_for):
+    """A future Institution Admin is out of a Campus Admin's reach now, and a later hire stays visible to whoever
+    added them (final review #1, #3)."""
+    city = org[1]
+    boss = client_for(world.a.slug, factories.member(world.a, role="campus_admin", scope=city))
+    ravi = factories.member(world.a, role="teacher", scope=city)
+    tomorrow = timezone.localdate() + dt.timedelta(days=2)
+    factories.assign(Membership.objects.get(user=ravi), "institution_admin", None, starts_on=tomorrow)
+    url = f"{STAFF}/{mid(ravi, world.a)}"
+    assert boss.get(url).json()["can_manage"] is False
+    assert boss.post(f"{url}/password", {"password": "Fresh-pass-2026"}).status_code == 403
+    version = boss.get(url).json()["version"]
+    assert boss.post(f"{url}/remove", {"reason": "x", "version": version}).status_code == 403
+    later = {
+        "full_name": "Later Hire",
+        "username": "later.hire",
+        "password": "First-pass-2026",
+        "role": "teacher",
+        "scope_type": "campus",
+        "campus": str(city.id),
+        "starts_on": "2030-01-01",
+    }
+    created = boss.post(STAFF, later, format="json")
+    assert created.status_code == 201
+    assert boss.get(f"{STAFF}/{created.json()['id']}").status_code == 200

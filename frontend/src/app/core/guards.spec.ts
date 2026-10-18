@@ -83,4 +83,13 @@ describe('guards', () => {
     await signInAs(makeMe());
     expect(run(requires('role.manage'), '/app/roles')).toBe(true);
   });
+
+  it('requires accepts any one of several permissions', async () => {
+    await onSite(makeSite('institution'));
+    const approver = makeMe({
+      membership: { roles: [], permissions: ['configuration.publish'], restricted: false, status_reason: '' },
+    });
+    await signInAs(approver);
+    expect(run(requires(['configuration.edit', 'configuration.publish']), '/app/settings')).toBe(true);
+  });
 });

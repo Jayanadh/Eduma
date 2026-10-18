@@ -37,9 +37,13 @@ export const memberOnly: CanActivateFn = () =>
     ? true
     : inject(Router).parseUrl('/');
 
-/** A workspace page that needs a permission: anyone without it goes to the workspace home. */
-export function requires(perm: string): CanActivateFn {
-  return () => (inject(AuthStore).can(perm) ? true : inject(Router).parseUrl('/app'));
+/** A workspace page that needs a permission (or any one of several): anyone without it goes to the workspace home. */
+export function requires(perm: string | string[]): CanActivateFn {
+  const any = Array.isArray(perm) ? perm : [perm];
+  return () => {
+    const auth = inject(AuthStore);
+    return any.some((name) => auth.can(name)) ? true : inject(Router).parseUrl('/app');
+  };
 }
 
 /** The sign-in page: signed-in users go to their work; addresses where nobody can sign in go to their public page. */

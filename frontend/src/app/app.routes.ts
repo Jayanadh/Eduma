@@ -115,13 +115,13 @@ export const routes: Routes = [
       {
         path: 'settings',
         title: 'Settings',
-        canActivate: [requires('configuration.edit')],
+        canActivate: [requires(['configuration.edit', 'configuration.publish'])],
         loadComponent: () => import('./features/settings/settings-page').then((m) => m.SettingsPage),
       },
       {
         path: 'settings/:key',
         title: 'Settings',
-        canActivate: [requires('configuration.edit')],
+        canActivate: [requires(['configuration.edit', 'configuration.publish'])],
         canDeactivate: [leaveGuard],
         loadComponent: () => import('./features/settings/setting-editor-page').then((m) => m.SettingEditorPage),
       },

@@ -1,6 +1,7 @@
 export type NavItem = { label: string; icon: string; link: string; group?: 'People' | 'Administration' };
 
-const WORKSPACE: (NavItem & { needs?: string })[] = [
+/** `needs`: the permission, or any one of several, that opens the page. */
+const WORKSPACE: (NavItem & { needs?: string | string[] })[] = [
   { label: 'Home', icon: 'home', link: '/app' },
   { label: 'Staff', icon: 'users', link: '/app/staff', group: 'People', needs: 'membership.read' },
   { label: 'Roles', icon: 'key', link: '/app/roles', group: 'People', needs: 'role.manage' },
@@ -11,7 +12,13 @@ const WORKSPACE: (NavItem & { needs?: string })[] = [
     group: 'Administration',
     needs: 'organization.manage',
   },
-  { label: 'Settings', icon: 'layers', link: '/app/settings', group: 'Administration', needs: 'configuration.edit' },
+  {
+    label: 'Settings',
+    icon: 'layers',
+    link: '/app/settings',
+    group: 'Administration',
+    needs: ['configuration.edit', 'configuration.publish'],
+  },
   { label: 'Public site', icon: 'globe', link: '/app/site', group: 'Administration', needs: 'institution_brand.update' },
   { label: 'Profile', icon: 'user', link: '/app/profile', group: 'Administration' },
 ];
@@ -27,5 +34,5 @@ export function navFor(kind: 'platform' | 'institution', can: (perm: string) => 
         { label: 'Institutions', icon: 'institution', link: '/console/institutions' },
         { label: 'Audit log', icon: 'list', link: '/console/audit' },
       ]
-    : WORKSPACE.filter((item) => !item.needs || can(item.needs)).map(({ needs, ...item }) => item);
+    : WORKSPACE.filter((item) => !item.needs || [item.needs].flat().some(can)).map(({ needs, ...item }) => item);
 }

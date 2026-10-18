@@ -37,4 +37,8 @@ describe('navFor', () => {
   it('keeps the console pages for the platform', () => {
     expect(navFor('platform', holding()).map((item) => item.label)).toEqual(['Overview', 'Institutions', 'Audit log']);
   });
+
+  it('opens Settings to someone who only approves setting changes', () => {
+    expect(navFor('institution', holding('configuration.publish')).map((item) => item.label)).toContain('Settings');
+  });
 });

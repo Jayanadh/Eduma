@@ -117,4 +117,26 @@ describe('Staff pages', () => {
     const messages = TestBed.inject(ToastService).messages().map((toast) => toast.text);
     expect(messages).toContain('Add another Institution Admin first.');
   });
+
+  it('gives a role from the form', async () => {
+    const fixture = await openDetail(detail());
+    const root = fixture.nativeElement as HTMLElement;
+    const select = root.querySelector<HTMLSelectElement>('#give-role')!;
+    const option = document.createElement('option');
+    option.value = 'registrar';
+    select.append(option);
+    select.value = 'registrar';
+    select.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    root.querySelector<HTMLFormElement>('form.give')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    const request = http.expectOne('/api/v1/institution/staff/m1/assignments');
+    expect(request.request.body).toEqual({
+      role: 'registrar',
+      scope_type: 'institution',
+      campus: null,
+      department: null,
+      starts_on: null,
+      ends_on: null,
+    });
+  });
 });

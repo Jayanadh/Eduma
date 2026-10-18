@@ -75,7 +75,7 @@ describe('HomePage', () => {
     const page = await render({ ...institution([ADMIN, SITE, CONTACTS], 'active'), modules: ['fees', 'students'] });
     expect(page.textContent).toContain('Students and guardians');
     expect(page.textContent).toContain('Fees');
-    expect(page.textContent).toContain('Arrives in a later release');
+    expect(page.textContent).toContain('each arrives in a later release');
   });
 
   it('tells a member with no role whom to ask, without the setup checklist', async () => {

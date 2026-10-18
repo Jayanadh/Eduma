@@ -2,8 +2,8 @@ import pytest
 from django.core.management import CommandError, call_command
 
 from accounts.models import RoleAssignment, User
-from institutions.modules import default_modules
 from institutions.models import Institution
+from institutions.modules import default_modules
 from sites.models import SiteRevision
 
 

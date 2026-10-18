@@ -94,8 +94,11 @@ Every demo login uses the password **`Demo-pass-2026`**.
 
 | Login ID | Sign in at | Things to try |
 |---|---|---|
-| `eduma.admin` | http://localhost:4201/login | Overview; Institutions (search as you type); **Add institution**, which gives the new institution its address and its admin's first password; an institution's page, where you can edit its details and own domain, activate, suspend, archive and reset its admin's password; Audit log. Branding is left to each institution's own admin. |
-| `aster.admin` | http://aster.localhost:4201/login | Home checklist; **Public site** (the same editor, for their own institution); Profile. |
+| `eduma.admin` | http://localhost:4201/login | Overview; Institutions (search as you type); **Add institution**, which gives the new institution its address, its modules and its admin's first password; an institution's page, where you can edit its details, own domain and modules, activate, restrict, suspend, archive and reset its admin's password; Audit log. Branding and staff are left to each institution's own admin. |
+| `aster.admin` | http://aster.localhost:4201/login | Home checklist and modules; **Staff** (add people with a first password, give and end roles for the whole school, a campus or a department); **Roles** (built-in roles and your own custom roles); **Organization** (campuses and departments); **Public site**; Profile. |
+| `aster.principal` | http://aster.localhost:4201/login | A Principal for the whole school: sees all staff and their roles, changes nothing. |
+| `aster.campus` | http://aster.localhost:4201/login | Campus Admin for City campus: sees and adds staff at City only; cannot make anyone an Institution Admin. |
+| `aster.teacher`, `aster.office` | http://aster.localhost:4201/login | A Science teacher (home only, for now) and a custom "Front office" role at City (sees City staff). |
 | `meridian.admin`, `summit.admin` | their own address | The same for their institutions. Signing in at another institution's address is refused. |
 | `vector.admin` | http://vector.localhost:4201/login | A first sign-in: the app asks for a new password before anything else. |
 

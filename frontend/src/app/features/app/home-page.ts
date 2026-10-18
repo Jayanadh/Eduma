@@ -60,16 +60,16 @@ const FIX_AT: Readonly<Record<string, string>> = { site_published: '/app/site', 
           </section>
           <section class="card stack">
             <h2 class="card-title">Modules in your plan</h2>
-            <ul class="modules">
-              @for (key of institution.modules; track key) {
-                <li>
-                  <span>{{ moduleLabels[key] ?? key }}</span>
-                  <span class="badge badge-muted">Arrives in a later release</span>
-                </li>
-              } @empty {
-                <li class="muted">Your plan has no modules yet. The Eduma team sets them.</li>
-              }
-            </ul>
+            @if (institution.modules.length) {
+              <p class="muted small">None is open yet: each arrives in a later release.</p>
+              <ul class="chips modules">
+                @for (key of institution.modules; track key) {
+                  <li class="chip">{{ moduleLabels[key] ?? key }}</li>
+                }
+              </ul>
+            } @else {
+              <p class="muted">Your plan has no modules yet. The Eduma team sets them.</p>
+            }
           </section>
         </div>
       } @else if (data.loading()) {
@@ -83,19 +83,12 @@ const FIX_AT: Readonly<Record<string, string>> = { site_published: '/app/site', 
     }
 
     .modules {
-      display: grid;
+      display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       margin: 0;
       padding: 0;
       list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 4px 12px;
-      }
     }
   `,
 })

@@ -24,6 +24,24 @@ spec `docs/superpowers/specs/2026-10-17-foundation-onboarding-branding-design.md
 | S1-12 | An institution may have its own domain (e.g. `www.dps.edu.in`) as well as `<slug>.<base host>`, set by the System Admin in its details at any time. Its links use the own domain; the Eduma address keeps working. On a server `DJANGO_ALLOWED_HOSTS=*`, since Eduma serves only its base host, its subdomains and recorded domains. | — |
 | S1-13 | Country, time zone and currency are chosen from lists taken from the browser's Intl data (ISO countries, current ISO 4217 currencies, IANA zones). | — |
 
+## Slice 2 (organization, staff roles, modules, restricted state)
+
+Full table and reasons: `docs/superpowers/specs/2026-10-18-slice2-organization-staff-modules-design.md` §2.
+
+| ID | Decision |
+|---|---|
+| S2-01 | Authority comes from role assignments (role + whole institution, campus or department + start/end dates), not a single role on the membership. |
+| S2-02, S2-03 | Built-in roles and the permission registry live in code; institutions add custom roles from the registry. Only permissions for built features are registered. |
+| S2-04 | Seeing the institution's home comes with membership itself. |
+| S2-05 | Staff logins get a first password with a forced change; a login ID is never reused across institutions. |
+| S2-06, S2-07 | Grant ceiling: nobody gives what they don't hold, changes their own roles, or removes the last Institution Admin. |
+| S2-08 | Role changes take effect at once, audited; approval routing comes with the configuration engine. |
+| S2-09 | The platform records each institution's modules; none is built yet, so each says it arrives in a later release. |
+| S2-10 | `restricted`: members can sign in and read; every change is refused with the reason. |
+| S2-11 | Every institution has a Main campus. |
+| S2-12 | Deferred: typed configuration engine, groups and affiliation grants, guardian grants, invitations, support access, approvals. |
+| S2-13 | New permission names `organization.manage` and `membership.read`. |
+
 ## Pack defaults accepted for local development
 
 Accepted by the user for local development on 12 Oct 2026 (pack 14 §3) and used in slice 1: D-02 (full catalogue kept,

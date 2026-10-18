@@ -27,7 +27,7 @@ const STATES: { code: LifecycleStatus; label: string }[] = [
       </app-page-header>
       <app-load-error [message]="data.error()" (retry)="data.reload()" />
       @if (data.value(); as overview) {
-        <div class="grid-4 section">
+        <div class="tiles section">
           @for (state of states; track state.code) {
             <a class="card card-strong figure tile" routerLink="/console/institutions" [queryParams]="{ status: state.code }">
               <strong>{{ overview.counts[state.code] }}</strong>
@@ -61,6 +61,12 @@ const STATES: { code: LifecycleStatus; label: string }[] = [
     </div>
   `,
   styles: `
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+    }
+
     .tile {
       color: inherit;
       text-decoration: none;

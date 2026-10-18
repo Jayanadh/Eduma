@@ -3,7 +3,31 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (17 October 2026)
+## Where things stand (18 October 2026)
+
+**Slice 2 is built and checked locally:** organization, staff roles, modules and the restricted state. Spec:
+`docs/superpowers/specs/2026-10-18-slice2-organization-staff-modules-design.md`. Plan:
+`docs/superpowers/plans/2026-10-18-slice2-organization-staff-modules.md`. Branch `slice-2-organization-access`, cut from
+`slice-1-foundation` (local commits only, nothing pushed).
+
+| Built in slice 2 | Where |
+|---|---|
+| Campuses and departments (nested, campus follows parent, no cycles, deactivation refused while in use); a Main campus for every institution | `backend/organization/`, `frontend/src/app/features/org/` |
+| Scoped, dated role assignments; permission registry and nine built-in roles; custom roles within the editor's own authority; grant ceiling, no self-changes, last-admin guard | `backend/accounts/roles.py`, `permissions.py`, `role_views.py` |
+| Staff: add with a first password, give and end roles, reset passwords, remove and restore; Campus Admins see and act only within their campus | `backend/accounts/staff*.py`, `frontend/src/app/features/staff/` |
+| Roles page and editor with a before/after preview | `frontend/src/app/features/roles/` |
+| Module catalogue (20 modules, category defaults, dependencies); Modules step in onboarding and tab on the institution page; "Modules in your plan" on Home | `backend/institutions/modules.py`, `frontend/src/app/core/modules.ts` |
+| `restricted` state: read-only for members with the reason shown; public page stays up | `backend/sites/middleware.py` |
+| Workspace menu by permission; restricted banner | `frontend/src/app/layout/` |
+
+Checks on 18 Oct 2026: backend `pytest` 231 passed; `ruff check --select F,E,W,I --line-length 120 --exclude
+'.venv,*/migrations' .` and `ruff format --check` (same options) clean; frontend `ng test` 117 passed; `ng build` clean.
+Browser (built-in, Chromium): as `aster.admin` added a campus, a member of staff with a first password, gave and ended a
+role, created a custom role; as `aster.campus` saw only City staff, Roles redirected home; as `eduma.admin` restricted
+Aster (banner shown, a write refused with the reason) and lifted it; onboarding Modules step and the Modules tab;
+Home and a staff page at 390 px with no sideways scroll.
+
+## Slice 1 (17 October 2026)
 
 **Slice 1 is built and checked locally:** foundation, onboarding, institution web addresses and branding. Spec:
 `docs/superpowers/specs/2026-10-17-foundation-onboarding-branding-design.md`. Plan:

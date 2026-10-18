@@ -28,6 +28,8 @@ PERMISSIONS: dict[str, Permission] = {
             False,
         ),
         Permission("role.manage", "Staff", "Create and change custom roles", True),
+        Permission("configuration.edit", "Settings", "Draft changes to settings and send them for approval", True),
+        Permission("configuration.publish", "Settings", "Publish and approve changes to settings", True),
     )
 }
 

@@ -75,6 +75,24 @@ export const routes: Routes = [
         loadComponent: () => import('./features/app/site-page').then((m) => m.SitePage),
       },
       {
+        path: 'staff',
+        title: 'Staff',
+        canActivate: [requires('membership.read')],
+        loadComponent: () => import('./features/staff/staff-page').then((m) => m.StaffPage),
+      },
+      {
+        path: 'staff/new',
+        title: 'Add staff',
+        canActivate: [requires('membership.assign')],
+        loadComponent: () => import('./features/staff/add-staff-page').then((m) => m.AddStaffPage),
+      },
+      {
+        path: 'staff/:id',
+        title: 'Staff',
+        canActivate: [requires('membership.read')],
+        loadComponent: () => import('./features/staff/staff-detail-page').then((m) => m.StaffDetailPage),
+      },
+      {
         path: 'organization',
         title: 'Organization',
         canActivate: [requires('organization.manage')],

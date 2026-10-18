@@ -13,7 +13,7 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     User.objects.filter(username="aster.admin").update(full_name="Changed")
     call_command("seed_demo")
     assert Institution.objects.count() == 4
-    assert User.objects.count() == 9
+    assert User.objects.count() == 10
     assert SiteRevision.objects.filter(status="published").count() == 3
     states = dict(Institution.objects.values_list("slug", "lifecycle_status"))
     assert states == {"aster": "active", "meridian": "active", "vector": "setup", "summit": "active"}
@@ -40,6 +40,14 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     )
     for institution in Institution.objects.all():
         assert institution.modules == default_modules(institution.category)
+    from configuration.models import SettingRevision
+    from configuration.registry import setting
+
+    assert setting(aster_inst, "modules.enabled") == ["admissions", "students"]
+    assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 1
+    assert setting(aster_inst, "access.role_approval") is False
+    deputy = User.objects.get(username="aster.deputy")
+    assert deputy.full_name == "Aster Deputy Admin" and deputy.check_password("Demo-pass-2026")
 
 
 def test_seed_refuses_without_debug(db, settings):

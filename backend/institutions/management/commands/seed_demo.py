@@ -24,6 +24,7 @@ ASTER_STAFF = [
     ("aster.campus", "Aster City Campus Admin", "campus_admin", "CITY"),
     ("aster.teacher", "Aster Science Teacher", "teacher", "SCI"),
     ("aster.office", "Aster Front Office", "Front office", "CITY"),
+    ("aster.deputy", "Aster Deputy Admin", "institution_admin", None),
 ]
 
 # slug, display name, legal name, category, active?, (primary, secondary, heading font, body font)
@@ -68,6 +69,7 @@ class Command(BaseCommand):
             institution.modules = default_modules(institution.category)
             institution.save(update_fields=["modules"])
         self._aster_staff(platform_admin)
+        self._aster_settings()
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -142,3 +144,16 @@ class Command(BaseCommand):
                 starts_on=today_for(aster),
                 created_by=actor,
             )
+
+    def _aster_settings(self) -> None:
+        """Aster has switched on Admissions and Students, through the same steps an admin takes."""
+        from accounts.permissions import today_for
+        from configuration import services as settings_services
+
+        aster = Institution.objects.get(slug="aster")
+        if aster.settings.filter(key="modules.enabled").exists():
+            return
+        admin = User.objects.get(username="aster.admin")
+        draft = settings_services.open_draft(aster, admin, "modules.enabled")
+        draft = settings_services.save_draft(aster, admin, "modules.enabled", draft.version, ["admissions", "students"])
+        settings_services.submit(aster, admin, "modules.enabled", draft.version, today_for(aster), "Demo data")

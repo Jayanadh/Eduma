@@ -40,7 +40,10 @@ class Student(VersionedModel):
     number = models.CharField(max_length=20)
     admitted_on = models.DateField()
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.ACTIVE)
-    # The student's own login.
+    # The admission it came from (provenance), and the student's own login.
+    application = models.OneToOneField(
+        "admissions.Application", null=True, blank=True, on_delete=models.PROTECT, related_name="student_record"
+    )
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="student_record"
     )

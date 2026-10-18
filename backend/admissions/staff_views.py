@@ -7,7 +7,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
 from accounts.role_views import holds_any
-from admissions import documents, review
+from admissions import documents, enrollment, review
 from admissions.applications import expire_if_due
 from admissions.serializers import staff_item, staff_list_item
 from common.pagination import Pages
@@ -119,6 +119,18 @@ class MakeOffer(StaffView):
         found = self.application()
         values = self.data(Offer)
         return self.answer(review.offer(request.user, found, values["version"], values["expires_on"]))
+
+
+class Enroll(Version):
+    password = serializers.CharField(trim_whitespace=False)
+
+
+class EnrollView(StaffView):
+    def post(self, request, pk):
+        found = self.application()
+        values = self.data(Enroll)
+        enrollment.enroll(request.user, found, values["version"], values["password"])
+        return self.answer(found)
 
 
 class Notes(StaffView):

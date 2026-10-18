@@ -153,7 +153,7 @@ def staff_item(application: Application, viewer) -> dict:
             {"id": str(n.id), "author": n.author.full_name, "text": n.text, "created_at": n.created_at}
             for n in application.notes.select_related("author")
         ],
-        "student_id": None,
+        "student_id": str(application.student_record.id) if hasattr(application, "student_record") else None,
         "actions": actions,
         "can_review": reviewer,
         "can_approve": approver,

@@ -16,6 +16,7 @@ urlpatterns = [
     path("applications/<uuid:pk>/eligible", staff_views.Eligible.as_view()),
     path("applications/<uuid:pk>/reject", staff_views.Reject.as_view()),
     path("applications/<uuid:pk>/offer", staff_views.MakeOffer.as_view()),
+    path("applications/<uuid:pk>/enroll", staff_views.EnrollView.as_view()),
     path("applications/<uuid:pk>/notes", staff_views.Notes.as_view()),
     path("applications/<uuid:pk>/documents/<uuid:doc>", staff_views.DocumentView.as_view()),
     path("applications/<uuid:pk>/documents/<uuid:doc>/verify", staff_views.VerifyDocument.as_view()),

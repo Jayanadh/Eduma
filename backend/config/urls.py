@@ -10,6 +10,7 @@ from institutions.urls import platform_patterns
 from institutions.views import OwnInstitutionView, module_catalogue, platform_overview
 from sites.public import PublicSiteView, public_asset
 from sites.urls import site_patterns
+from students.views import OwnRecord
 
 urlpatterns = [
     path("api/v1/health", health, name="health"),
@@ -27,6 +28,8 @@ urlpatterns = [
     path("api/v1/institution/", include("accounts.urls")),
     path("api/v1/institution/", include("configuration.urls")),
     path("api/v1/institution/admissions/", include("admissions.urls")),
+    path("api/v1/institution/", include("students.urls")),
+    path("api/v1/student/me", OwnRecord.as_view(), name="student-me"),
     path("api/v1/institution", OwnInstitutionView.as_view(), name="own-institution"),
     path("api/v1/platform/overview", platform_overview, name="platform-overview"),
     path("api/v1/platform/modules", module_catalogue, name="platform-modules"),

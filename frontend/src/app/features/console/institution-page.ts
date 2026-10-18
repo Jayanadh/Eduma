@@ -15,15 +15,17 @@ import { ToastService } from '../../ui/toast';
 import { UnsavedChanges } from '../../core/unsaved-changes';
 import { AuditList } from './audit-list';
 import { allowedMoves, lifecycleQuestion, Move } from './lifecycle';
+import { ModulesTab } from './modules-tab';
 import { InstitutionProfileForm } from './profile-form';
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
+  { key: 'modules', label: 'Modules' },
   { key: 'activity', label: 'Activity' },
 ];
 
-/** One institution, for the platform admin: its state and readiness, its details and its history. Its branding is its
- * own admin's to do. */
+/** One institution, for the platform admin: its state and readiness, its details, its modules and its history. Its
+ * branding is its own admin's to do. */
 @Component({
   selector: 'app-institution-page',
   imports: [
@@ -32,6 +34,7 @@ const TABS = [
     Icon,
     InstitutionProfileForm,
     LoadError,
+    ModulesTab,
     PageHeader,
     StatusBadge,
   ],

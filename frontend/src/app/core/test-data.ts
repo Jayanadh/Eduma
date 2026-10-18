@@ -1,6 +1,6 @@
 import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Me, PublicSite, Theme } from './api/types';
+import { Category, Me, ModuleInfo, PublicSite, Theme } from './api/types';
 import { AuthStore } from './auth-store';
 import { SiteStore } from './site-store';
 
@@ -108,3 +108,32 @@ export async function signInAs(user: Me | null): Promise<void> {
   TestBed.inject(HttpTestingController).expectOne('/api/v1/session').flush({ user });
   await loaded;
 }
+
+const ALL: Category[] = ['college', 'engineering_college', 'school', 'university'];
+const HIGHER: Category[] = ['college', 'engineering_college', 'university'];
+
+/** The module catalogue as GET /api/v1/platform/modules sends it (backend institutions/modules.py). */
+export const MODULE_CATALOGUE: ModuleInfo[] = (
+  [
+    ['admissions', 'Admissions and enrollment', 'core', ['students'], ALL],
+    ['students', 'Students and guardians', 'core', [], ALL],
+    ['academics', 'Academic structure and timetable', 'core', [], ALL],
+    ['attendance', 'Attendance', 'core', ['academics'], ALL],
+    ['exams', 'Assessment and results', 'core', ['academics'], ALL],
+    ['report_cards', 'Grades, sections, report cards and promotion', 'core', ['exams'], ['school']],
+    ['course_registration', 'Course registration, credits and degree audit', 'core', ['academics'], HIGHER],
+    ['outcomes', 'Lab batches, projects and outcome evidence', 'core', ['exams'], ['engineering_college', 'university']],
+    ['affiliations', 'Affiliated colleges and central examinations', 'core', ['exams'], ['university']],
+    ['fees', 'Fees', 'core', ['students'], ALL],
+    ['communication', 'Messages, calls and online classes', 'core', ['students'], ALL],
+    ['reports', 'Reports', 'core', [], ALL],
+    ['library', 'Library', 'operations', [], []],
+  ] as const
+).map(([key, label, group, depends_on, default_for]) => ({
+  key,
+  label,
+  group,
+  depends_on: [...depends_on],
+  default_for: [...default_for],
+  available: false,
+}));

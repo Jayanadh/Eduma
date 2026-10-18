@@ -78,6 +78,9 @@
           </section>
         </div>
       }
+      @case ('modules') {
+        <app-modules-tab class="section" [institution]="institution" (saved)="data.value.set($event)" (reload)="data.reload()" />
+      }
       @case ('activity') {
         <app-audit-list class="section" [path]="'platform/institutions/' + institution.id + '/audit'" />
       }

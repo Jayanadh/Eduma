@@ -10,7 +10,7 @@
     }
   </ol>
 
-  <form class="card card-strong wizard" [formGroup]="form" (ngSubmit)="step() === 4 ? create() : next()" novalidate>
+  <form class="card card-strong wizard" [formGroup]="form" (ngSubmit)="step() === steps.length - 1 ? create() : next()" novalidate>
     <p class="muted small step-count">Step {{ step() + 1 }} of {{ steps.length }}</p>
     <h2 #stepHeading tabindex="-1">{{ steps[step()] }}</h2>
 
@@ -123,6 +123,12 @@
         </div>
       }
       @case (3) {
+        <p class="muted">What this institution's plan includes. The common ones for its category are ticked; none of these
+          is built yet, so each will say it arrives in a later release.</p>
+        <app-module-picker [catalogue]="catalogue()" [selected]="modules()" (selectedChange)="chooseModules($event)" />
+        @if (serverErrors()['modules']; as message) { <p class="field-error">{{ message }}</p> }
+      }
+      @case (4) {
         <div class="form-grid" formGroupName="admin">
           <div class="field">
             <label for="admin-name">Full name</label>
@@ -154,7 +160,7 @@
           </div>
         </div>
       }
-      @case (4) {
+      @case (5) {
         <dl class="review">
           <div><dt>Legal name</dt><dd>{{ value('identity', 'legal_name') }}</dd></div>
           <div><dt>Name</dt><dd>{{ value('identity', 'display_name') }}</dd></div>
@@ -165,6 +171,7 @@
           <div><dt>Address</dt><dd>{{ value('contacts', 'address') }}</dd></div>
           <div><dt>Time zone and currency</dt><dd>{{ value('contacts', 'timezone') }} · {{ value('contacts', 'base_currency') }}</dd></div>
           <div class="full"><dt>Web address</dt><dd class="url">{{ previewUrl() }}</dd></div>
+          <div class="full"><dt>Modules</dt><dd>{{ moduleLabels() }}</dd></div>
           <div><dt>Institution Admin</dt><dd>{{ value('admin', 'full_name') }}</dd></div>
           <div><dt>Login ID</dt><dd>{{ value('admin', 'username') }}</dd></div>
         </dl>
@@ -186,7 +193,7 @@
         </button>
       }
       <button type="submit" class="btn btn-primary" [disabled]="busy()">
-        @if (step() === 4) {
+        @if (step() === steps.length - 1) {
           {{ busy() ? 'Creating…' : 'Create institution' }}
         } @else {
           Next <app-icon name="arrow-right" [size]="18" />

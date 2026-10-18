@@ -2,12 +2,16 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { defaultsFor, tick } from '../../core/modules';
+import { MODULE_CATALOGUE } from '../../core/test-data';
 import { OnboardingPage } from './onboarding-page';
 
 type Wizard = {
   form: OnboardingPage['form'];
   step: () => number;
   create: () => void;
+  modules: () => string[];
+  chooseModules: (keys: string[]) => void;
 };
 
 const VALUES = {
@@ -80,7 +84,7 @@ describe('OnboardingPage', () => {
       },
       { status: 422, statusText: 'Unprocessable' },
     );
-    expect(wizard.step()).toBe(3);
+    expect(wizard.step()).toBe(4);
   });
 
   it('opens the new institution', async () => {
@@ -90,5 +94,26 @@ describe('OnboardingPage', () => {
     wizard.create();
     http.expectOne('/api/v1/platform/institutions').flush({ id: 'new-id' }, { status: 201, statusText: 'Created' });
     expect(navigate).toHaveBeenCalledWith('/console/institutions/new-id');
+  });
+
+  it('starts the modules from the category defaults until they are changed by hand', async () => {
+    const wizard = await open();
+    http.expectOne('/api/v1/platform/modules').flush(MODULE_CATALOGUE);
+    expect(wizard.modules()).toEqual(defaultsFor('school', MODULE_CATALOGUE));
+    wizard.form.controls.identity.controls.category.setValue('university');
+    expect(wizard.modules()).toContain('affiliations');
+    wizard.chooseModules(tick(wizard.modules(), 'library', MODULE_CATALOGUE));
+    wizard.form.controls.identity.controls.category.setValue('school');
+    expect(wizard.modules()).toContain('affiliations');
+    expect(wizard.modules()).toContain('library');
+  });
+
+  it('sends the chosen modules with the new institution', async () => {
+    const wizard = await open();
+    http.expectOne('/api/v1/platform/modules').flush(MODULE_CATALOGUE);
+    wizard.form.patchValue(VALUES);
+    wizard.chooseModules(['students']);
+    wizard.create();
+    expect(http.expectOne('/api/v1/platform/institutions').request.body.modules).toEqual(['students']);
   });
 });

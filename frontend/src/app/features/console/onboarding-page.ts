@@ -5,16 +5,18 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { apiErrorMessage, fieldErrors } from '../../core/api-error';
-import { CATEGORY_LABELS, InstitutionDetail } from '../../core/api/types';
+import { Category, CATEGORY_LABELS, InstitutionDetail, ModuleInfo } from '../../core/api/types';
 import { COUNTRIES, CURRENCIES, TIME_ZONES } from '../../core/locales';
+import { defaultsFor } from '../../core/modules';
 import { slugify } from '../../core/slug';
 import { Icon } from '../../ui/icon';
+import { ModulePicker } from './module-picker';
 import { PageHeader } from '../../ui/page-header';
 import { Reveal } from '../../ui/reveal';
 
-const STEPS = ['Identity and type', 'Contacts', 'Web address', 'Institution Admin', 'Review and create'];
+const STEPS = ['Identity and type', 'Contacts', 'Web address', 'Modules', 'Institution Admin', 'Review and create'];
 /** Which step holds each field, so a server error can send the admin back to it. */
-const GROUP_STEP: Readonly<Record<string, number>> = { identity: 0, contacts: 1, address: 2, admin: 3 };
+const GROUP_STEP: Readonly<Record<string, number>> = { identity: 0, contacts: 1, address: 2, modules: 3, admin: 4 };
 const FIELD_GROUP: Readonly<Record<string, string>> = {
   legal_name: 'identity',
   display_name: 'identity',
@@ -29,6 +31,7 @@ const FIELD_GROUP: Readonly<Record<string, string>> = {
   timezone: 'contacts',
   base_currency: 'contacts',
   slug: 'address',
+  modules: 'modules',
 };
 type SlugCheck = { available: boolean; reason: string };
 
@@ -38,7 +41,7 @@ type SlugCheck = { available: boolean; reason: string };
  */
 @Component({
   selector: 'app-onboarding-page',
-  imports: [Icon, PageHeader, ReactiveFormsModule, Reveal],
+  imports: [Icon, ModulePicker, PageHeader, ReactiveFormsModule, Reveal],
   templateUrl: './onboarding-page.html',
   styleUrl: './onboarding-page.scss',
 })
@@ -86,6 +89,10 @@ export class OnboardingPage {
   });
 
   readonly step = signal(0);
+  /** Every module a plan can include, and the ones chosen: the category's defaults until the admin changes them. */
+  protected readonly catalogue = signal<ModuleInfo[]>([]);
+  readonly modules = signal<string[]>([]);
+  private modulesTouched = false;
   protected readonly busy = signal(false);
   protected readonly error = signal('');
   protected readonly serverErrors = signal<Record<string, string>>({});
@@ -116,6 +123,11 @@ export class OnboardingPage {
 
   constructor() {
     const { identity, address, admin } = this.form.controls;
+    this.http.get<ModuleInfo[]>('/api/v1/platform/modules').subscribe((catalogue) => {
+      this.catalogue.set(catalogue);
+      this.resetModules();
+    });
+    identity.controls.category.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.resetModules());
     // Suggestions follow the name until the admin types their own.
     identity.controls.display_name.valueChanges.pipe(takeUntilDestroyed()).subscribe((name) => {
       if (!address.controls.slug.dirty) {
@@ -128,6 +140,23 @@ export class OnboardingPage {
         admin.controls.username.setValue(`${slug.slice(0, 34).replace(/-+$/, '')}.admin`);
       }
     });
+  }
+
+  chooseModules(keys: string[]): void {
+    this.modulesTouched = true;
+    this.modules.set(keys);
+  }
+
+  private resetModules(): void {
+    if (!this.modulesTouched) {
+      const category = this.form.controls.identity.controls.category.value as Category;
+      this.modules.set(defaultsFor(category, this.catalogue()));
+    }
+  }
+
+  protected moduleLabels(): string {
+    const chosen = this.catalogue().filter((module) => this.modules().includes(module.key));
+    return chosen.map((module) => module.label).join(', ') || '—';
   }
 
   /** The first problem with a field: the server's answer, else the form's own check once touched. */
@@ -182,7 +211,7 @@ export class OnboardingPage {
       return;
     }
     const { identity, contacts, address, admin } = this.form.getRawValue();
-    const body = { ...identity, ...contacts, slug: address.slug.trim().toLowerCase(), admin };
+    const body = { ...identity, ...contacts, slug: address.slug.trim().toLowerCase(), modules: this.modules(), admin };
     this.busy.set(true);
     this.error.set('');
     this.serverErrors.set({});

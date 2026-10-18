@@ -21,10 +21,11 @@ from accounts.permissions import (
     today_for,
 )
 from accounts.role_serializers import CustomRoleInput
-from accounts.roles import BUILTIN_ROLES, IMPLICIT, PERMISSIONS, institution_only
+from accounts.roles import BUILTIN_ROLES, IMPLICIT, PERMISSIONS, institution_only, powerful
 from common import audit
 from common.exceptions import Problem
 from common.pagination import Pages
+from configuration.registry import setting
 from sites.permissions import member_with
 
 
@@ -205,6 +206,21 @@ class RoleDetail(GenericAPIView):
                     labels = ", ".join(PERMISSIONS[name].label.lower() for name in whole_only)
                     message = f"{who} this role at a campus or department; {labels} can only be given for the whole"
                     raise ValidationError({"permissions": [f"{message} institution."]})
+                gained = set(changes["permissions"]) - set(role.permissions)
+                held = in_use.count()
+                if (
+                    gained
+                    and held
+                    and powerful(changes["permissions"])
+                    and setting(institution, "access.role_approval")
+                ):
+                    raise Problem(
+                        409,
+                        "needs_approval",
+                        f"{held} {'person holds' if held == 1 else 'people hold'} this role. While approval for "
+                        "powerful roles is on, a held role cannot gain powers: make a new role and give it, so each "
+                        "new power is approved.",
+                    )
             if changes.get("is_active") is False and role.is_active and in_use.exists():
                 raise Problem(409, "in_use", "Take this role away from everyone who has it first.")
             diff = {

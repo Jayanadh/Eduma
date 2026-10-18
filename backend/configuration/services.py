@@ -128,8 +128,16 @@ def submit(institution, actor, key: str, version: int, effective_from: dt.date, 
         draft.reason = reason
         draft.submitted_by = actor
         draft.submitted_at = timezone.now()
+        alone = found.needs_approval and _other_publishers(institution, actor) == 0
+        if alone and found.exit_value is not None and draft.value == found.exit_value:
+            if not has_perm(actor, institution, "configuration.publish"):
+                raise PermissionDenied("Ask someone who can publish settings to publish this change.")
+            _publish(draft, institution)
+            verb = "Published without a second person, as nobody else could approve,"
+            _log(actor, "setting.published", draft, verb, institution, reason=reason)
+            return draft
         if found.needs_approval:
-            if _other_publishers(institution, actor) == 0:
+            if alone:
                 raise Problem(
                     409,
                     "no_approver",

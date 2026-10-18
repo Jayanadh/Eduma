@@ -72,12 +72,11 @@ def test_maker_is_not_checker(world):
     assert setting(world.a, APPROVAL) is True
 
 
-def test_single_publisher_cannot_send_for_approval(world):
-    with pytest.raises(ValidationError):  # value check comes first: one assigner cannot turn approval on
+def test_single_publisher_cannot_turn_approval_on_but_can_turn_it_off(world):
+    with pytest.raises(ValidationError):  # value check comes first: one approver cannot turn approval on
         change(world.a, world.a_admin, APPROVAL, True)
-    with pytest.raises(Problem) as missing:
-        change(world.a, world.a_admin, APPROVAL, False)
-    assert code_of(missing.value) == "no_approver"
+    # Off is the way out, so it never waits for a second person who does not exist (final review #2).
+    assert change(world.a, world.a_admin, APPROVAL, False).status == "published"
 
 
 def test_editor_without_publish_cannot_publish(world):

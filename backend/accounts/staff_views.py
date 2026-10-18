@@ -187,7 +187,8 @@ class Decide(ActionView):
     """Approve or turn down a role that waits for approval."""
 
     def row(self, aid) -> RoleAssignment:
-        found = self.person().assignments.filter(pk=aid).select_related("institution", "membership__user").first()
+        # target(): a request for the caller's own roles is someone else's to decide.
+        found = self.target().assignments.filter(pk=aid).select_related("institution", "membership__user").first()
         if found is None:
             raise NotFound()
         return found

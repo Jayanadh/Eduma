@@ -30,6 +30,9 @@ class Definition:
     clean: Callable[[Any, Any], Any]
     describe: Callable[[Any, Any], str]
     preview: Callable[[Any, Any, Any, dt.date], list[str]]
+    # A value that may be published without a second person when nobody else could approve it, so the setting can
+    # never lock an institution in (turning role approval off after the other approver has left).
+    exit_value: Any = None
 
 
 def academic_year(month: int, on: dt.date) -> tuple[str, dt.date, dt.date]:
@@ -69,20 +72,23 @@ def _preview_modules(institution, old, new, effective_from) -> list[str]:
     return lines
 
 
-def _whole_institution_assigners(institution) -> int:
-    from accounts.permissions import has_perm
+def _full_approvers(institution) -> int:
+    """People who could approve any role request, including one for an Institution Admin."""
+    from accounts.permissions import WHOLE, can_assign
+    from accounts.roles import BUILTIN_ROLES
 
+    everything = BUILTIN_ROLES["institution_admin"].permissions
     members = institution.memberships.filter(status="active", user__is_active=True).select_related("user")
-    return sum(1 for membership in members if has_perm(membership.user, institution, "membership.assign"))
+    return sum(1 for membership in members if can_assign(membership.user, institution, everything, WHOLE))
 
 
 def _clean_approval(institution, value) -> bool:
     if not isinstance(value, bool):
         raise ValidationError("Choose on or off.")
-    if value and _whole_institution_assigners(institution) < 2:
+    if value and _full_approvers(institution) < 2:
         raise ValidationError(
-            "Turning this on needs at least two people who can add staff for the whole institution, so one can "
-            "approve the other's requests."
+            "Turning this on needs at least two people who can approve any role (such as two Institution Admins), so "
+            "one can approve the other's requests."
         )
     return value
 
@@ -137,6 +143,7 @@ DEFINITIONS: dict[str, Definition] = {
             _clean_approval,
             lambda institution, value: "On: a second person approves" if value else "Off: roles take effect when given",
             _preview_approval,
+            exit_value=False,
         ),
         Definition(
             "academic.year_start",

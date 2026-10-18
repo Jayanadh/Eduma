@@ -306,6 +306,8 @@ def _decision(actor, assignment: RoleAssignment) -> RoleAssignment:
         raise Problem(409, "invalid_transition", "This request has already been decided.")
     if row.created_by_id == actor.id:
         raise Problem(403, "own_request", "You asked for this role, so someone else must decide on it.")
+    if row.membership.user_id == actor.id:
+        raise Problem(403, "own_membership", "This role is for you, so someone else must decide on it.")
     if not can_assign(actor, row.institution, row.permissions, row.scope):
         raise PermissionDenied("Deciding on this role is beyond your own.")
     return row
@@ -315,6 +317,7 @@ def can_decide(viewer, row: RoleAssignment) -> bool:
     return (
         row.status == RoleAssignment.Status.PENDING
         and row.created_by_id != getattr(viewer, "id", None)
+        and row.membership.user_id != getattr(viewer, "id", None)
         and can_assign(viewer, row.institution, row.permissions, row.scope)
     )
 

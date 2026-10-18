@@ -181,12 +181,13 @@ class RoleDetail(GenericAPIView):
         return Response(role_item(self.role(), _counts(request.institution)))
 
     def patch(self, request, pk):
+        found = self.role()
         data = CustomRoleInput(data=request.data, partial=True)
         data.is_valid(raise_exception=True)
         changes = dict(data.validated_data)
         institution = request.institution
         with transaction.atomic():
-            role = CustomRole.objects.select_for_update().get(pk=self.role().pk)
+            role = CustomRole.objects.select_for_update().get(pk=found.pk)
             role.check_version(changes.pop("version", None))
             held = grants(active_membership(request.user, institution))
             if not all(holds(held, institution, name, WHOLE) for name in role.permissions):

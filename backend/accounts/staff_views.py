@@ -74,11 +74,12 @@ class StaffDetail(StaffView):
         return Response(staff_detail(self.person(), request.user))
 
     def patch(self, request, pk):
+        found = self.managed()  # the record first: someone who may not see it learns nothing from the body's errors
         data = DetailsInput(data=request.data)
         data.is_valid(raise_exception=True)
         changes = dict(data.validated_data)
         with transaction.atomic():
-            membership = Membership.objects.select_for_update().get(pk=self.managed().pk)
+            membership = Membership.objects.select_for_update().get(pk=found.pk)
             membership.check_version(changes.pop("version"))
             user = membership.user
             diff = {
@@ -121,18 +122,18 @@ class ActionView(StaffView):
 
 class GiveRole(ActionView):
     def post(self, request, pk):
+        membership = self.target()
         data = AssignmentInput(data=request.data)
         data.is_valid(raise_exception=True)
-        membership = self.target()
         give_role(request.user, membership, data.validated_data)
         return self.done(membership, status.HTTP_201_CREATED)
 
 
 class EndRole(ActionView):
     def post(self, request, pk, aid):
+        membership = self.target()
         data = ReasonInput(data=request.data)
         data.is_valid(raise_exception=True)
-        membership = self.target()
         row = membership.assignments.filter(pk=aid).select_related("institution", "membership__user").first()
         if row is None:
             raise NotFound()
@@ -142,18 +143,20 @@ class EndRole(ActionView):
 
 class ResetPassword(ActionView):
     def post(self, request, pk):
+        membership = self.managed()
         data = PasswordInput(data=request.data)
         data.is_valid(raise_exception=True)
-        reset_password(request.user, self.managed(), data.validated_data["password"])
+        reset_password(request.user, membership, data.validated_data["password"])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class Remove(ActionView):
     def post(self, request, pk):
+        found = self.managed()
         data = RemoveInput(data=request.data)
         data.is_valid(raise_exception=True)
         values = data.validated_data
-        membership = remove(request.user, self.managed(), values["reason"], values["version"])
+        membership = remove(request.user, found, values["reason"], values["version"])
         return self.done(membership)
 
 
@@ -163,7 +166,8 @@ class VersionInput(serializers.Serializer):
 
 class Restore(ActionView):
     def post(self, request, pk):
+        found = self.target()
         data = VersionInput(data=request.data)
         data.is_valid(raise_exception=True)
-        membership = restore(request.user, self.target(), data.validated_data["version"])
+        membership = restore(request.user, found, data.validated_data["version"])
         return self.done(membership)

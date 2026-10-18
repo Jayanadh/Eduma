@@ -72,10 +72,11 @@ def covers(institution, holder: Scope, target: Scope, tree: dict | None = None) 
         return False
     if holder[0] == "campus":
         return tree[target[1]][1] == holder[1]
-    node = target[1]
-    while node is not None:
+    node, seen = target[1], set()
+    while node is not None and node not in seen:  # `seen`: a loop in bad data must not hang the request
         if node == holder[1]:
             return True
+        seen.add(node)
         node = tree.get(node, (None, None))[0]
     return False
 

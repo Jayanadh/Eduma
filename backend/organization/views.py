@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.db.models import Q
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView
 
 from accounts.models import RoleAssignment
@@ -7,6 +8,7 @@ from accounts.permissions import live, today_for
 from common import audit
 from common.exceptions import Problem
 from common.pagination import Pages
+from institutions.models import Institution
 from organization.models import Campus, Department
 from organization.serializers import CampusSerializer, DepartmentSerializer
 from sites.permissions import member_with
@@ -55,8 +57,11 @@ class OrgDetail(OrgView, RetrieveUpdateAPIView):
         changes = dict(serializer.validated_data)
         version = changes.pop("version", None)
         with transaction.atomic():
+            # One change to an institution's structure at a time, so two parent moves cannot together make a loop.
+            Institution.objects.select_for_update().get(pk=self.request.institution.pk)
             record = self.model.objects.select_for_update().get(pk=serializer.instance.pk)
             record.check_version(version)
+            self.check_locked(record, changes)
             if changes.get("is_active") is False and record.is_active:
                 self.check_can_deactivate(record)
             diff = {
@@ -75,6 +80,9 @@ class OrgDetail(OrgView, RetrieveUpdateAPIView):
 
     def check_can_deactivate(self, record) -> None:
         raise NotImplementedError
+
+    def check_locked(self, record, changes: dict) -> None:
+        """Checks that need the current state, made again under the lock."""
 
     def after_update(self, record, diff: dict) -> None:
         pass
@@ -119,6 +127,11 @@ class DepartmentDetail(OrgDetail):
             raise in_use("Deactivate its departments first.")
         if (count := live_assignments(self.request.institution, department=department).count()) > 0:
             raise in_use(f"{count} {'person has a role' if count == 1 else 'people have roles'} in this department.")
+
+    def check_locked(self, department: Department, changes: dict) -> None:
+        parent = changes.get("parent")
+        if parent is not None and (parent.pk == department.pk or parent.pk in department.descendant_ids()):
+            raise ValidationError({"parent": ["A department cannot sit under itself or one of its own departments."]})
 
     def after_update(self, department: Department, diff: dict) -> None:
         # Departments below follow their parent to a new campus.

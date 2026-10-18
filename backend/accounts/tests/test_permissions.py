@@ -135,3 +135,26 @@ def test_me_lists_roles_permissions_and_restriction(world):
         "restricted": False,
         "status_reason": "",
     }
+
+
+def test_covers_ends_even_if_departments_loop(world):
+    """Two parent changes at once could once loop departments; the scope walk must still finish (final review #2)."""
+    import signal
+
+    from accounts.permissions import covers
+    from organization.models import Department
+
+    a = factories.department(world.a, code="A")
+    b = factories.department(world.a, code="B", parent=a)
+    other = factories.department(world.a, code="C")
+    Department.objects.filter(pk=a.pk).update(parent=b)
+
+    def too_slow(*_):
+        raise TimeoutError("covers() did not finish")
+
+    signal.signal(signal.SIGALRM, too_slow)
+    signal.alarm(2)
+    try:
+        assert not covers(world.a, ("department", other.id), ("department", a.id))
+    finally:
+        signal.alarm(0)

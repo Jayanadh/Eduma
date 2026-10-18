@@ -4,8 +4,8 @@ counts, applicants or anything unpublished."""
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny
-from rest_framework.throttling import SimpleRateThrottle
 from rest_framework.response import Response
+from rest_framework.throttling import SimpleRateThrottle
 
 from accounts.permissions import today_for
 from admissions.models import AdmissionCycle

@@ -3,7 +3,28 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (18 October 2026)
+## Where things stand (18 October 2026, slice 3)
+
+**Slice 3 is built and checked locally, finishing BUILD-03** except the parts the pack places elsewhere (support access
+→ BUILD-11, groups and affiliation grants → BUILD-05, guardian grants → BUILD-04, invitations/recovery → after D-12).
+Spec: `docs/superpowers/specs/2026-10-19-slice3-configuration-approvals-design.md`. Plan:
+`docs/superpowers/plans/2026-10-19-slice3-configuration-approvals.md`. Branch `slice-3-configuration`, cut from
+`slice-2-organization-access`.
+
+| Built in slice 3 | Where |
+|---|---|
+| Configuration engine: typed settings in code, revisions with drafts, preview, approval by a second person, effective dates, cancelling unstarted schedules, history and restore | `backend/configuration/` |
+| Settings: modules switched on (plan ∩ switched on), approval for powerful roles, academic year start | `backend/configuration/registry.py` |
+| Role-change approval: powerful roles wait (grant nothing) until someone else who could give them approves; reject with a reason; approvals list | `backend/accounts/staff.py`, `approvals.py` |
+| Settings list and editor; grouped menu; "Waiting for your approval" on Home; approve/reject on the staff page; academic year and switched-on modules on Home | `frontend/src/app/features/settings/`, `layout/`, `features/app/`, `features/staff/` |
+| Slice 2 review follow-ups: 422/409 for model and race errors, unique active role names, rank re-checked under the lock, private platform notes, audit wording, roles search, one query per staff page, reversible role migrations, route guards, Add staff leave-guard, can_give, onboarding fallback | across backend and frontend |
+
+Checks: backend `pytest` all passing, `ruff check`/`ruff format --check` clean; frontend `ng test` 132 passed, `ng build`
+clean. Browser: as `aster.admin` scheduled the academic year to April from 1 Apr 2027 (today still June) and sent
+"approval for powerful roles" for approval; as `aster.deputy` approved it from Home; as `aster.campus` asked to make
+`aster.office` a Campus Admin — it waited; the deputy approved it on the staff page. The demo was then put back (role
+ended, approval off through the same two-person steps). Settings editor checked at 390 px with no sideways scroll.
+
 
 **Slice 2 is built and checked locally:** organization, staff roles, modules and the restricted state. Spec:
 `docs/superpowers/specs/2026-10-18-slice2-organization-staff-modules-design.md`. Plan:

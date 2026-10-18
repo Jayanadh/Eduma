@@ -54,3 +54,18 @@ D-18 (one complete theme first; no dark mode yet).
 D-01 pilot boards and regulations · D-03 capacity targets · D-05 launch languages · D-06 team, budget and dates ·
 D-12 providers (payment, email/SMS, storage, media) · D-14 residency, retention and recovery commitments ·
 D-16 import formats · D-17 support coverage · D-21 hosting and region · D-22 mobile framework.
+
+## Slice 3 (configuration engine, module enablement, approvals)
+
+Full table and reasons: `docs/superpowers/specs/2026-10-19-slice3-configuration-approvals-design.md` §2.
+
+| ID | Decision |
+|---|---|
+| S3-01, S3-02 | Settings are defined in code; institutions hold revisions: draft → waiting for approval → published → replaced, or returned / withdrawn. Published revisions are never edited. |
+| S3-03 | A change starts on a chosen day (today or later); the value on any day is the latest published one that has started; a newer change cancels a not-yet-started one; restore puts an old value in a new draft. |
+| S3-04, S3-05 | Changes that need approval are approved by someone else holding `configuration.publish`; `configuration.edit` drafts and sends. |
+| S3-06, S3-07 | First settings: modules switched on (within the plan), approval for powerful roles (needs two whole-institution assigners), academic year start month. Modules in force = plan ∩ switched on. |
+| S3-08 | While approval is on, a role beyond "see staff" waits until someone else who could give it approves. |
+| S3-09 | No campus overrides yet. |
+| S3-10 | Workspace menu grouped: Home · People · Administration. |
+| S3-11 | Support access → BUILD-11; groups and affiliation grants → BUILD-05; guardian grants → BUILD-04; invitations and recovery wait for D-12. |

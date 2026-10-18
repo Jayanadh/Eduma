@@ -20,7 +20,13 @@ Spec: `docs/superpowers/specs/2026-10-19-slice3-configuration-approvals-design.m
 | Slice 2 review follow-ups: 422/409 for model and race errors, unique active role names, rank re-checked under the lock, private platform notes, audit wording, roles search, one query per staff page, reversible role migrations, route guards, Add staff leave-guard, can_give, onboarding fallback | across backend and frontend |
 
 Checks: backend `pytest` all passing, `ruff check`/`ruff format --check` clean; frontend `ng test` 132 passed, `ng build`
-clean. Browser: as `aster.admin` scheduled the academic year to April from 1 Apr 2027 (today still June) and sent
+clean. Final review (fresh reviewer): fixed, each with a failing test first — nobody approves a role requested for
+themselves; turning approval off can never get stuck (a lone remaining approver may switch it off, audited); turning it on
+needs two people who could approve any role; a held custom role cannot gain powers while approval is on; Settings opens
+to approvers who only publish. Deferred minor items: expired role requests stay approvable without effect; approve and
+return ignore the setting key in the URL; same-day republish labels the earlier one "Replaced before it started"; some
+audit lines lack "from" values; approver counting is per person; the editor drops an unsaved edit when paging history.
+Browser: as `aster.admin` scheduled the academic year to April from 1 Apr 2027 (today still June) and sent
 "approval for powerful roles" for approval; as `aster.deputy` approved it from Home; as `aster.campus` asked to make
 `aster.office` a Campus Admin — it waited; the deputy approved it on the staff page. The demo was then put back (role
 ended, approval off through the same two-person steps). Settings editor checked at 390 px with no sideways scroll.

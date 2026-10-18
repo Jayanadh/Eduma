@@ -8,7 +8,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
 from accounts.models import Membership
-from accounts.permissions import can_manage_person
+from accounts.permissions import can_manage_person, today_for
 from accounts.role_views import holds_any
 from accounts.staff import (
     create_staff,
@@ -20,7 +20,14 @@ from accounts.staff import (
     restore,
     visible_memberships,
 )
-from accounts.staff_serializers import AssignmentInput, DetailsInput, StaffInput, staff_detail, staff_item
+from accounts.staff_serializers import (
+    AssignmentInput,
+    DetailsInput,
+    StaffInput,
+    current_roles,
+    staff_detail,
+    staff_item,
+)
 from common import audit
 from common.pagination import Pages
 
@@ -57,6 +64,7 @@ class StaffList(StaffView):
 
     def get(self, request):
         queryset = visible_memberships(request.user, request.institution).select_related("user", "institution")
+        queryset = queryset.prefetch_related(current_roles(today_for(request.institution)))
         if len(search := request.query_params.get("search", "").strip()) >= 3:
             queryset = queryset.filter(Q(user__full_name__icontains=search) | Q(user__username__icontains=search))
         page = self.paginate_queryset(queryset.order_by("user__full_name"))

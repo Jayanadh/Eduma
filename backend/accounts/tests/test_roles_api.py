@@ -124,3 +124,28 @@ def test_roles_not_on_other_hosts(world, client_for):
     role = factories.custom_role(world.a)
     assert client_for(world.b.slug, world.b_admin).get(f"{ROLES}/{role.id}").status_code == 404
     assert client_for(None, world.platform_admin).get(ROLES).status_code == 404
+
+
+def test_active_role_names_are_unique_in_the_database_too(world):
+    """Two creates at the same instant cannot both pass the name check (final review #6)."""
+    from django.db import IntegrityError, transaction
+
+    factories.custom_role(world.a, name="Front office")
+    with pytest.raises(IntegrityError), transaction.atomic():
+        factories.custom_role(world.a, name="FRONT OFFICE")
+    factories.custom_role(world.a, name="Front office", is_active=False)
+
+
+def test_restoring_an_archived_role_checks_its_name(world, admin):
+    """Final review #5."""
+    old = factories.custom_role(world.a, name="Office", is_active=False)
+    factories.custom_role(world.a, name="office")
+    response = admin.patch(f"{ROLES}/{old.id}", {"version": old.version, "is_active": True}, format="json")
+    assert response.status_code == 422 and response.json()["errors"][0]["field"] == "name"
+
+
+def test_roles_list_searches_from_three_letters(world, admin):
+    """Final review #15: every list is searchable."""
+    factories.custom_role(world.a, name="Front office")
+    assert [r["label"] for r in admin.get(ROLES, {"search": "fro"}).json()["results"]] == ["Front office"]
+    assert admin.get(ROLES, {"search": "fr"}).json()["count"] == 10

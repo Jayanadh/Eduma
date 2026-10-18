@@ -90,3 +90,21 @@ def test_lifting_the_restriction_restores_writes(world, platform, restricted, cl
     assert admin.post("/api/v1/institution/campuses", {"code": "CITY", "name": "City"}).status_code == 403
     assert post_transition(platform, world.a, "active", reason="Paid").status_code == 200
     assert admin.post("/api/v1/institution/campuses", {"code": "CITY", "name": "City"}).status_code == 201
+
+
+def test_members_see_the_platform_note_only_while_restricted(world, platform, client_for):
+    """Final review #7: an activation or override note is the platform's own; a restriction reason is for members."""
+    teacher = client_for(world.a.slug, factories.member(world.a, role="teacher"))
+    world.a.status_reason = "Activated early: board letter pending"
+    world.a.save()
+    assert teacher.get("/api/v1/institution").json()["status_reason"] == ""
+    post_transition(platform, world.a, "restricted", reason="Fees overdue")
+    assert teacher.get("/api/v1/institution").json()["status_reason"] == "Fees overdue"
+
+
+def test_lifting_reads_well_in_the_audit_log(world, platform, restricted):
+    """Final review #11."""
+    post_transition(platform, world.a, "active", reason="Paid")
+    lifted = AuditEvent.objects.get(action="institution.restriction_lifted")
+    assert lifted.summary == "Lifted the restriction on Aster School"
+    assert AuditEvent.objects.get(action="institution.restricted").summary == "Restricted Aster School"

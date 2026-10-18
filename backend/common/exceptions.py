@@ -1,6 +1,8 @@
 """Every API error is an RFC 9457 problem: {type, title, status, detail, code, errors[]} as application/problem+json.
 The app reads `code`; `errors` lists field problems as {field: "admin.username", code, message}."""
 
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError
 from django.http import Http404
 from rest_framework import exceptions as drf
 from rest_framework.response import Response
@@ -93,6 +95,12 @@ def _response(status: int, code: str, title: str, detail: str, errors=(), header
 def problem_handler(exc, context):
     if isinstance(exc, Http404):
         exc = drf.NotFound()
+    if isinstance(exc, DjangoValidationError):
+        exc = drf.ValidationError(exc.messages)
+    if isinstance(exc, IntegrityError):
+        # Two identical saves at once: the database's unique rules held; the second caller just needs to reload.
+        detail = "Someone else saved the same thing at the same moment. Reload and try again."
+        return _response(409, "conflict", "Saved at the same moment", detail)
     if isinstance(exc, Problem):
         return _response(exc.status_code, exc.problem_code, exc.title, str(exc.detail), **exc.extra)
     for kind, status, code, title in _KNOWN:

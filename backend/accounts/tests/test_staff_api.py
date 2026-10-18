@@ -139,3 +139,21 @@ def test_roles_come_with_their_phase_on_the_institutions_calendar(world, org, ad
         "Principal / Director": "later",
         "Registrar": "earlier",
     }
+
+
+def test_staff_list_queries_do_not_grow_with_staff(world, org, admin):
+    """Final review #14: one page costs the same number of queries for 5 people or 25."""
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    def queries() -> int:
+        with CaptureQueriesContext(connection) as captured:
+            assert admin.get(STAFF, {"page_size": 50}).status_code == 200
+        return len(captured)
+
+    for _ in range(4):
+        factories.member(world.a, role="teacher", scope=org[2])
+    few = queries()
+    for _ in range(20):
+        factories.member(world.a, role="teacher", scope=org[2])
+    assert queries() == few

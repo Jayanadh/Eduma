@@ -15,6 +15,7 @@ from accounts.permissions import (
     Scope,
     active_membership,
     can_assign,
+    can_manage_person,
     covers,
     department_tree,
     grants,
@@ -219,22 +220,31 @@ def end_assignment(actor, assignment: RoleAssignment, reason: str) -> RoleAssign
     return row
 
 
+def _check_rank(actor, membership: Membership) -> None:
+    """The view checked this too; checking again under the lock means a change made meanwhile cannot slip through."""
+    if not can_manage_person(actor, membership):
+        raise PermissionDenied("You can't change this person: they hold roles beyond yours.")
+
+
 def reset_password(actor, membership: Membership, password: str) -> None:
     person = membership.user
     try:
         password_validation.validate_password(password, person)
     except DjangoValidationError as error:
         raise ValidationError({"password": error.messages}) from error
-    person.set_password(password)
-    person.must_change_password = True
-    person.save()
-    audit.log(
-        actor,
-        "staff.password_reset",
-        membership,
-        f"Reset the password of {person.full_name}",
-        institution=membership.institution,
-    )
+    with transaction.atomic():
+        _lock(membership.institution)
+        _check_rank(actor, membership)
+        person.set_password(password)
+        person.must_change_password = True
+        person.save()
+        audit.log(
+            actor,
+            "staff.password_reset",
+            membership,
+            f"Reset the password of {person.full_name}",
+            institution=membership.institution,
+        )
 
 
 def remove(actor, membership: Membership, reason: str, version: int) -> Membership:
@@ -246,6 +256,7 @@ def remove(actor, membership: Membership, reason: str, version: int) -> Membersh
         membership.check_version(version)
         if membership.status != Membership.Status.ACTIVE:
             raise Problem(409, "invalid_transition", "This person has already been removed.")
+        _check_rank(actor, membership)
         check_last_admin(institution, losing=membership)
         for row in membership.assignments.filter(status=RoleAssignment.Status.ACTIVE):
             _end(actor, row, "Removed from staff")

@@ -168,3 +168,17 @@ def test_roles_that_start_later_count_for_rank_and_visibility(world, org, admin,
     created = boss.post(STAFF, later, format="json")
     assert created.status_code == 201
     assert boss.get(f"{STAFF}/{created.json()['id']}").status_code == 200
+
+
+def test_rank_is_checked_again_under_the_lock(world, org):
+    """Final review #6: the view's check could be stale by the time the change runs."""
+    from rest_framework.exceptions import PermissionDenied
+
+    from accounts import staff
+
+    boss = factories.member(world.a, role="campus_admin", scope=org[1])
+    principal = Membership.objects.get(user=factories.member(world.a, role="principal"))
+    with pytest.raises(PermissionDenied):
+        staff.remove(boss, principal, "x", principal.version)
+    with pytest.raises(PermissionDenied):
+        staff.reset_password(boss, principal, "Fresh-pass-2026")

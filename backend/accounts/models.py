@@ -6,6 +6,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+from django.db.models.functions import Lower
 
 from accounts.roles import BUILTIN_ROLES
 from common.models import VersionedModel
@@ -83,6 +84,11 @@ class CustomRole(VersionedModel):
 
     class Meta:
         ordering = ["-is_active", "name"]
+        constraints = [
+            models.UniqueConstraint(
+                Lower("name"), "institution", condition=Q(is_active=True), name="unique_active_role_name"
+            )
+        ]
 
     def __str__(self) -> str:
         return self.name

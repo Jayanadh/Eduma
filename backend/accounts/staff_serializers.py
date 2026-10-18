@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from rest_framework import serializers
 
 from accounts.models import Membership, RoleAssignment
@@ -32,8 +33,16 @@ def _assignments(membership: Membership):
     return membership.assignments.select_related("custom_role", "campus", "department")
 
 
+def current_roles(today) -> Prefetch:
+    """Prefetches each membership's in-effect assignments into `current_assignments`, for lists."""
+    rows = in_effect(RoleAssignment.objects.select_related("custom_role", "campus", "department"), today)
+    return Prefetch("assignments", queryset=rows, to_attr="current_assignments")
+
+
 def roles_of(membership: Membership) -> list[dict]:
-    rows = in_effect(_assignments(membership), today_for(membership.institution))
+    rows = getattr(membership, "current_assignments", None)
+    if rows is None:
+        rows = in_effect(_assignments(membership), today_for(membership.institution))
     return [{"label": row.role_label, "scope_label": row.scope_label} for row in rows]
 
 

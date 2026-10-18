@@ -44,3 +44,27 @@ def test_http404_is_not_found_and_throttled_is_rate_limited():
 
 def test_unknown_exceptions_fall_through():
     assert problem_handler(ValueError("boom"), {}) is None
+
+
+def test_django_validation_error_is_422_problem():
+    """A model-level check (such as a malformed id in a filter) is the caller's mistake, not a server error."""
+    from django.core.exceptions import ValidationError as DjangoValidationError
+
+    response = problem_handler(DjangoValidationError("“nope” is not a valid UUID."), {})
+    assert response.status_code == 422
+    assert response.data["code"] == "validation_failed"
+
+
+def test_integrity_error_is_409_problem():
+    """Two identical saves at the same instant: the loser is told to reload, not shown a server error."""
+    from django.db import IntegrityError
+
+    response = problem_handler(IntegrityError("duplicate key value"), {})
+    assert response.status_code == 409
+    assert response.data["code"] == "conflict"
+    assert "duplicate key" not in response.data["detail"]
+
+
+def test_malformed_campus_filter_is_422(world, client_for):
+    response = client_for(world.a.slug, world.a_admin).get("/api/v1/institution/departments", {"campus": "garbage"})
+    assert response.status_code == 422

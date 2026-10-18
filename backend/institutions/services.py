@@ -168,6 +168,17 @@ TRANSITIONS = {
 }
 
 
+# The audit log's wording for each move.
+SUMMARIES = {
+    "institution.activated": "Activated",
+    "institution.suspended": "Suspended",
+    "institution.reactivated": "Reactivated",
+    "institution.archived": "Archived",
+    "institution.restricted": "Restricted",
+    "institution.restriction_lifted": "Lifted the restriction on",
+}
+
+
 def transition(institution_id, actor, *, to: str, reason: str, version: int, override_reason: str = "") -> Institution:
     """Moves an institution through its lifecycle with a recorded reason. Suspension and archiving end members'
     sessions on their next request (see sites.middleware.SessionSiteMiddleware); nothing is deleted."""
@@ -206,7 +217,7 @@ def transition(institution_id, actor, *, to: str, reason: str, version: int, ove
             actor,
             action,
             institution,
-            f"{action.split('.')[1].capitalize()} {institution.display_name}",
+            f"{SUMMARIES[action]} {institution.display_name}",
             changes={"from": start, "to": to, "reason": reason, "override_reason": override_reason},
         )
         return institution

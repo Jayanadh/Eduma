@@ -165,10 +165,17 @@ class InstitutionSerializer(InstitutionFieldsMixin, serializers.ModelSerializer)
 
 
 class OwnInstitutionSerializer(InstitutionSerializer):
-    """What an institution's own members see of it: everything but the admin summary."""
+    """What an institution's own members see of it: everything but the admin summary, and the platform's note on its
+    state only while it is restricted (then the note is the reason members need)."""
 
     class Meta(InstitutionSerializer.Meta):
         fields = [name for name in InstitutionSerializer.Meta.fields if name != "admin"]
+
+    def to_representation(self, institution: Institution) -> dict:
+        body = super().to_representation(institution)
+        if institution.lifecycle_status != LifecycleStatus.RESTRICTED:
+            body["status_reason"] = ""
+        return body
 
 
 class InstitutionProfileSerializer(serializers.ModelSerializer):

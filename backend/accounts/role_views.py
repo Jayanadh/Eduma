@@ -141,6 +141,8 @@ class RoleList(GenericAPIView):
         institution = request.institution
         counts = _counts(institution)
         items = builtin_items(counts) + [role_item(r, counts) for r in institution.custom_roles.all()]
+        if len(search := request.query_params.get("search", "").strip()) >= 3:
+            items = [item for item in items if search.lower() in item["label"].lower()]
         if request.query_params.get("assignable") == "1":
             held = grants(active_membership(request.user, institution))
             items = [
@@ -192,8 +194,8 @@ class RoleDetail(GenericAPIView):
             held = grants(active_membership(request.user, institution))
             if not all(holds(held, institution, name, WHOLE) for name in role.permissions):
                 raise PermissionDenied("This role includes permissions you don't hold.")
-            if "name" in changes:
-                changes["name"] = _check_name(institution, changes["name"], role)
+            if "name" in changes or (changes.get("is_active") and not role.is_active):
+                changes["name"] = _check_name(institution, changes.get("name", role.name), role)
             in_use = live(role.assignments.all(), today_for(institution))
             if "permissions" in changes:
                 changes["permissions"] = _check_permissions(request.user, institution, changes["permissions"])

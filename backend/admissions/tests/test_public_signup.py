@@ -60,3 +60,12 @@ def test_signup_only_where_admissions_are_open_to_it(world, on):
 
 def test_signup_needs_the_module(world):
     assert signup(host(world.a.slug)).status_code == 404
+
+
+def test_public_page_is_rate_limited(world, on, client_for, monkeypatch):
+    """Spec pack 09 §4.7: public reads are rate limited."""
+    from admissions.public import PublicThrottle
+
+    monkeypatch.setattr(PublicThrottle, "THROTTLE_RATES", {**PublicThrottle.THROTTLE_RATES, "public": "2/min"})
+    client = client_for(world.a.slug)
+    assert [client.get(PUBLIC).status_code for _ in range(3)] == [200, 200, 429]

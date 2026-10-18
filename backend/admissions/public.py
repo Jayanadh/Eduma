@@ -4,6 +4,7 @@ counts, applicants or anything unpublished."""
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny
+from rest_framework.throttling import SimpleRateThrottle
 from rest_framework.response import Response
 
 from accounts.permissions import today_for
@@ -28,9 +29,18 @@ def public_cycle(cycle: AdmissionCycle) -> dict:
     }
 
 
+class PublicThrottle(SimpleRateThrottle):
+    """Per address: public reads are rate limited (spec pack 09 §4.7)."""
+
+    scope = "public"
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
-@throttle_classes([])
+@throttle_classes([PublicThrottle])
 def public_admissions(request):
     if request.site_kind != "institution":
         raise NotFound()

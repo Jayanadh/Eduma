@@ -173,7 +173,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "EXCEPTION_HANDLER": "common.exceptions.problem_handler",
     # Sign-in attempts: per client address, and per login ID however many addresses the attempts come from.
-    "DEFAULT_THROTTLE_RATES": {"login": "10/min", "login_id": "20/hour"},
+    "DEFAULT_THROTTLE_RATES": {"login": "10/min", "login_id": "20/hour", "public": "120/min"},
     "NUM_PROXIES": PROXY_COUNT,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
 }

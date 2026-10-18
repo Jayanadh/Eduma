@@ -608,3 +608,19 @@ a.list-row:hover .list-title {
     color: #ffffff;
   }
 }
+
+// <label class="check"><input type="checkbox" /> Active</label>
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-weight: 600;
+  cursor: pointer;
+
+  input {
+    flex: none;
+    width: 20px;
+    height: 20px;
+  }
+}

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { guestOnly, memberOnly, platformOnly, signedIn } from './core/guards';
+import { guestOnly, memberOnly, platformOnly, requires, signedIn } from './core/guards';
 import { leaveGuard } from './core/unsaved-changes';
 
 export const routes: Routes = [
@@ -73,6 +73,12 @@ export const routes: Routes = [
         title: 'Public site',
         canDeactivate: [leaveGuard],
         loadComponent: () => import('./features/app/site-page').then((m) => m.SitePage),
+      },
+      {
+        path: 'organization',
+        title: 'Organization',
+        canActivate: [requires('organization.manage')],
+        loadComponent: () => import('./features/org/organization-page').then((m) => m.OrganizationPage),
       },
       {
         path: 'profile',

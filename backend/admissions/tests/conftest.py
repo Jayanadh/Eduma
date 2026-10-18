@@ -71,3 +71,37 @@ def cycle_body(main, **changes):
     }
     body.update(changes)
     return body
+
+
+APPS = "/api/v1/applicant/applications"
+
+
+def applicant(institution, username):
+    from accounts.models import Membership
+
+    person = factories.user(username=username, full_name=username.replace(".", " ").title())
+    Membership.objects.create(institution=institution, user=person, kind="applicant")
+    return person
+
+
+@pytest.fixture
+def cycle(world, on, main, client_for):
+    admin = client_for(world.a.slug, world.a_admin)
+    draft = admin.post(CYCLES, cycle_body(main), format="json").json()
+    return admin.post(f"{CYCLES}/{draft['id']}/publish", {"version": draft["version"]}, format="json").json()
+
+
+def complete(application: dict) -> dict:
+    """The core fields and answers a submittable application needs (documents are uploaded separately)."""
+    return {
+        "version": application["version"],
+        "learner_name": "Meera Rao",
+        "date_of_birth": "2020-05-17",
+        "guardian_name": "Asha Rao",
+        "guardian_relationship": "Mother",
+        "guardian_phone": "+91 90000 12345",
+        "guardian_email": "asha@example.com",
+        "address": "4 Lake Road, Vijayawada",
+        "previous_school": "",
+        "answers": {"LANG": "Telugu", "BUS": True, "STREAM": "Hindi"},
+    }

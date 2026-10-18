@@ -1,6 +1,8 @@
 """Admissions: a cycle with its places, questions and required documents (slice 4a spec §3). A cycle is edited only
 while it is a draft; publishing freezes it, so the published cycle is the form every application answered."""
 
+import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -36,6 +38,7 @@ class AdmissionCycle(VersionedModel):
 class Place(models.Model):
     """What one applies for: a class, grade or programme, with its seats."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     cycle = models.ForeignKey(AdmissionCycle, on_delete=models.CASCADE, related_name="places")
     code = models.CharField(max_length=20)
     label = models.CharField(max_length=80)
@@ -52,6 +55,8 @@ class Place(models.Model):
 
 
 class Question(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     class Kind(models.TextChoices):
         TEXT = "text", "Short answer"
         LONG_TEXT = "long_text", "Long answer"
@@ -74,6 +79,7 @@ class Question(models.Model):
 
 
 class DocumentRequirement(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     cycle = models.ForeignKey(AdmissionCycle, on_delete=models.CASCADE, related_name="documents")
     code = models.CharField(max_length=20)
     label = models.CharField(max_length=120)
@@ -144,6 +150,7 @@ class Application(VersionedModel):
 class Submission(models.Model):
     """What was submitted, as it was: kept unchanged when the applicant is asked to correct something."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="submissions")
     revision = models.PositiveIntegerField()
     snapshot = models.JSONField()
@@ -182,6 +189,7 @@ class Document(VersionedModel):
 class Note(models.Model):
     """Staff's internal note on an application; applicants never see these."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="notes")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
     text = models.TextField(max_length=2000)

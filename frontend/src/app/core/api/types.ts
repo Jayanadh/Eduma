@@ -357,3 +357,60 @@ export type PublicAdmissions = {
     documents: { code: string; label: string; required: boolean }[];
   }[];
 };
+
+export type QuestionKind = 'text' | 'long_text' | 'date' | 'choice' | 'yes_no';
+export type ApplicationStage =
+  | 'draft'
+  | 'submitted'
+  | 'under_review'
+  | 'needs_information'
+  | 'eligible'
+  | 'rejected'
+  | 'offered'
+  | 'offer_expired'
+  | 'accepted'
+  | 'enrolled'
+  | 'withdrawn';
+
+export type ApplicationDocument = {
+  id: string;
+  requirement: string;
+  label: string;
+  original_name: string;
+  content_type: string;
+  size: number;
+  status: 'pending' | 'verified' | 'rejected' | 'replaced';
+  uploaded_at: string;
+  review_note?: string;
+  version?: number;
+};
+
+/** An application as its applicant sees it. */
+export type ApplicantApplication = {
+  id: string;
+  number: string;
+  stage: ApplicationStage;
+  stage_label: string;
+  version: number;
+  cycle: { id: string; name: string; academic_year: string; closes_on: string };
+  place: { id: string; label: string; campus_name: string | null };
+  questions: { code: string; label: string; help: string; kind: QuestionKind; options: string[]; required: boolean }[];
+  requirements: { code: string; label: string; help: string; required: boolean }[];
+  learner_name: string;
+  date_of_birth: string | null;
+  guardian_name: string;
+  guardian_relationship: string;
+  guardian_phone: string;
+  guardian_email: string;
+  address: string;
+  previous_school: string;
+  answers: Record<string, string | boolean | null>;
+  information_request: string;
+  decision_reason: string;
+  offer_expires_on: string | null;
+  submitted_at: string | null;
+  documents: ApplicationDocument[];
+  /** What still stops it being submitted: field → message. */
+  missing: Record<string, string>;
+  allowed_actions: ('edit' | 'upload' | 'submit' | 'withdraw' | 'accept')[];
+};

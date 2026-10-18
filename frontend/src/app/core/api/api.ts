@@ -40,9 +40,12 @@ export class Api {
     return this.http.delete<void>(`/api/v1/${path}`);
   }
 
-  /** A multipart upload of one file under `field`. */
-  upload<T>(path: string, field: string, file: File): Observable<T> {
+  /** A multipart upload of one file under `field`, with any other form fields alongside it. */
+  upload<T>(path: string, field: string, file: File, extra: Record<string, string> = {}): Observable<T> {
     const form = new FormData();
+    for (const [name, value] of Object.entries(extra)) {
+      form.append(name, value);
+    }
     form.append(field, file);
     return this.http.post<T>(`/api/v1/${path}`, form);
   }

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { guestOnly, memberOnly, platformOnly, requires, signedIn } from './core/guards';
+import { applicantOnly, guestOnly, memberOnly, platformOnly, requires, signedIn, studentOnly } from './core/guards';
 import { leaveGuard } from './core/unsaved-changes';
 
 export const routes: Routes = [
@@ -68,6 +68,19 @@ export const routes: Routes = [
     title: 'Create an account',
     canActivate: [guestOnly],
     loadComponent: () => import('./features/apply/signup-page').then((m) => m.SignupPage),
+  },
+  {
+    path: 'apply/applications',
+    title: 'Your applications',
+    canActivate: [signedIn, applicantOnly],
+    loadComponent: () => import('./features/apply/applications-page').then((m) => m.ApplicationsPage),
+  },
+  {
+    path: 'apply/applications/:id',
+    title: 'Application',
+    canActivate: [signedIn, applicantOnly],
+    canDeactivate: [leaveGuard],
+    loadComponent: () => import('./features/apply/application-form-page').then((m) => m.ApplicationFormPage),
   },
   {
     path: 'app',

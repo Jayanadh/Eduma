@@ -147,6 +147,8 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_ROOT = Path(env("DJANGO_MEDIA_ROOT", str(BASE_DIR / "media")))
+# Applicants' documents: never under MEDIA_ROOT or any public URL; served only through checked views.
+PRIVATE_MEDIA_ROOT = Path(env("DJANGO_PRIVATE_MEDIA_ROOT", str(BASE_DIR / "private_media")))
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Session-cookie login. Cookies are host-only (no SESSION_COOKIE_DOMAIN), so every institution's subdomain has its own

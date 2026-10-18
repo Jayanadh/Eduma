@@ -10,4 +10,6 @@ urlpatterns = [
     path("applications/<uuid:pk>/submit", views.Submit.as_view()),
     path("applications/<uuid:pk>/withdraw", views.Withdraw.as_view()),
     path("applications/<uuid:pk>/accept", views.Accept.as_view()),
+    path("applications/<uuid:pk>/documents", views.Documents.as_view()),
+    path("applications/<uuid:pk>/documents/<uuid:doc>", views.DocumentFile.as_view()),
 ]

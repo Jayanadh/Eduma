@@ -4,9 +4,19 @@ while it is a draft; publishing freezes it, so the published cycle is the form e
 import uuid
 
 from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 from django.db import models
 
 from common.models import VersionedModel
+
+
+def private_storage() -> FileSystemStorage:
+    """Applicants' documents live outside the public media path (slice 4a S4-09)."""
+    return FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT)
+
+
+def document_path(document, filename: str) -> str:
+    return f"applications/{document.application.institution_id}/{document.application_id}/{filename}"
 
 
 class AdmissionCycle(VersionedModel):
@@ -171,7 +181,7 @@ class Document(VersionedModel):
 
     application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="documents")
     requirement = models.ForeignKey(DocumentRequirement, on_delete=models.PROTECT, related_name="+")
-    file = models.FileField()
+    file = models.FileField(storage=private_storage, upload_to=document_path)
     original_name = models.CharField(max_length=200)
     content_type = models.CharField(max_length=40)
     size = models.PositiveIntegerField()

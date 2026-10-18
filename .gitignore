@@ -19,3 +19,4 @@ frontend/.angular/
 
 # Local tool settings
 .claude/
+backend/private_media/

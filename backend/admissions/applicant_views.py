@@ -5,11 +5,13 @@ import uuid
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.permissions import active_membership
 from admissions import applications as services
+from admissions import documents
 from admissions.applications import expire_if_due
 from admissions.serializers import ApplicationInput, StartInput, applicant_item
 from common.pagination import Pages
@@ -95,3 +97,21 @@ class Withdraw(Step):
 
 class Accept(Step):
     action_name = "accept"
+
+
+class Documents(ApplicantView):
+    parser_classes = [MultiPartParser]
+
+    def post(self, request, pk):
+        found = self.application()
+        documents.upload(request.user, found, request.data.get("requirement", ""), request.FILES.get("file"))
+        found.refresh_from_db()
+        return Response(applicant_item(found), status=status.HTTP_201_CREATED)
+
+
+class DocumentFile(ApplicantView):
+    def get(self, request, pk, doc):
+        found = self.application().documents.filter(pk=doc).first()
+        if found is None:
+            raise NotFound()
+        return documents.download_response(found)

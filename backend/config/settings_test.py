@@ -7,6 +7,7 @@ from .settings import *  # noqa: F403
 
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 MEDIA_ROOT = Path(tempfile.gettempdir()) / "eduma-test-media"
+PRIVATE_MEDIA_ROOT = Path(tempfile.gettempdir()) / "eduma-test-private-media"
 # conftest clears the cache before every test, including those that use no database.
 CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 # Tests address the platform as eduma.test and an institution as <slug>.eduma.test.

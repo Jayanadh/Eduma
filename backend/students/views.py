@@ -2,19 +2,29 @@
 
 from django.db import transaction
 from django.db.models import Q
+from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import Membership
-from accounts.permissions import WHOLE, active_membership, grants, has_perm
+from accounts.permissions import WHOLE, active_membership, grants, has_perm, today_for
 from accounts.role_views import holds_any
 from common import audit
 from common.pagination import Pages
 from configuration.gates import require_module
-from students.models import Student
-from students.serializers import StudentInput, student_item, student_list_item
+from students import guardians
+from students.models import GuardianLink, Student
+from students.serializers import (
+    ProposeInput,
+    RevokeInput,
+    StudentInput,
+    VerifyInput,
+    link_item,
+    student_item,
+    student_list_item,
+)
 
 
 def visible_students(actor, institution):
@@ -25,11 +35,6 @@ def visible_students(actor, institution):
         return found
     campuses = [pk for kind, pk in scopes if kind == "campus"]
     return found.filter(enrollments__status="active", enrollments__campus_id__in=campuses).distinct()
-
-
-def _scope(student: Student):
-    current = student.enrollments.filter(status="active").first()
-    return ("campus", current.campus_id) if current and current.campus_id else WHOLE
 
 
 class StudentView(GenericAPIView):
@@ -65,7 +70,7 @@ class StudentDetail(StudentView):
 
     def patch(self, request, pk):
         found = self.student()
-        if not has_perm(request.user, request.institution, "student.update", _scope(found)):
+        if not has_perm(request.user, request.institution, "student.update", found.scope):
             raise PermissionDenied("Your role cannot correct this student's details.")
         data = StudentInput(data=request.data)
         data.is_valid(raise_exception=True)
@@ -107,3 +112,60 @@ class OwnRecord(GenericAPIView):
             raise NotFound()
         item = student_item(student)
         return Response({key: item[key] for key in ("number", "full_name", "date_of_birth", "status", "enrollment")})
+
+
+class GuardianView(StudentView):
+    """A student's guardian links. Reading follows student.read; changing needs guardian_link.manage there."""
+
+    def managed(self) -> Student:
+        found = self.student()
+        if not guardians.can_manage_links(self.request.user, found):
+            raise PermissionDenied("Your role cannot change guardian links for this student.")
+        return found
+
+    def link(self, student: Student) -> GuardianLink:
+        found = student.guardian_links.filter(pk=self.kwargs["link"]).first()
+        if found is None:
+            raise NotFound()
+        return found
+
+    def item(self, link: GuardianLink, student: Student) -> dict:
+        full = guardians.can_manage_links(self.request.user, student)
+        return link_item(link, full, today_for(student.institution))
+
+    def body(self, serializer_class) -> dict:
+        data = serializer_class(data=self.request.data)
+        data.is_valid(raise_exception=True)
+        return data.validated_data
+
+
+class GuardianList(GuardianView):
+    def get(self, request, pk):
+        student = self.student()
+        links = student.guardian_links.select_related("adult", "student__person")
+        return Response([self.item(link, student) for link in links])
+
+    def post(self, request, pk):
+        student = self.managed()
+        data = self.body(ProposeInput)
+        with transaction.atomic():
+            link = guardians.propose(request.user, student, data["adult"], data["relationship"])
+        return Response(self.item(link, student), status=status.HTTP_201_CREATED)
+
+
+class GuardianVerify(GuardianView):
+    def post(self, request, pk, link):
+        student = self.managed()
+        link = self.link(student)  # the record first: an unknown id is 404 whatever the body says
+        data = self.body(VerifyInput)
+        found = guardians.verify(request.user, link, data.pop("version"), data)
+        return Response(self.item(found, student))
+
+
+class GuardianRevoke(GuardianView):
+    def post(self, request, pk, link):
+        student = self.managed()
+        link = self.link(student)
+        data = self.body(RevokeInput)
+        found = guardians.revoke(request.user, link, data["version"], data["reason"])
+        return Response(self.item(found, student))

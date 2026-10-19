@@ -5,16 +5,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('admissions', '0002_private_documents'),
-        ('students', '0001_initial'),
+        ("admissions", "0002_private_documents"),
+        ("students", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='student',
-            name='application',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='student_record', to='admissions.application'),
+            model_name="student",
+            name="application",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="student_record",
+                to="admissions.application",
+            ),
         ),
     ]

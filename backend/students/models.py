@@ -58,6 +58,13 @@ class Student(VersionedModel):
     def __str__(self) -> str:
         return f"{self.number} {self.person.full_name}"
 
+    @property
+    def scope(self):
+        """Where authority over this student must reach: the current enrollment's campus, else the whole
+        institution (an accounts.permissions Scope)."""
+        current = self.enrollments.filter(status="active").first()
+        return ("campus", current.campus_id) if current and current.campus_id else ("institution", None)
+
 
 class Enrollment(VersionedModel):
     """One study-track episode: the year and place a student was admitted to."""

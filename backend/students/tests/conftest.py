@@ -2,3 +2,4 @@
 
 from admissions.tests.conftest import cycle, main, on  # noqa: F401
 from admissions.tests.test_enrollment import accepted, registrar  # noqa: F401
+from students.tests.fixtures import enrolled  # noqa: F401

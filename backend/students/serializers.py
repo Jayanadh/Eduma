@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from students.models import Student
+from students.models import GuardianLink, Student
 
 
 class StudentInput(serializers.Serializer):
@@ -57,3 +57,73 @@ def student_item(student: Student) -> dict:
         "login": student.user.username if student.user_id else None,
         "last_login": student.user.last_login if student.user_id else None,
     }
+
+
+class AdultInput(serializers.Serializer):
+    full_name = serializers.CharField(max_length=150)
+    phone = serializers.CharField(max_length=30, allow_blank=True, required=False, default="")
+    email = serializers.EmailField(allow_blank=True, required=False, default="")
+
+
+class ProposeInput(serializers.Serializer):
+    adult = AdultInput()
+    relationship = serializers.CharField(max_length=40)
+
+
+class AccessInput(serializers.Serializer):
+    record = serializers.BooleanField(required=False, default=True)
+    fees = serializers.BooleanField(required=False, default=False)
+    messages = serializers.BooleanField(required=False, default=False)
+
+
+class LoginInput(serializers.Serializer):
+    username = serializers.CharField(max_length=40)
+    password = serializers.CharField(trim_whitespace=False, write_only=True)
+
+
+class VerifyInput(serializers.Serializer):
+    version = serializers.IntegerField()
+    authority_basis = serializers.ChoiceField(GuardianLink.Basis.choices)
+    verification_method = serializers.ChoiceField(GuardianLink.Method.choices)
+    verification_reference = serializers.CharField(max_length=120, allow_blank=True, required=False, default="")
+    starts_on = serializers.DateField(required=False, allow_null=True, default=None)
+    ends_on = serializers.DateField(required=False, allow_null=True, default=None)
+    access = AccessInput(required=False)
+    restrictions = serializers.CharField(max_length=1000, allow_blank=True, required=False, default="")
+    login = LoginInput(required=False, allow_null=True, default=None)
+
+
+class RevokeInput(serializers.Serializer):
+    version = serializers.IntegerField()
+    reason = serializers.CharField(max_length=500, allow_blank=True)
+
+
+def link_item(link: GuardianLink, full: bool, today) -> dict:
+    """A guardian link for staff. Notes and verification evidence only for those who manage links (`full`)."""
+    from students.guardians import needs_adult_review
+
+    adult = link.adult
+    item = {
+        "id": str(link.id),
+        "version": link.version,
+        "adult": {"full_name": adult.full_name, "phone": adult.phone, "email": adult.email},
+        "relationship": link.relationship,
+        "status": link.status,
+        "status_label": link.get_status_display(),
+        "in_effect": link.in_effect(today),
+        "access": {"record": link.access_record, "fees": link.access_fees, "messages": link.access_messages},
+        "starts_on": link.starts_on,
+        "ends_on": link.ends_on,
+        "has_login": link.user_id is not None,
+        "source": link.source,
+        "needs_adult_review": needs_adult_review(link, today),
+    }
+    if full:
+        item.update(
+            restrictions=link.restrictions,
+            authority_basis=link.authority_basis,
+            verification_method=link.verification_method,
+            verification_reference=link.verification_reference,
+            revoke_reason=link.revoke_reason,
+        )
+    return item

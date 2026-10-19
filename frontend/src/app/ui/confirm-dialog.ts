@@ -60,6 +60,7 @@ export class ConfirmDialog {
   firstPassword(
     title: string,
     message = 'Their old password stops working. Hand the new one over in person; they must change it at the next sign-in.',
+    confirmLabel = 'Set password',
   ): Promise<string | null> {
     return this.prompt({
       title,
@@ -67,7 +68,7 @@ export class ConfirmDialog {
       label: 'New first password',
       type: 'password',
       hint: 'At least 8 characters, not all numbers.',
-      confirmLabel: 'Set password',
+      confirmLabel,
     });
   }
 

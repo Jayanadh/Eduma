@@ -1,3 +1,4 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { SEARCH_DELAY_MS, SearchBox } from './search-box';
 
@@ -41,5 +42,15 @@ describe('SearchBox', () => {
     type('');
     await pause(SEARCH_DELAY_MS + 50);
     expect(searched).toEqual(['kaval', '']);
+  });
+
+  it('leaves the id to the input, so its label focuses it', async () => {
+    @Component({ imports: [SearchBox], template: '<app-search-box id="people-search" label="Search people" />' })
+    class Host {}
+    const fixture = TestBed.createComponent(Host);
+    await fixture.whenStable();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelectorAll('#people-search').length).toBe(1);
+    expect(root.querySelector('#people-search')?.tagName).toBe('INPUT');
   });
 });

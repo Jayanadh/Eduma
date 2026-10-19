@@ -113,6 +113,7 @@ export class ApplicationReviewPage {
     const password = await this.confirm.firstPassword(
       `First password for ${a.learner_name}`,
       "Enrolling makes the student record and the student's own login. Hand this password over; they change it at first sign-in.",
+      'Enroll',
     );
     if (password !== null) {
       this.send(`${this.base(a)}/enroll`, { version: a.version, password }, `${a.learner_name} is enrolled.`);

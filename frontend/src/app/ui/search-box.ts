@@ -12,6 +12,8 @@ export const SEARCH_DELAY_MS = 300;
 @Component({
   selector: 'app-search-box',
   imports: [Icon],
+  // The id belongs to the input; left on the host too, the label would point at the host and never focus the box.
+  host: { '[attr.id]': 'null' },
   template: `
     <div class="field">
       <label [for]="id()">{{ label() }}</label>

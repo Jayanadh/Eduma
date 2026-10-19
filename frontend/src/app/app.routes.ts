@@ -83,6 +83,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/apply/application-form-page').then((m) => m.ApplicationFormPage),
   },
   {
+    path: 'student',
+    title: 'Your record',
+    canActivate: [signedIn, studentOnly],
+    loadComponent: () => import('./features/student/student-home').then((m) => m.StudentHome),
+  },
+  {
     path: 'app',
     loadComponent: () => import('./layout/shell').then((m) => m.Shell),
     canActivateChild: [signedIn, memberOnly],
@@ -117,6 +123,19 @@ export const routes: Routes = [
         title: 'Staff',
         canActivate: [requires('membership.read')],
         loadComponent: () => import('./features/staff/staff-detail-page').then((m) => m.StaffDetailPage),
+      },
+      {
+        path: 'students',
+        title: 'Students',
+        canActivate: [requires('student.read')],
+        loadComponent: () => import('./features/students/students-page').then((m) => m.StudentsPage),
+      },
+      {
+        path: 'students/:id',
+        title: 'Student',
+        canActivate: [requires('student.read')],
+        canDeactivate: [leaveGuard],
+        loadComponent: () => import('./features/students/student-page').then((m) => m.StudentPage),
       },
       {
         path: 'roles',

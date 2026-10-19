@@ -468,3 +468,37 @@ export type StaffApplication = Omit<ApplicantApplication, 'missing' | 'allowed_a
   can_review: boolean;
   can_approve: boolean;
 };
+
+export type StudentEnrollment = {
+  academic_year: string;
+  place_code: string;
+  place_label: string;
+  campus_name: string | null;
+  entry_date: string;
+  status: string;
+};
+
+export type StudentListItem = {
+  id: string;
+  number: string;
+  full_name: string;
+  status: string;
+  enrollment: StudentEnrollment | null;
+};
+
+/** A student's record as staff with student.read see it. */
+export type StudentRecord = StudentListItem & {
+  version: number;
+  date_of_birth: string | null;
+  phone: string;
+  email: string;
+  address: string;
+  admitted_on: string;
+  enrollments: StudentEnrollment[];
+  application: { id: string; number: string } | null;
+  login: string | null;
+  last_login: string | null;
+};
+
+/** What students see of their own record. */
+export type OwnStudentRecord = Pick<StudentRecord, 'number' | 'full_name' | 'date_of_birth' | 'status' | 'enrollment'>;

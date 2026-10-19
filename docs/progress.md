@@ -3,7 +3,36 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (19 October 2026, slice 4a)
+## Where things stand (19 October 2026, slice 4b)
+
+**Slice 4b is built and checked locally: the second part of BUILD-04.** Spec:
+`docs/superpowers/specs/2026-10-19-slice4b-guardians-withdrawal-design.md`. Plan:
+`docs/superpowers/plans/2026-10-19-slice4b-guardians-withdrawal.md`. Branch `slice-4b-guardians`, cut from
+`slice-4-admissions` (with its review fixes merged). Left for slice 4c, which finishes BUILD-04: enquiries and staged
+spreadsheet imports (TST-025, SCR-042).
+
+| Built in slice 4b | Where |
+|---|---|
+| Guardian links: proposed by enrollment or staff, verified with evidence and access, revoked; adult-student consent and review flag; `guardian_link.manage` | `backend/students/guardians.py`, `models.py`, `views.py` |
+| Guardian logins and the family portal (`/family`, child pages); guardians keep the applicant pages; applicant pages for applicants and guardians only | `backend/students/family.py`, `frontend/src/app/features/family/` |
+| Withdrawal and reinstatement | `backend/students/withdrawal.py`, `frontend/src/app/features/students/student-page.ts` |
+| Employee number and joining/leaving dates on staff | `backend/accounts/models.py`, `staff.py`, `frontend/src/app/features/staff/` |
+| Student record history; possible-duplicate warning on applications; directory status filter | `backend/students/views.py`, `frontend/src/app/features/students/`, `features/admissions/` |
+| Demo: `aster.parent` verified for Arjun, `aster.grandparent` with nothing shared, employee numbers `AST-001`… | `backend/institutions/management/commands/seed_demo.py` |
+
+Checks on 19 Oct 2026: backend `pytest` 383 passed; `ruff check` and `ruff format --check` clean; frontend `ng test`
+166 passed; `ng build` clean.
+Browser (built-in, Chromium): as `aster.registrar` at 1280 px, added Diya Krishnan's father as a guardian, verified
+him with evidence, record access off and a new login; he signed in at 390 px, was made to change the password and saw
+Diya listed as not shared (no sideways scroll); after the registrar revoked the link his portal showed nothing and the
+child's page was 404; `aster.parent` at 390 px saw Arjun's number and class. Withdrawing Diya today was refused
+("before the enrollment starts", as she is enrolled for next year); with her test enrollment moved to June 2026 the
+withdrawal succeeded (banner, ended enrollment, her login refused), and Reinstate restored her sign-in; her history
+listed every step. As `aster.admin` changed a teacher's employee number. The check's guardian (`ravi.krishnan`,
+revoked) and Diya's backdated enrollment remain in the local database.
+
+
+## Slice 4a (19 October 2026)
 
 **Slice 4a is built and checked locally: the first half of BUILD-04**, from an admission cycle to an enrolled student
 with their own login. Spec: `docs/superpowers/specs/2026-10-19-slice4a-admissions-students-design.md`. Plan:

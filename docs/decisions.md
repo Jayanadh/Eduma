@@ -88,3 +88,23 @@ Full table and reasons: `docs/superpowers/specs/2026-10-19-slice4a-admissions-st
 | S4-10 | Admissions and Students routes need their module switched on; otherwise 404. |
 | S4-11 | New permissions `admission_cycle.manage`, `application.review`, `admission.approve`, `student.read`, `student.update`, given to Registrar, Admissions Officer and Principal as listed in the spec. |
 | S4-12 | Applicant routes live under `/api/v1/applicant/` on the institution's own host. |
+
+## Slice 4b (guardian links, family portal, withdrawal, staff records, history)
+
+Full table and reasons: `docs/superpowers/specs/2026-10-19-slice4b-guardians-withdrawal-design.md` §2.
+
+| ID | Decision |
+|---|---|
+| S4B-01 | A guardian link joins a student to an adult: proposed → active (verified) → revoked; expiry is computed from its end date; one live link per student and adult. |
+| S4B-02 | Links come only from enrollment (to the application's owner) or from staff. Matching names or phones never make one. |
+| S4B-03 | Verifying records the authority, how it was checked, a reference, dates and access; revoking needs a reason and takes effect at once. |
+| S4B-04 | Access is per link: record (used now), fees and messages (stored for later modules). Paying fees never implies record access. |
+| S4B-05 | A link for a student aged 18 or over needs the student's own consent; links made before the 18th birthday are flagged for review. |
+| S4B-06 | Verified adults get a guardian login (or keep their applicant login, which becomes one). Staff and student logins cannot be guardians at the same school. |
+| S4B-07 | New permission `guardian_link.manage` (Registrar, Institution Admin); `student.read` sees links without notes or evidence. |
+| S4B-08 | Family portal `/family`: only children with an active, in-effect link, and only what it shares. |
+| S4B-09 | Withdrawal (`student.update`) on or before today and not before the enrollment starts; ends the enrollment and the student's login; reinstate undoes it. Fees untouched. |
+| S4B-10 | Employee number (unique per school) and joining/leaving dates on staff. |
+| S4B-11 | Every student record shows its own history, without guardian notes or evidence. |
+| S4B-12 | Applications show possible duplicate students (same name and date of birth) as a warning; enrolling never merges. |
+

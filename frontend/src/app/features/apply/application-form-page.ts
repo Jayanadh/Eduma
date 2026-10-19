@@ -169,7 +169,7 @@ type Answer = string | boolean | null;
             <section class="notice notice-warning" role="status">
               <strong>Before you can submit:</strong>
               <ul>
-                @for (item of missingList(); track item) { <li>{{ item }}</li> }
+                @for (item of missingList(); track $index) { <li>{{ item }}</li> }
               </ul>
             </section>
           }
@@ -236,6 +236,8 @@ export class ApplicationFormPage {
   protected readonly busy = signal(false);
   protected readonly errors = signal<Record<string, string>>({});
   protected readonly error = signal('');
+  // Set by an upload: take the server's documents and version but keep what the family has typed and not saved.
+  private keepEdits = false;
 
   protected readonly heading = computed(() => {
     const a = this.data.value();
@@ -248,7 +250,9 @@ export class ApplicationFormPage {
   constructor() {
     effect(() => {
       const a = this.data.value();
-      if (a) {
+      if (a && this.keepEdits) {
+        this.keepEdits = false;
+      } else if (a) {
         this.form.reset({
           learner_name: a.learner_name,
           date_of_birth: a.date_of_birth ?? '',
@@ -269,7 +273,7 @@ export class ApplicationFormPage {
     inject(DestroyRef).onDestroy(() => this.unsaved.dirty.set(false));
   }
 
-  /** The server's word on a field, else what it says is still missing. */
+  /** The server's word on a field after a save or submit. */
   protected problem(field: string): string {
     return this.errors()[field] ?? '';
   }
@@ -327,7 +331,10 @@ export class ApplicationFormPage {
     this.api
       .upload<ApplicantApplication>(`applicant/applications/${a.id}/documents`, 'file', file, { requirement: code })
       .subscribe({
-        next: (updated) => this.settle(updated, `${file.name} uploaded.`),
+        next: (updated) => {
+          this.keepEdits = this.dirty();
+          this.settle(updated, `${file.name} uploaded.`);
+        },
         error: (err) => {
           const fields = fieldErrors(err);
           this.failed(err);

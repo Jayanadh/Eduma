@@ -8,7 +8,7 @@ from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from accounts.permissions import WHOLE, active_membership, grants, has_perm, today_for
-from admissions.applications import Stage, wrong_stage
+from admissions.applications import Stage, expire_if_due, wrong_stage
 from admissions.models import Application, Document, Note, Place
 from common import audit
 from common.exceptions import Problem
@@ -16,6 +16,8 @@ from common.exceptions import Problem
 REVIEW = "application.review"
 APPROVE = "admission.approve"
 REVIEWABLE = (Stage.SUBMITTED, Stage.UNDER_REVIEW, Stage.NEEDS_INFORMATION, Stage.ELIGIBLE)
+REJECTABLE = (*REVIEWABLE, Stage.OFFER_EXPIRED)
+OFFERABLE = (Stage.ELIGIBLE, Stage.OFFER_EXPIRED)
 
 
 def _scope(application: Application):
@@ -105,9 +107,9 @@ def reject(actor, application, version, reason: str):
     reason = reason.strip()
     if not reason:
         raise ValidationError({"reason": ["Give the reason; the applicant sees it."]})
+    expire_if_due(application)
     with transaction.atomic():
-        allowed = (Stage.SUBMITTED, Stage.UNDER_REVIEW, Stage.ELIGIBLE)
-        found = _locked(application, version, allowed, lambda a: _reviewer(actor, a))
+        found = _locked(application, version, REJECTABLE, lambda a: _reviewer(actor, a))
         found.stage = Stage.REJECTED
         found.decision_reason = reason
         return _done(actor, found, "application.rejected", "not offered a place", reason=reason)
@@ -118,8 +120,9 @@ def offer(actor, application, version, expires_on: dt.date):
     today = today_for(application.institution)
     if expires_on <= today:
         raise ValidationError({"expires_on": ["Give the family at least until tomorrow to accept."]})
+    expire_if_due(application)
     with transaction.atomic():
-        found = _locked(application, version, (Stage.ELIGIBLE,), lambda a: can_approve(actor, a))
+        found = _locked(application, version, OFFERABLE, lambda a: can_approve(actor, a))
         place = Place.objects.select_for_update().get(pk=found.place_id)
         if seats_in_use(place, today) >= place.seats:
             raise Problem(409, "no_seats", f"All {place.seats} places in {place.label} are offered or taken.")

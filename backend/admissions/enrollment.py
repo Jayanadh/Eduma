@@ -15,6 +15,7 @@ from admissions.applications import Stage, wrong_stage
 from admissions.models import Application
 from admissions.review import can_approve
 from common import audit
+from common.exceptions import Problem
 from configuration.registry import setting
 from institutions.models import Institution
 from students.models import Enrollment, Person, Student
@@ -38,6 +39,13 @@ def enroll(actor, application: Application, version: int, password: str) -> Stud
             raise wrong_stage(application)
         cycle, place = application.cycle, application.place
         number = Student.objects.next_number(institution, cycle.entry_year)
+        if User.objects.filter(username=f"{institution.slug}.{number}").exists():
+            raise Problem(
+                409,
+                "login_taken",
+                f"The student login {institution.slug}.{number} already belongs to another account. Contact Eduma "
+                "support to free it before enrolling.",
+            )
         login = User(
             username=f"{institution.slug}.{number}",
             full_name=application.learner_name,

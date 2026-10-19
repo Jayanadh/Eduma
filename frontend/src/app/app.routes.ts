@@ -178,12 +178,14 @@ export const routes: Routes = [
         path: 'admissions/cycles/new',
         title: 'New cycle',
         canActivate: [requires('admission_cycle.manage')],
+        canDeactivate: [leaveGuard],
         loadComponent: () => import('./features/admissions/cycle-editor-page').then((m) => m.CycleEditorPage),
       },
       {
         path: 'admissions/cycles/:id',
         title: 'Admission cycle',
         canActivate: [requires(['admission_cycle.manage', 'application.review', 'admission.approve'])],
+        canDeactivate: [leaveGuard],
         loadComponent: () => import('./features/admissions/cycle-editor-page').then((m) => m.CycleEditorPage),
       },
       {

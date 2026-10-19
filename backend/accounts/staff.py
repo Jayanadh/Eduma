@@ -95,7 +95,7 @@ def visible_memberships(actor, institution):
     starting later inside one of their membership.read scopes."""
     held = grants(active_membership(actor, institution))
     scopes = [where for perms, where in held if "membership.read" in perms]
-    everyone = institution.memberships.all()
+    everyone = institution.memberships.filter(kind=Membership.Kind.STAFF)
     if WHOLE in scopes:
         return everyone
     tree = department_tree(institution)

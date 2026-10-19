@@ -1,8 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { StaffApplication } from '../../core/api/types';
+import { UnsavedChanges } from '../../core/unsaved-changes';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { ApplicationReviewPage } from './application-review-page';
 import { CycleEditorPage } from './cycle-editor-page';
@@ -94,6 +95,63 @@ describe('Staff admissions pages', () => {
     const request = http.expectOne('/api/v1/institution/admissions/cycles');
     expect(request.request.method).toBe('POST');
     expect(request.request.body.places.length).toBe(1);
+  });
+
+  it('will not open a cycle while it has unsaved changes', async () => {
+    const draft = {
+      id: 'c1',
+      name: 'Admissions 2027',
+      entry_year: 2027,
+      academic_year: '2027–28',
+      opens_on: '2026-10-18',
+      closes_on: '2026-12-17',
+      instructions: '',
+      status: 'draft',
+      version: 4,
+      places: [{ code: 'C1', label: 'Class 1', campus: null, seats: 40 }],
+      questions: [],
+      documents: [],
+      counts: {},
+    };
+    const fixture = TestBed.createComponent(CycleEditorPage);
+    fixture.componentRef.setInput('id', 'c1');
+    await fixture.whenStable();
+    for (const request of http.match(() => true)) {
+      request.flush(request.request.url.endsWith('/cycles/c1') ? draft : EMPTY);
+    }
+    await fixture.whenStable();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(button(root, 'Open for applications')!.disabled).toBe(false);
+    const name = root.querySelector<HTMLInputElement>('#cycle-name')!;
+    name.value = 'Admissions 2027–28';
+    name.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    expect(button(root, 'Open for applications')!.disabled).toBe(true);
+    expect(root.textContent).toContain('Save your changes first.');
+  });
+
+  it('clears the leave warning before moving to a new cycle\'s page', async () => {
+    const fixture = TestBed.createComponent(CycleEditorPage);
+    await fixture.whenStable();
+    for (const request of http.match(() => true)) {
+      request.flush(EMPTY);
+    }
+    await fixture.whenStable();
+    const root = fixture.nativeElement as HTMLElement;
+    const name = root.querySelector<HTMLInputElement>('#cycle-name')!;
+    name.value = 'Mid-year intake';
+    name.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    const unsaved = TestBed.inject(UnsavedChanges);
+    expect(unsaved.dirty()).toBe(true);
+    let dirtyWhenLeaving: boolean | undefined;
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockImplementation(() => {
+      dirtyWhenLeaving = unsaved.dirty();
+      return Promise.resolve(true);
+    });
+    button(root, 'Save cycle')!.click();
+    http.expectOne('/api/v1/institution/admissions/cycles').flush({ id: 'c9' });
+    expect(dirtyWhenLeaving).toBe(false);
   });
 
   async function review(body: StaffApplication) {

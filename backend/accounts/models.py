@@ -12,6 +12,8 @@ from accounts.roles import BUILTIN_ROLES
 from common.models import VersionedModel
 
 USERNAME_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{2,39}$")
+# <institution slug>.<student number>, e.g. aster.2027-0001: made only by enrollment (slice 4a S4-07).
+STUDENT_LOGIN_RE = re.compile(r"^[a-z0-9-]+\.\d{4}-\d+$")
 
 
 def normalize_username(value: str) -> str:
@@ -23,6 +25,8 @@ def validate_username(value: str) -> str:
     username = normalize_username(value)
     if not USERNAME_RE.match(username):
         raise ValidationError("Use 3–40 lowercase letters, digits, dots, dashes or underscores.")
+    if STUDENT_LOGIN_RE.match(username):
+        raise ValidationError("IDs like aster.2027-0001 are kept for student logins. Choose another.")
     return username
 
 

@@ -114,4 +114,45 @@ describe('ApplicationFormPage', () => {
     expect(root.textContent).toContain('Please upload a clearer photo.');
     expect(root.querySelector('#learner-name')).not.toBeNull();
   });
+
+  it('keeps unsaved answers when a document is uploaded', async () => {
+    const fixture = await open(application());
+    const root = fixture.nativeElement as HTMLElement;
+    const name = root.querySelector<HTMLInputElement>('#learner-name')!;
+    name.value = 'Meera Rao';
+    name.dispatchEvent(new Event('input'));
+    const input = root.querySelector<HTMLInputElement>('#doc-BIRTH')!;
+    Object.defineProperty(input, 'files', { value: [new File(['%PDF-1.4'], 'birth.pdf', { type: 'application/pdf' })] });
+    input.dispatchEvent(new Event('change'));
+    const uploaded = application({
+      version: 3,
+      documents: [
+        {
+          id: 'd1',
+          requirement: 'BIRTH',
+          label: 'Birth certificate',
+          original_name: 'birth.pdf',
+          content_type: 'application/pdf',
+          size: 8,
+          status: 'pending',
+          uploaded_at: '2026-10-19T10:00:00Z',
+        },
+      ],
+      missing: { learner_name: "Enter the learner's full name." },
+    });
+    http.expectOne('/api/v1/applicant/applications/a1/documents').flush(uploaded);
+    await fixture.whenStable();
+    expect(root.querySelector<HTMLInputElement>('#learner-name')!.value).toBe('Meera Rao');
+    expect(root.textContent).toContain('Save your changes first.');
+    button(root, 'Save')!.click();
+    const save = http.expectOne('/api/v1/applicant/applications/a1');
+    expect(save.request.body.version).toBe(3);
+    expect(save.request.body.learner_name).toBe('Meera Rao');
+  });
+
+  it('lists every missing item even when two read the same', async () => {
+    const fixture = await open(application({ missing: { a: 'Answer this.', b: 'Answer this.' } }));
+    const items = (fixture.nativeElement as HTMLElement).querySelectorAll('.notice-warning li');
+    expect(items.length).toBe(2);
+  });
 });

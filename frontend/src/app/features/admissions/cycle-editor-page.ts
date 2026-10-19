@@ -1,10 +1,11 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage, fieldErrors } from '../../core/api-error';
 import { AdmissionCycle, Campus, CycleDocument, CycleQuestion, Page, QuestionKind } from '../../core/api/types';
 import { load } from '../../core/load';
+import { UnsavedChanges } from '../../core/unsaved-changes';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { Icon } from '../../ui/icon';
 import { LoadError } from '../../ui/load-error';
@@ -62,8 +63,16 @@ export class CycleEditorPage {
   protected readonly error = signal('');
 
   protected readonly draft = computed(() => (this.data.value()?.status ?? 'draft') === 'draft');
+  // What was last loaded or saved, to tell whether opening the cycle would publish something else.
+  private readonly lastSaved = signal('');
+  protected readonly dirty = computed(() => this.draft() && JSON.stringify(this.body()) !== this.lastSaved());
+
+  private readonly unsaved = inject(UnsavedChanges);
 
   constructor() {
+    this.lastSaved.set(JSON.stringify(this.body()));
+    effect(() => this.unsaved.dirty.set(this.dirty()));
+    inject(DestroyRef).onDestroy(() => this.unsaved.dirty.set(false));
     effect(() => {
       const cycle = this.data.value();
       if (cycle) {
@@ -77,6 +86,7 @@ export class CycleEditorPage {
         );
         this.questions.set(cycle.questions.map((q) => ({ ...q, options: [...q.options] })));
         this.documents.set(cycle.documents.map((d) => ({ ...d })));
+        this.lastSaved.set(untracked(() => JSON.stringify(this.body())));
       }
     });
   }
@@ -140,6 +150,8 @@ export class CycleEditorPage {
     request.subscribe({
       next: (saved) => {
         this.busy.set(false);
+        this.lastSaved.set(JSON.stringify(this.body()));
+        this.unsaved.dirty.set(false); // now, not on the next effect run: the leave guard checks it during navigation
         this.toasts.show('Cycle saved.');
         if (cycle) {
           this.data.value.set(saved);

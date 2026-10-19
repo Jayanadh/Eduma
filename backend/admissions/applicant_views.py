@@ -9,6 +9,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from accounts.models import Membership
 from accounts.permissions import active_membership
 from admissions import applications as services
 from admissions import documents
@@ -24,7 +25,10 @@ class ApplicantView(GenericAPIView):
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
-        if request.site_kind != "institution" or active_membership(request.user, request.institution) is None:
+        membership = (
+            active_membership(request.user, request.institution) if request.site_kind == "institution" else None
+        )
+        if membership is None or membership.kind != Membership.Kind.APPLICANT:
             raise NotFound()
         require_module(request.institution, "admissions")
 

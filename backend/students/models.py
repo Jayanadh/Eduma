@@ -127,6 +127,7 @@ class GuardianLink(VersionedModel):
     class Source(models.TextChoices):
         ENROLLMENT = "enrollment", "Enrollment"
         STAFF = "staff", "Staff"
+        IMPORT = "import", "Import"
 
     institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="+")
     student = models.ForeignKey(Student, on_delete=models.PROTECT, related_name="guardian_links")

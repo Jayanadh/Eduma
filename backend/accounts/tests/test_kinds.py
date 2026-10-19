@@ -64,3 +64,14 @@ def test_registrar_holds_guardian_link_manage():
     assert "guardian_link.manage" in BUILTIN_ROLES["institution_admin"].permissions
     assert PERMISSIONS["guardian_link.manage"].institution_only is False
     assert Membership.Kind.GUARDIAN == "guardian"
+
+
+def test_enquiry_and_import_permissions():
+    from accounts.roles import PERMISSIONS
+
+    assert "enquiry.manage" in BUILTIN_ROLES["registrar"].permissions
+    assert "enquiry.manage" in BUILTIN_ROLES["admissions_officer"].permissions
+    assert PERMISSIONS["enquiry.manage"].institution_only is False
+    assert PERMISSIONS["data.import"].institution_only is True
+    assert "data.import" not in BUILTIN_ROLES["registrar"].permissions
+    assert "data.import" in BUILTIN_ROLES["institution_admin"].permissions

@@ -72,7 +72,17 @@ EDUMA_BASE_URL = env("EDUMA_BASE_URL", "http://localhost:4201")
 # Where the "Talk to us" button on the Eduma landing page sends email.
 EDUMA_CONTACT_EMAIL = env("EDUMA_CONTACT_EMAIL", "hello@eduma.example")
 
-LOCAL_APPS = ["common", "accounts", "institutions", "organization", "configuration", "admissions", "students", "sites"]
+LOCAL_APPS = [
+    "common",
+    "accounts",
+    "institutions",
+    "organization",
+    "configuration",
+    "admissions",
+    "students",
+    "imports",
+    "sites",
+]
 
 AUTH_USER_MODEL = "accounts.User"
 

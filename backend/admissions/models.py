@@ -207,3 +207,80 @@ class Note(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+class EnquiryManager(models.Manager):
+    def next_number(self, institution, year: int) -> str:
+        """E2026-0001, E2026-0002… per institution and year. Call while holding the institution's lock."""
+        prefix = f"E{year}-"
+        taken = self.filter(institution=institution, number__startswith=prefix).values_list("number", flat=True)
+        return f"{prefix}{max((int(n[len(prefix) :]) for n in taken), default=0) + 1:04d}"
+
+
+class Enquiry(VersionedModel):
+    """A question from a family who may apply (spec pack 01 §9.1, slice 4c S4C-01)."""
+
+    class Source(models.TextChoices):
+        WEBSITE = "website", "Website"
+        WALK_IN = "walk_in", "Walk-in"
+        PHONE = "phone", "Phone"
+        REFERRAL = "referral", "Referral"
+        EVENT = "event", "Event"
+        OTHER = "other", "Other"
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Open"
+        FOLLOWING_UP = "following_up", "Following up"
+        CONVERTED = "converted", "Applied"
+        CLOSED = "closed", "Closed"
+
+    institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="enquiries")
+    number = models.CharField(max_length=20)
+    contact_name = models.CharField(max_length=150)
+    phone = models.CharField(max_length=30, blank=True)
+    email = models.EmailField(blank=True)
+    learner_name = models.CharField(max_length=150, blank=True)
+    learner_date_of_birth = models.DateField(null=True, blank=True)
+    place = models.ForeignKey(Place, null=True, blank=True, on_delete=models.PROTECT, related_name="enquiries")
+    message = models.TextField(max_length=1000, blank=True)
+    source = models.CharField(max_length=12, choices=Source.choices)
+    status = models.CharField(max_length=14, choices=Status.choices, default=Status.OPEN)
+    close_reason = models.CharField(max_length=500, blank=True)
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    next_follow_up_on = models.DateField(null=True, blank=True)
+    application = models.ForeignKey(
+        Application, null=True, blank=True, on_delete=models.PROTECT, related_name="enquiries"
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+
+    objects = EnquiryManager()
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["institution", "number"], name="unique_enquiry_number")]
+
+    def __str__(self) -> str:
+        return f"{self.number} {self.contact_name}"
+
+
+class FollowUp(models.Model):
+    class How(models.TextChoices):
+        PHONE = "phone", "Phone call"
+        EMAIL = "email", "Email"
+        IN_PERSON = "in_person", "In person"
+        MESSAGE = "message", "Message"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    enquiry = models.ForeignKey(Enquiry, on_delete=models.CASCADE, related_name="follow_ups")
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    how = models.CharField(max_length=10, choices=How.choices)
+    note = models.TextField(max_length=1000)
+    at = models.DateTimeField(auto_now_add=True)
+    next_follow_up_on = models.DateField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-at"]

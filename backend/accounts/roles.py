@@ -38,6 +38,13 @@ PERMISSIONS: dict[str, Permission] = {
             False,
         ),
         Permission("admission.approve", "Admissions", "Offer places and enroll accepted applicants", False),
+        Permission(
+            "enquiry.manage",
+            "Admissions",
+            "Answer enquiries: record, assign, follow up, link to applications and close",
+            False,
+        ),
+        Permission("data.import", "Settings", "Import students from a spreadsheet", True),
         Permission("student.read", "Students", "See student records", False),
         Permission("student.update", "Students", "Correct student details", False),
         Permission(
@@ -104,13 +111,16 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "student.read",
             "student.update",
             "guardian_link.manage",
+            "enquiry.manage",
         ),
         _role("teacher", "Teacher / Faculty", f"{TODAY} Teaching permissions arrive with Academics and Attendance."),
         _role(
             "admissions_officer",
             "Admissions Officer",
-            "Reviews applications: checks documents, asks for information, marks eligible or rejects.",
+            "Answers enquiries and reviews applications: checks documents, asks for information, marks eligible or "
+            "rejects.",
             "application.review",
+            "enquiry.manage",
         ),
         _role("accountant", "Accountant / Cashier", f"{TODAY} Fee permissions arrive with the Fees module."),
         _role(

@@ -13,7 +13,7 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     User.objects.filter(username="aster.admin").update(full_name="Changed")
     call_command("seed_demo")
     assert Institution.objects.count() == 4
-    assert User.objects.count() == 14
+    assert User.objects.count() == 15  # with aster.grandparent
     assert SiteRevision.objects.filter(status="published").count() == 3
     states = dict(Institution.objects.values_list("slug", "lifecycle_status"))
     assert states == {"aster": "active", "meridian": "active", "vector": "setup", "summit": "active"}
@@ -32,6 +32,16 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     for username in ("aster.principal", "aster.campus", "aster.teacher", "aster.office"):
         person = User.objects.get(username=username)
         assert person.check_password("Demo-pass-2026") and not person.must_change_password
+    from accounts.models import Employee, Membership
+    from students.models import GuardianLink
+
+    links = GuardianLink.objects.filter(student__application__learner_name="Arjun Demo").order_by("created_at")
+    assert [(link.user.username, link.status, link.access_record) for link in links] == [
+        ("aster.parent", "active", True),
+        ("aster.grandparent", "active", False),
+    ]
+    assert Membership.objects.get(user__username="aster.parent").kind == "guardian"
+    assert Employee.objects.get(membership__user__username="aster.admin").employee_number == "AST-001"
     office = RoleAssignment.objects.get(membership__user__username="aster.office")
     assert (office.custom_role.name, office.custom_role.permissions, office.campus.code) == (
         "Front office",

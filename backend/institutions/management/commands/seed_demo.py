@@ -2,6 +2,7 @@
 and at Aster a second campus, departments and staff with different roles. Safe to run again: nothing is duplicated
 and the demo passwords are put back. Refuses to run with DEBUG off."""
 
+import datetime as dt
 import uuid
 
 from django.conf import settings
@@ -73,6 +74,8 @@ class Command(BaseCommand):
         self._aster_staff(platform_admin)
         self._aster_settings()
         self._aster_admissions()
+        self._aster_families()
+        self._aster_employees()
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -228,3 +231,46 @@ class Command(BaseCommand):
         student.user.must_change_password = False
         student.user.last_login = timezone.now()
         student.user.save()
+
+    def _aster_families(self) -> None:
+        """Arjun's parent verified with record access; his grandmother with her own login and nothing shared."""
+        from students import guardians
+
+        aster = Institution.objects.get(slug="aster")
+        student = aster.students.filter(application__learner_name="Arjun Demo").first()
+        if student is None:
+            return
+        registrar = User.objects.get(username="aster.registrar")
+        evidence = {"authority_basis": "parent", "verification_method": "documents_in_person"}
+        parent = student.guardian_links.filter(user__username="aster.parent").first()
+        if parent is None:
+            parent = guardians.propose_from_application(registrar, student, student.application)
+        if parent.status == "proposed":
+            guardians.verify(
+                registrar, parent, parent.version, {**evidence, "verification_reference": "Seen at admission"}
+            )
+        if not student.guardian_links.filter(adult__full_name="Lakshmi Demo").exists():
+            grandmother = guardians.propose(registrar, student, {"full_name": "Lakshmi Demo"}, "Grandmother")
+            login = {"username": "aster.grandparent", "password": PASSWORD}
+            guardians.verify(
+                registrar,
+                grandmother,
+                grandmother.version,
+                {**evidence, "authority_basis": "other", "access": {"record": False}, "login": login},
+            )
+        grandparent = User.objects.get(username="aster.grandparent")
+        grandparent.set_password(PASSWORD)
+        grandparent.must_change_password = False
+        grandparent.save()
+
+    def _aster_employees(self) -> None:
+        from accounts.models import Employee
+
+        aster = Institution.objects.get(slug="aster")
+        staff = aster.memberships.filter(kind=Membership.Kind.STAFF).order_by("user__username")
+        for number, membership in enumerate(staff, start=1):
+            Employee.objects.get_or_create(
+                institution=aster,
+                membership=membership,
+                defaults={"employee_number": f"AST-{number:03d}", "joined_on": dt.date(2024, 6, 1)},
+            )

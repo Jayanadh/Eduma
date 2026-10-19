@@ -30,6 +30,7 @@ urlpatterns = [
     path("api/v1/institution/admissions/", include("admissions.urls")),
     path("api/v1/institution/", include("students.urls")),
     path("api/v1/student/me", OwnRecord.as_view(), name="student-me"),
+    path("api/v1/family/", include("students.family_urls")),
     path("api/v1/institution", OwnInstitutionView.as_view(), name="own-institution"),
     path("api/v1/platform/overview", platform_overview, name="platform-overview"),
     path("api/v1/platform/modules", module_catalogue, name="platform-modules"),

@@ -5,15 +5,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('admissions', '0001_initial'),
+        ("admissions", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='document',
-            name='file',
-            field=models.FileField(storage=admissions.models.private_storage, upload_to=admissions.models.document_path),
+            model_name="document",
+            name="file",
+            field=models.FileField(
+                storage=admissions.models.private_storage, upload_to=admissions.models.document_path
+            ),
         ),
     ]

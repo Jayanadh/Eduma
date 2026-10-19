@@ -28,7 +28,8 @@ class ApplicantView(GenericAPIView):
         membership = (
             active_membership(request.user, request.institution) if request.site_kind == "institution" else None
         )
-        if membership is None or membership.kind != Membership.Kind.APPLICANT:
+        # Guardians keep these pages: they may apply for a brother or sister.
+        if membership is None or membership.kind not in (Membership.Kind.APPLICANT, Membership.Kind.GUARDIAN):
             raise NotFound()
         require_module(request.institution, "admissions")
 

@@ -34,6 +34,22 @@ Found and fixed during the check: every search box's label pointed at the wrong 
 component and its input), so clicking the label did not focus the box; the enroll dialog's button said "Set password".
 The check's applicant, application and student remain in the local database; `seed_demo` does not remove them.
 
+Final review (fresh reviewer, 19 Oct 2026), fixed with a failing test first: student-style login IDs
+(`<school>.<year>-<n>`) are reserved, so nobody can take one before enrollment, and enrolling names a taken one
+clearly; applicant pages are for applicant logins only; applicants and students never appear among staff nor hold
+staff permissions, even with a role row; a family asked for more information can reply after the closing date, and
+staff can decline while waiting; an expired offer can be offered again or declined; uploading a document keeps
+unsaved form entries; the "before you can submit" list names each missing item; a cycle with unsaved edits cannot be
+opened, and its editor warns before leaving. Backend `pytest` 339 passed, frontend `ng test` 154 passed, lint and
+build clean. Deferred minors: module-off routes answer 403 (not 404) to people without the permission; enroll
+returns an existing student before the permission check; cycle summaries show all campuses' counts to campus
+reviewers and count drafts; document buttons show in stages that refuse them; submission history lacks content;
+not-yet-open cycles are offered and refuse; editor default dates use UTC; reviewers see draft-cycle controls they
+cannot use; student edits accept a future birth date and do not rename the login; the record links to an application
+some readers cannot open; the enroll toast omits the login ID; Apply shows when admissions is off; no separate
+student-created audit event; seed has two questions; a failed document save can leave its file on disk.
+Two test cycles from the check ("Mid-year intake 2027", "Sports quota 2027 (draft)") remain as drafts locally.
+
 
 ## Slice 3 (18 October 2026)
 

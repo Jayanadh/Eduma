@@ -9,7 +9,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
-from accounts.models import CustomRole, Membership, RoleAssignment, User, validate_username
+from accounts.models import CustomRole, Employee, Membership, RoleAssignment, User, validate_username
 from accounts.permissions import (
     WHOLE,
     Scope,
@@ -107,6 +107,21 @@ def visible_memberships(actor, institution):
     return everyone.filter(pk__in=seen, status=Membership.Status.ACTIVE)
 
 
+def check_employee_number(institution, number: str, membership: Membership | None = None) -> str:
+    number = number.strip()
+    taken = Employee.objects.filter(institution=institution, employee_number=number)
+    if number and taken.exclude(membership=membership).exists():
+        raise ValidationError({"employee_number": ["Another person here has this employee number."]})
+    return number
+
+
+def set_left_on(membership: Membership, left_on) -> None:
+    employee, _ = Employee.objects.get_or_create(institution=membership.institution, membership=membership)
+    if left_on is None or employee.left_on is None:
+        employee.left_on = left_on
+        employee.save()
+
+
 def create_staff(actor, institution, data: dict) -> Membership:
     """A new login (first password, must change it), its membership and its first role, all or nothing."""
     try:
@@ -116,6 +131,7 @@ def create_staff(actor, institution, data: dict) -> Membership:
     if User.objects.filter(username=username).exists():
         raise ValidationError({"username": ["This login ID is already in use."]})
     assignment = check_assignment(actor, institution, data)
+    number = check_employee_number(institution, data.get("employee_number", ""))
     person = User(
         username=username,
         full_name=data["full_name"],
@@ -132,6 +148,9 @@ def create_staff(actor, institution, data: dict) -> Membership:
     with transaction.atomic():
         person.save()
         membership = Membership.objects.create(institution=institution, user=person, created_by=actor)
+        Employee.objects.create(
+            institution=institution, membership=membership, employee_number=number, joined_on=data.get("joined_on")
+        )
         row = RoleAssignment.objects.create(
             membership=membership, institution=institution, created_by=actor, **assignment
         )
@@ -272,6 +291,7 @@ def remove(actor, membership: Membership, reason: str, version: int) -> Membersh
             _end(actor, row, "Removed from staff")
         membership.status = Membership.Status.REVOKED
         membership.save()
+        set_left_on(membership, today_for(institution))
         audit.log(
             actor,
             "staff.removed",
@@ -294,6 +314,7 @@ def restore(actor, membership: Membership, version: int) -> Membership:
             raise Problem(409, "invalid_transition", "This person is already on the staff.")
         membership.status = Membership.Status.ACTIVE
         membership.save()
+        set_left_on(membership, None)
         summary = f"Restored {membership.user.full_name} to staff"
         audit.log(actor, "staff.restored", membership, summary, institution=institution)
     return membership

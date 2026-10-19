@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from admissions.applications import CORE, EDITABLE, LIVE_DOCUMENTS, WITHDRAWABLE, Stage, missing
 from admissions.models import Application, Document
+from students.models import Student
 
 
 class StartInput(serializers.Serializer):
@@ -154,6 +155,12 @@ def staff_item(application: Application, viewer) -> dict:
             for n in application.notes.select_related("author")
         ],
         "student_id": str(application.student_record.id) if hasattr(application, "student_record") else None,
+        "possible_duplicates": [
+            {"id": str(row.id), "number": row.number, "full_name": row.person.full_name}
+            for row in Student.objects.possible_duplicates(
+                application.institution, application.learner_name, application.date_of_birth, application
+            )
+        ],
         "actions": actions,
         "can_review": reviewer,
         "can_approve": approver,

@@ -4,21 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('accounts', '0004_assign_existing_admins'),
+        ("accounts", "0004_assign_existing_admins"),
     ]
 
     operations = [
         # A default first, so that migrating back can restore the column on existing rows (as Institution Admins,
         # the only role there was).
         migrations.AlterField(
-            model_name='membership',
-            name='role',
-            field=models.CharField(default='INSTITUTION_ADMIN', max_length=30),
+            model_name="membership",
+            name="role",
+            field=models.CharField(default="INSTITUTION_ADMIN", max_length=30),
         ),
         migrations.RemoveField(
-            model_name='membership',
-            name='role',
+            model_name="membership",
+            name="role",
         ),
     ]

@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('accounts', '0007_pending_assignments'),
+        ("accounts", "0007_pending_assignments"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='membership',
-            name='kind',
-            field=models.CharField(choices=[('staff', 'Staff'), ('applicant', 'Applicant'), ('student', 'Student')], default='staff', max_length=12),
+            model_name="membership",
+            name="kind",
+            field=models.CharField(
+                choices=[("staff", "Staff"), ("applicant", "Applicant"), ("student", "Student")],
+                default="staff",
+                max_length=12,
+            ),
         ),
     ]

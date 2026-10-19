@@ -38,9 +38,9 @@ def asha(world, cycle, client_for):
     return client_for(world.a.slug, applicant(world.a, "asha.parent"))
 
 
-def submitted(client, cycle):
+def submitted(client, cycle, **changes):
     draft = start(client, cycle).json()
-    saved = client.patch(f"{APPS}/{draft['id']}", complete(draft), format="json").json()
+    saved = client.patch(f"{APPS}/{draft['id']}", {**complete(draft), **changes}, format="json").json()
     attach_documents(draft["id"])
     return client.post(f"{APPS}/{draft['id']}/submit", {"version": saved["version"]}, format="json")
 

@@ -12,6 +12,7 @@ from accounts.models import Membership
 from accounts.permissions import WHOLE, active_membership, grants, has_perm, today_for
 from accounts.role_views import holds_any
 from common import audit
+from common.models import AuditEvent
 from common.pagination import Pages
 from configuration.gates import require_module
 from configuration.serializers import VersionInput
@@ -200,3 +201,24 @@ class Reinstate(StudentView):
         data = VersionInput(data=request.data)
         data.is_valid(raise_exception=True)
         return Response(self.detail(withdrawal.reinstate(request.user, found, data.validated_data["version"])))
+
+
+class StudentHistory(StudentView):
+    pagination_class = Pages
+
+    def get(self, request, pk):
+        student = self.student()
+        events = AuditEvent.objects.filter(object_type="student", object_id=str(student.id)).select_related("actor")
+        page = self.paginate_queryset(events.order_by("-at"))
+        return self.get_paginated_response(
+            [
+                {
+                    "at": event.at,
+                    "actor": event.actor.full_name if event.actor_id else None,
+                    "action": event.action,
+                    "summary": event.summary,
+                    "changes": event.changes,
+                }
+                for event in page
+            ]
+        )

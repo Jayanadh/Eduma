@@ -29,6 +29,17 @@ class StudentManager(models.Manager):
         highest = max((int(number[len(prefix) :]) for number in taken), default=0)
         return f"{prefix}{highest + 1:04d}"
 
+    def possible_duplicates(self, institution, name: str, date_of_birth, exclude_application=None) -> list:
+        """Students here with the same name (ignoring case and spacing) and date of birth: a warning for staff, never
+        a merge (spec pack 08 §4)."""
+        if date_of_birth is None:
+            return []
+        wanted = " ".join(name.split()).lower()
+        rows = self.filter(institution=institution, person__date_of_birth=date_of_birth).select_related("person")
+        if exclude_application is not None:
+            rows = rows.exclude(application=exclude_application)
+        return [row for row in rows if " ".join(row.person.full_name.split()).lower() == wanted]
+
 
 class Student(VersionedModel):
     class Status(models.TextChoices):

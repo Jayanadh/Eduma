@@ -6,33 +6,59 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('accounts', '0008_membership_kind'),
-        ('institutions', '0005_restricted'),
+        ("accounts", "0008_membership_kind"),
+        ("institutions", "0005_restricted"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='membership',
-            name='kind',
-            field=models.CharField(choices=[('staff', 'Staff'), ('applicant', 'Applicant'), ('student', 'Student'), ('guardian', 'Guardian')], default='staff', max_length=12),
+            model_name="membership",
+            name="kind",
+            field=models.CharField(
+                choices=[
+                    ("staff", "Staff"),
+                    ("applicant", "Applicant"),
+                    ("student", "Student"),
+                    ("guardian", "Guardian"),
+                ],
+                default="staff",
+                max_length=12,
+            ),
         ),
         migrations.CreateModel(
-            name='Employee',
+            name="Employee",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('version', models.PositiveIntegerField(default=1)),
-                ('employee_number', models.CharField(blank=True, max_length=20)),
-                ('joined_on', models.DateField(blank=True, null=True)),
-                ('left_on', models.DateField(blank=True, null=True)),
-                ('institution', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='employees', to='institutions.institution')),
-                ('membership', models.OneToOneField(on_delete=django.db.models.deletion.PROTECT, related_name='employee', to='accounts.membership')),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("version", models.PositiveIntegerField(default=1)),
+                ("employee_number", models.CharField(blank=True, max_length=20)),
+                ("joined_on", models.DateField(blank=True, null=True)),
+                ("left_on", models.DateField(blank=True, null=True)),
+                (
+                    "institution",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="employees",
+                        to="institutions.institution",
+                    ),
+                ),
+                (
+                    "membership",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.PROTECT, related_name="employee", to="accounts.membership"
+                    ),
+                ),
             ],
             options={
-                'constraints': [models.UniqueConstraint(condition=models.Q(('employee_number', ''), _negated=True), fields=('institution', 'employee_number'), name='unique_employee_number')],
+                "constraints": [
+                    models.UniqueConstraint(
+                        condition=models.Q(("employee_number", ""), _negated=True),
+                        fields=("institution", "employee_number"),
+                        name="unique_employee_number",
+                    )
+                ],
             },
         ),
     ]

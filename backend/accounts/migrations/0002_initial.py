@@ -6,27 +6,30 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('accounts', '0001_initial'),
-        ('institutions', '0001_initial'),
+        ("accounts", "0001_initial"),
+        ("institutions", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='membership',
-            name='institution',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='memberships', to='institutions.institution'),
+            model_name="membership",
+            name="institution",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, related_name="memberships", to="institutions.institution"
+            ),
         ),
         migrations.AddField(
-            model_name='membership',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='memberships', to=settings.AUTH_USER_MODEL),
+            model_name="membership",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, related_name="memberships", to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AddConstraint(
-            model_name='membership',
-            constraint=models.UniqueConstraint(fields=('institution', 'user'), name='one_membership_per_institution'),
+            model_name="membership",
+            constraint=models.UniqueConstraint(fields=("institution", "user"), name="one_membership_per_institution"),
         ),
     ]

@@ -20,6 +20,8 @@ class StaffInput(AssignmentInput):
     email = serializers.EmailField(required=False, allow_blank=True, default="")
     mobile = serializers.CharField(max_length=20, required=False, allow_blank=True, default="")
     password = serializers.CharField(trim_whitespace=False, write_only=True)
+    employee_number = serializers.CharField(max_length=20, required=False, allow_blank=True, default="")
+    joined_on = serializers.DateField(required=False, allow_null=True, default=None)
 
 
 class DetailsInput(serializers.Serializer):
@@ -27,6 +29,8 @@ class DetailsInput(serializers.Serializer):
     full_name = serializers.CharField(max_length=150, required=False)
     email = serializers.EmailField(required=False, allow_blank=True)
     mobile = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    employee_number = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    joined_on = serializers.DateField(required=False, allow_null=True)
 
 
 def _assignments(membership: Membership):
@@ -46,6 +50,13 @@ def roles_of(membership: Membership) -> list[dict]:
     return [{"label": row.role_label, "scope_label": row.scope_label} for row in rows]
 
 
+def employee_item(membership: Membership) -> dict:
+    employee = getattr(membership, "employee", None)
+    if employee is None:
+        return {"number": "", "joined_on": None, "left_on": None}
+    return {"number": employee.employee_number, "joined_on": employee.joined_on, "left_on": employee.left_on}
+
+
 def staff_item(membership: Membership) -> dict:
     user = membership.user
     return {
@@ -54,6 +65,7 @@ def staff_item(membership: Membership) -> dict:
         "username": user.username,
         "status": membership.status,
         "roles": roles_of(membership),
+        "employee": employee_item(membership),
     }
 
 

@@ -7,11 +7,12 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from accounts.models import Membership, RoleAssignment
+from accounts.models import Employee, Membership, RoleAssignment
 from accounts.permissions import can_manage_person, today_for
 from accounts.role_views import holds_any
 from accounts.staff import (
     approve_request,
+    check_employee_number,
     create_staff,
     end_assignment,
     give_role,
@@ -65,7 +66,9 @@ class StaffList(StaffView):
     pagination_class = Pages
 
     def get(self, request):
-        queryset = visible_memberships(request.user, request.institution).select_related("user", "institution")
+        queryset = visible_memberships(request.user, request.institution).select_related(
+            "user", "institution", "employee"
+        )
         queryset = queryset.prefetch_related(current_roles(today_for(request.institution)))
         if len(search := request.query_params.get("search", "").strip()) >= 3:
             queryset = queryset.filter(Q(user__full_name__icontains=search) | Q(user__username__icontains=search))
@@ -92,14 +95,21 @@ class StaffDetail(StaffView):
             membership = Membership.objects.select_for_update().get(pk=found.pk)
             membership.check_version(changes.pop("version"))
             user = membership.user
+            employee, _ = Employee.objects.get_or_create(institution=membership.institution, membership=membership)
+            if "employee_number" in changes:
+                changes["employee_number"] = check_employee_number(
+                    membership.institution, changes["employee_number"], membership
+                )
+            records = {name: employee if name in ("employee_number", "joined_on") else user for name in changes}
             diff = {
-                name: {"from": getattr(user, name), "to": value}
+                name: {"from": str(getattr(records[name], name) or ""), "to": str(value or "")}
                 for name, value in changes.items()
-                if getattr(user, name) != value
+                if getattr(records[name], name) != value
             }
             for name, value in changes.items():
-                setattr(user, name, value)
+                setattr(records[name], name, value)
             user.save()
+            employee.save()
             membership.save()  # the details' version lives on the membership
             if diff:
                 summary = f"Changed {user.full_name}'s details"

@@ -5,15 +5,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('accounts', '0005_remove_membership_role'),
-        ('institutions', '0005_restricted'),
+        ("accounts", "0005_remove_membership_role"),
+        ("institutions", "0005_restricted"),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='customrole',
-            constraint=models.UniqueConstraint(django.db.models.functions.text.Lower('name'), models.F('institution'), condition=models.Q(('is_active', True)), name='unique_active_role_name'),
+            model_name="customrole",
+            constraint=models.UniqueConstraint(
+                django.db.models.functions.text.Lower("name"),
+                models.F("institution"),
+                condition=models.Q(("is_active", True)),
+                name="unique_active_role_name",
+            ),
         ),
     ]

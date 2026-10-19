@@ -98,3 +98,13 @@ def test_students_list_scope_search_and_edit(world, cycle, accepted, registrar, 
 
 def test_students_need_the_module(world, client_for):
     assert client_for(world.a.slug, world.a_admin).get("/api/v1/institution/students").status_code == 404
+
+
+def test_possible_duplicates_warn_but_enroll_separately(world, cycle, accepted, registrar, client_for):
+    first = act(registrar, accepted, "enroll", password=FIRST).json()
+    family = client_for(world.a.slug, applicant(world.a, "ravi.parent"))
+    second = submitted(family, cycle, learner_name="meera   RAO").json()
+    warned = registrar.get(f"{STAFF}/{second['id']}").json()["possible_duplicates"]
+    student = Student.objects.get()
+    assert warned == [{"id": str(student.id), "number": student.number, "full_name": "Meera Rao"}]
+    assert registrar.get(f"{STAFF}/{first['id']}").json()["possible_duplicates"] == []

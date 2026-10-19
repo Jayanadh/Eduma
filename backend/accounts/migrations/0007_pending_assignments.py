@@ -6,25 +6,34 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('accounts', '0006_unique_active_role_name'),
+        ("accounts", "0006_unique_active_role_name"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='roleassignment',
-            name='decided_at',
+            model_name="roleassignment",
+            name="decided_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='roleassignment',
-            name='decided_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to=settings.AUTH_USER_MODEL),
+            model_name="roleassignment",
+            name="decided_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='roleassignment',
-            name='status',
-            field=models.CharField(choices=[('active', 'Active'), ('pending', 'Waiting for approval'), ('ended', 'Ended')], default='active', max_length=10),
+            model_name="roleassignment",
+            name="status",
+            field=models.CharField(
+                choices=[("active", "Active"), ("pending", "Waiting for approval"), ("ended", "Ended")],
+                default="active",
+                max_length=10,
+            ),
         ),
     ]

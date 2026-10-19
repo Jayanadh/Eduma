@@ -40,6 +40,12 @@ PERMISSIONS: dict[str, Permission] = {
         Permission("admission.approve", "Admissions", "Offer places and enroll accepted applicants", False),
         Permission("student.read", "Students", "See student records", False),
         Permission("student.update", "Students", "Correct student details", False),
+        Permission(
+            "guardian_link.manage",
+            "Students",
+            "Verify and revoke guardian links, and read custody notes and verification evidence",
+            False,
+        ),
     )
 }
 
@@ -92,11 +98,12 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
         _role(
             "registrar",
             "Registrar",
-            "Offers places, enrolls accepted applicants and keeps student records.",
+            "Offers places, enrolls accepted applicants, keeps student records and verifies guardians.",
             "admission.approve",
             "application.review",
             "student.read",
             "student.update",
+            "guardian_link.manage",
         ),
         _role("teacher", "Teacher / Faculty", f"{TODAY} Teaching permissions arrive with Academics and Attendance."),
         _role(

@@ -65,6 +65,7 @@ class Membership(VersionedModel):
         STAFF = "staff", "Staff"
         APPLICANT = "applicant", "Applicant"
         STUDENT = "student", "Student"
+        GUARDIAN = "guardian", "Guardian"
 
     institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="memberships")
     kind = models.CharField(max_length=12, choices=Kind.choices, default=Kind.STAFF)
@@ -77,6 +78,25 @@ class Membership(VersionedModel):
 
     def __str__(self) -> str:
         return f"{self.user} in {self.institution_id}"
+
+
+class Employee(VersionedModel):
+    """A staff member's employment record (spec pack 08 Employee). Leave, payroll and contracts arrive with HR."""
+
+    institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="employees")
+    membership = models.OneToOneField(Membership, on_delete=models.PROTECT, related_name="employee")
+    employee_number = models.CharField(max_length=20, blank=True)
+    joined_on = models.DateField(null=True, blank=True)
+    left_on = models.DateField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["institution", "employee_number"],
+                condition=~Q(employee_number=""),
+                name="unique_employee_number",
+            )
+        ]
 
 
 class CustomRole(VersionedModel):

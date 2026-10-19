@@ -55,3 +55,12 @@ def test_me_says_which_modules_are_on(world):
     switch_on(world.a)
     me = client.get("/api/v1/session").json()["user"]["membership"]
     assert me["modules_enabled"] == ["admissions", "students"]
+
+
+def test_registrar_holds_guardian_link_manage():
+    from accounts.roles import PERMISSIONS
+
+    assert "guardian_link.manage" in BUILTIN_ROLES["registrar"].permissions
+    assert "guardian_link.manage" in BUILTIN_ROLES["institution_admin"].permissions
+    assert PERMISSIONS["guardian_link.manage"].institution_only is False
+    assert Membership.Kind.GUARDIAN == "guardian"

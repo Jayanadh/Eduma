@@ -66,3 +66,55 @@ def test_module_gate_follows_switched_on_modules(world):
     world.a.modules = ["students"]
     world.a.save()
     assert not module_on(world.a, "admissions")
+
+
+def link(student, adult, status="proposed", **kw):
+    from students.models import GuardianLink
+
+    return GuardianLink.objects.create(
+        institution=student.institution, student=student, adult=adult, relationship="Mother", status=status, **kw
+    )
+
+
+def test_one_live_link_per_student_and_adult(world):
+    student = make_student(world.a, "2027-0001")
+    adult = Person.objects.create(institution=world.a, full_name="Asha Rao")
+    first = link(student, adult)
+    with pytest.raises(IntegrityError), transaction.atomic():
+        link(student, adult, status="active")
+    first.status = "revoked"
+    first.save()
+    link(student, adult)
+
+
+def test_link_in_effect_follows_dates(world):
+    today = today_for(world.a)
+    student = make_student(world.a, "2027-0001")
+    people = [Person.objects.create(institution=world.a, full_name=f"Adult {n}") for n in range(4)]
+    ended = link(
+        student,
+        people[0],
+        status="active",
+        starts_on=today - dt.timedelta(days=9),
+        ends_on=today - dt.timedelta(days=1),
+    )
+    proposed = link(student, people[1])
+    open_ended = link(student, people[2], status="active", starts_on=today)
+    later = link(student, people[3], status="active", starts_on=today + dt.timedelta(days=1))
+    assert [row.in_effect(today) for row in (ended, proposed, open_ended, later)] == [False, False, True, False]
+
+
+def test_employee_number_unique_per_institution_but_blank_repeats(world):
+    from accounts.models import Employee, Membership
+    from testing import factories
+
+    def employee(institution, number):
+        membership = Membership.objects.get(user=factories.member(institution))
+        return Employee.objects.create(institution=institution, membership=membership, employee_number=number)
+
+    employee(world.a, "")
+    employee(world.a, "")
+    employee(world.a, "AST-001")
+    employee(world.b, "AST-001")
+    with pytest.raises(IntegrityError), transaction.atomic():
+        employee(world.a, "AST-001")

@@ -33,7 +33,15 @@ CORE = (
     "address",
     "previous_school",
 )
-REQUIRED_CORE = ("learner_name", "date_of_birth", "guardian_name", "guardian_relationship", "guardian_phone", "address")
+# What the family is told when a required core field is empty, so the list says which one.
+REQUIRED_CORE = {
+    "learner_name": "Enter the learner's full name.",
+    "date_of_birth": "Enter the learner's date of birth.",
+    "guardian_name": "Enter the parent or guardian's name.",
+    "guardian_relationship": "Say how the parent or guardian is related to the learner.",
+    "guardian_phone": "Enter the parent or guardian's phone number.",
+    "address": "Enter the family's address.",
+}
 LIVE_DOCUMENTS = (Document.Status.PENDING, Document.Status.VERIFIED)
 
 
@@ -145,10 +153,10 @@ def edit(owner, application: Application, version: int, data: dict) -> Applicati
 
 def missing(application: Application) -> dict[str, list[str]]:
     """What still stops the application being submitted, by field."""
-    errors = {name: ["Fill this in."] for name in REQUIRED_CORE if not getattr(application, name)}
+    errors = {name: [message] for name, message in REQUIRED_CORE.items() if not getattr(application, name)}
     for question in application.cycle.questions.all():
         if question.required and application.answers.get(question.code) in (None, ""):
-            errors[f"answers.{question.code}"] = ["Answer this question."]
+            errors[f"answers.{question.code}"] = [f"Answer “{question.label}”."]
     present = set(application.documents.filter(status__in=LIVE_DOCUMENTS).values_list("requirement__code", flat=True))
     for requirement in application.cycle.documents.all():
         if requirement.required and requirement.code not in present:
@@ -181,7 +189,8 @@ def submit(owner, application: Application, version: int) -> Application:
         application.check_version(version)
         if application.stage not in EDITABLE:
             raise wrong_stage(application)
-        if not is_open(application.cycle):
+        # The dates bound new applications; a family answering a request for information may reply after them.
+        if application.stage == Stage.DRAFT and not is_open(application.cycle):
             raise _closed(application.cycle)
         if errors := missing(application):
             raise ValidationError(errors)

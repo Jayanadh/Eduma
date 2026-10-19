@@ -116,7 +116,7 @@ def staff_list_item(application: Application) -> dict:
 
 
 def staff_item(application: Application, viewer) -> dict:
-    from admissions.review import can_approve, can_review
+    from admissions.review import OFFERABLE, REJECTABLE, can_approve, can_review
 
     item = applicant_item(application)
     for applicant_only in ("missing", "allowed_actions"):
@@ -130,9 +130,9 @@ def staff_item(application: Application, viewer) -> dict:
         actions.append("request_information")
     if reviewer and stage == Stage.UNDER_REVIEW:
         actions.append("eligible")
-    if reviewer and stage in (Stage.SUBMITTED, Stage.UNDER_REVIEW, Stage.ELIGIBLE):
+    if reviewer and stage in REJECTABLE:
         actions.append("reject")
-    if approver and stage == Stage.ELIGIBLE:
+    if approver and stage in OFFERABLE:
         actions.append("offer")
     if approver and stage == Stage.ACCEPTED:
         actions.append("enroll")

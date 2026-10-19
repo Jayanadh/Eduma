@@ -155,7 +155,8 @@
     <div class="form-actions section">
       <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="save()">Save cycle</button>
       @if (data.value()) {
-        <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="move('publish')">Open for applications</button>
+        <button type="button" class="btn btn-secondary" [disabled]="busy() || dirty()" (click)="move('publish')">Open for applications</button>
+        @if (dirty()) { <span class="muted small">Save your changes first.</span> }
       }
     </div>
   }

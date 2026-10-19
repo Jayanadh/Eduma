@@ -45,6 +45,8 @@ def grants(membership: Membership | None) -> Grants:
     """What each of the membership's in-effect assignments allows, and where."""
     if membership is None or membership.status != Membership.Status.ACTIVE or not membership.user.is_active:
         return []
+    if membership.kind != Membership.Kind.STAFF:
+        return []  # roles are for staff; a role row on a family or student login grants nothing
     rows = in_effect(membership.assignments.select_related("custom_role"), today_for(membership.institution))
     return [(row.permissions, row.scope) for row in rows]
 

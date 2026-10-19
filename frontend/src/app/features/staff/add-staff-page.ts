@@ -43,6 +43,15 @@ const ALL = { page_size: 200 };
             <label for="staff-mobile">Mobile (optional)</label>
             <input id="staff-mobile" type="tel" formControlName="mobile" />
           </div>
+          <div class="field">
+            <label for="staff-employee">Employee number (optional)</label>
+            <input id="staff-employee" formControlName="employee_number" />
+            @if (errors()['employee_number']; as message) { <span class="field-error">{{ message }}</span> }
+          </div>
+          <div class="field">
+            <label for="staff-joined">Joined on (optional)</label>
+            <input id="staff-joined" type="date" formControlName="joined_on" />
+          </div>
           <div class="field full">
             <label for="staff-password">First password</label>
             <div class="password-field">
@@ -87,6 +96,8 @@ export class AddStaffPage {
     mobile: [''],
     password: ['', Validators.required],
     role: ['', Validators.required],
+    employee_number: [''],
+    joined_on: [''],
   });
   protected readonly scope = signal<ScopeValue>({ scope_type: 'institution', campus: null, department: null });
   protected readonly roles = load(() => this.api.get<Page<RoleItem>>('institution/roles', { ...ALL, assignable: 1 }));
@@ -117,7 +128,9 @@ export class AddStaffPage {
     this.busy.set(true);
     this.errors.set({});
     this.error.set('');
-    this.api.post<StaffDetail>('institution/staff', { ...this.form.getRawValue(), ...this.scope() }).subscribe({
+    const values = this.form.getRawValue();
+    const body = { ...values, joined_on: values.joined_on || null, ...this.scope() };
+    this.api.post<StaffDetail>('institution/staff', body).subscribe({
       next: (person) => {
         this.unsaved.dirty.set(false);
         this.toasts.show(`${person.full_name} added. Hand over their first password in person.`);

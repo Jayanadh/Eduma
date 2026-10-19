@@ -1,0 +1,144 @@
+<section class="card stack">
+  <h2 class="card-title">Guardians</h2>
+  <app-load-error [message]="links.error()" (retry)="links.reload()" />
+  @if (links.value(); as rows) {
+    @for (link of rows; track link.id) {
+      <div class="link" [class.revoked]="link.status === 'revoked'">
+        <div class="link-head">
+          <strong>{{ link.adult.full_name }}</strong>
+          <span class="muted small">{{ link.relationship }}</span>
+          <span class="badge" [class.badge-success]="link.in_effect" [class.badge-info]="link.status === 'proposed'">
+            {{ link.status === 'active' && !link.in_effect ? 'Not in effect' : link.status_label }}
+          </span>
+        </div>
+        <p class="muted small">
+          {{ link.adult.phone || 'No phone' }}{{ link.adult.email ? ' · ' + link.adult.email : '' }}
+          · {{ link.has_login ? 'Has a login' : 'No login' }}
+          @if (link.status === 'active') {
+            · {{ access(link) }} · from {{ date(link.starts_on) }}{{ link.ends_on ? ' to ' + date(link.ends_on) : '' }}
+          }
+        </p>
+        @if (link.needs_adult_review) {
+          <p class="notice notice-warning small">Review: this student is now an adult. Their own consent is needed to keep this link.</p>
+        }
+        @if (link.restrictions) {
+          <p class="small"><strong>Restrictions:</strong> {{ link.restrictions }}</p>
+        }
+        @if (link.verification_reference) {
+          <p class="muted small">Checked: {{ link.verification_reference }}</p>
+        }
+        @if (link.revoke_reason) {
+          <p class="muted small">Revoked: {{ link.revoke_reason }}</p>
+        }
+        @if (student().can_manage_guardians && link.status !== 'revoked') {
+          <div class="actions">
+            @if (link.status === 'proposed' && verifying() !== link.id) {
+              <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="openVerify(link)">Verify</button>
+            }
+            <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="revoke(link)">Revoke</button>
+          </div>
+        }
+        @if (verifying() === link.id) {
+          <form class="verify stack" [formGroup]="verifyForm" (ngSubmit)="verify(link)" novalidate>
+            <p class="small">Record how you checked {{ link.adult.full_name }}'s authority. A matching phone or surname is not enough.</p>
+            <div class="grid">
+              <div class="field">
+                <label for="verify-basis">Authority</label>
+                <select id="verify-basis" formControlName="authority_basis">
+                  @for (b of bases; track b[0]) { <option [value]="b[0]">{{ b[1] }}</option> }
+                </select>
+                @if (errors()['authority_basis']; as m) { <span class="field-error">{{ m }}</span> }
+              </div>
+              <div class="field">
+                <label for="verify-method">How it was checked</label>
+                <select id="verify-method" formControlName="verification_method">
+                  @for (m of methods; track m[0]) { <option [value]="m[0]">{{ m[1] }}</option> }
+                </select>
+              </div>
+              <div class="field full">
+                <label for="verify-reference">Reference</label>
+                <input id="verify-reference" formControlName="verification_reference" placeholder="What you saw, and where it is filed" />
+              </div>
+              <div class="field">
+                <label for="verify-start">From</label>
+                <input id="verify-start" type="date" formControlName="starts_on" />
+              </div>
+              <div class="field">
+                <label for="verify-end">Until (optional)</label>
+                <input id="verify-end" type="date" formControlName="ends_on" />
+                @if (errors()['ends_on']; as m) { <span class="field-error">{{ m }}</span> }
+              </div>
+            </div>
+            <fieldset class="access">
+              <legend>They may see</legend>
+              <label><input type="checkbox" formControlName="record" /> The student's record</label>
+              <label><input type="checkbox" formControlName="fees" /> Fees (when the Fees module is on)</label>
+              <label><input type="checkbox" formControlName="messages" /> Messages (when Communication is on)</label>
+            </fieldset>
+            <div class="field">
+              <label for="verify-restrictions">Restrictions (staff with this permission only)</label>
+              <textarea id="verify-restrictions" rows="2" formControlName="restrictions"></textarea>
+            </div>
+            @if (!link.has_login) {
+              <label class="check"><input id="verify-login" type="checkbox" formControlName="login" /> Give them a login</label>
+              @if (verifyForm.controls.login.value) {
+                <div class="grid">
+                  <div class="field">
+                    <label for="verify-username">Login ID</label>
+                    <input id="verify-username" formControlName="username" autocomplete="off" />
+                    @if (errors()['login.username']; as m) { <span class="field-error">{{ m }}</span> }
+                  </div>
+                  <div class="field">
+                    <label for="verify-password">First password</label>
+                    <div class="password-field">
+                      <input #pw id="verify-password" type="password" formControlName="password" autocomplete="new-password" />
+                      <app-reveal [for]="pw" />
+                    </div>
+                    @if (errors()['login.password']; as m) { <span class="field-error">{{ m }}</span> }
+                  </div>
+                </div>
+              }
+            }
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" [disabled]="busy()">Verify</button>
+              <button type="button" class="btn btn-secondary" (click)="verifying.set(null)">Cancel</button>
+            </div>
+          </form>
+        }
+      </div>
+    } @empty {
+      <p class="muted small">No guardians yet.</p>
+    }
+  }
+  @if (student().can_manage_guardians && student().status === 'active') {
+    @if (adding()) {
+      <form class="stack" [formGroup]="addForm" (ngSubmit)="add()" novalidate>
+        <div class="grid">
+          <div class="field">
+            <label for="guardian-name">Full name</label>
+            <input id="guardian-name" formControlName="full_name" />
+            @if (errors()['adult.full_name']; as m) { <span class="field-error">{{ m }}</span> }
+          </div>
+          <div class="field">
+            <label for="guardian-relationship">Relationship</label>
+            <input id="guardian-relationship" formControlName="relationship" placeholder="Mother, uncle, guardian…" />
+          </div>
+          <div class="field">
+            <label for="guardian-phone">Phone</label>
+            <input id="guardian-phone" type="tel" formControlName="phone" />
+          </div>
+          <div class="field">
+            <label for="guardian-email">Email</label>
+            <input id="guardian-email" type="email" formControlName="email" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="busy() || addForm.invalid">Add guardian</button>
+          <button type="button" class="btn btn-secondary" (click)="adding.set(false)">Cancel</button>
+        </div>
+      </form>
+    } @else {
+      <div><button type="button" class="btn btn-secondary btn-sm" (click)="adding.set(true)">Add a guardian</button></div>
+    }
+  }
+</section>

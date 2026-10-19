@@ -116,6 +116,9 @@ def test_read_without_manage_hides_evidence(world, enrolled, registrar, client_f
     assert not {"restrictions", "verification_reference", "authority_basis"} & set(rows[0])
     assert "No contact" not in str(rows)
     assert "restrictions" in registrar.get(url(enrolled)).json()[0]
+    record = f"/api/v1/institution/students/{enrolled.id}"
+    assert principal.get(record).json()["can_manage_guardians"] is False
+    assert registrar.get(record).json()["can_manage_guardians"] is True
     link.refresh_from_db()
     assert (
         principal.post(url(enrolled, f"/{link.id}/revoke"), {"version": link.version, "reason": "x"}).status_code == 403

@@ -5,6 +5,12 @@
       <span class="badge badge-info">{{ a.stage_label }}</span>
     </app-page-header>
     <p class="muted">{{ a.cycle.name }} · {{ a.place.label }}{{ a.place.campus_name ? ' · ' + a.place.campus_name : '' }} · sent {{ dateTime(a.submitted_at) }} by {{ a.owner.full_name }} ({{ a.owner.username }})</p>
+    @for (d of a.possible_duplicates; track d.id) {
+      <p class="notice notice-warning" role="status">
+        Possible duplicate of <a [routerLink]="['/app/students', d.id]">{{ d.number }} {{ d.full_name }}</a>: same name and date of birth.
+        Enrolling still makes a separate student; check before you do.
+      </p>
+    }
 
     @if (a.actions.length) {
       <div class="form-actions section">

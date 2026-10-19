@@ -42,6 +42,7 @@ function detail(overrides: Partial<StaffDetail> = {}): StaffDetail {
     ],
     can_manage: true,
     can_give: true,
+    employee: { number: 'AST-004', joined_on: '2024-06-01', left_on: null },
     ...overrides,
   };
 }
@@ -193,5 +194,43 @@ describe('Staff pages', () => {
     await fixture.whenStable();
     const request = http.expectOne('/api/v1/institution/staff/m1/assignments/a9/reject');
     expect(request.request.body).toEqual({ reason: 'Moved' });
+  });
+
+  it('sends the employee number and joining date when adding staff', async () => {
+    const fixture = TestBed.createComponent(AddStaffPage);
+    await fixture.whenStable();
+    for (const request of http.match(() => true)) {
+      request.flush(EMPTY_PAGE);
+    }
+    const page = fixture.componentInstance as unknown as { form: AddStaffPage['form'] };
+    page.form.setValue({
+      full_name: 'Ravi Kumar',
+      username: 'ravi.kumar',
+      email: '',
+      mobile: '',
+      password: 'Welcome-2027-pass',
+      role: 'teacher',
+      employee_number: 'AST-010',
+      joined_on: '',
+    });
+    await fixture.whenStable();
+    (fixture.nativeElement as HTMLElement).querySelector('form')!.dispatchEvent(new Event('submit'));
+    const request = http.expectOne('/api/v1/institution/staff');
+    expect(request.request.body.employee_number).toBe('AST-010');
+    expect(request.request.body.joined_on).toBeNull();
+  });
+
+  it('shows and corrects the employee number', async () => {
+    const fixture = await openDetail(detail());
+    const root = fixture.nativeElement as HTMLElement;
+    const number = root.querySelector<HTMLInputElement>('#detail-employee')!;
+    expect(number.value).toBe('AST-004');
+    number.value = 'AST-040';
+    number.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    root.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    const request = http.expectOne('/api/v1/institution/staff/m1');
+    expect(request.request.body.employee_number).toBe('AST-040');
+    expect(request.request.body.joined_on).toBe('2024-06-01');
   });
 });

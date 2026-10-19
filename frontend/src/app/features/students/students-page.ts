@@ -16,8 +16,16 @@ import { SearchBox } from '../../ui/search-box';
   template: `
     <div class="page">
       <app-page-header eyebrow="People" title="Students" subtitle="Students join here when an accepted application is enrolled." />
-      <div class="section">
+      <div class="filters section">
         <app-search-box id="student-search" label="Search by number or name" (search)="search.set($event); page.set(1)" />
+        <div class="field">
+          <label for="student-status">Status</label>
+          <select id="student-status" (change)="status.set($any($event.target).value); page.set(1)">
+            <option value="">All</option>
+            <option value="active">Active</option>
+            <option value="withdrawn">Withdrawn</option>
+          </select>
+        </div>
       </div>
       <app-load-error [message]="data.error()" (retry)="data.reload()" />
       @if (data.value(); as result) {
@@ -48,13 +56,30 @@ import { SearchBox } from '../../ui/search-box';
       }
     </div>
   `,
+  styles: `
+    .filters {
+      display: grid;
+      gap: 12px;
+
+      @media (min-width: 900px) {
+        grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+        align-items: end;
+      }
+    }
+  `,
 })
 export class StudentsPage {
   private readonly api = inject(Api);
   protected readonly search = signal('');
+  protected readonly status = signal('');
   protected readonly page = signal(1);
   protected readonly data = load(
-    () => this.api.get<Page<StudentListItem>>('institution/students', { search: this.search(), page: this.page() }),
-    () => [this.search(), this.page()],
+    () =>
+      this.api.get<Page<StudentListItem>>('institution/students', {
+        search: this.search(),
+        status: this.status(),
+        page: this.page(),
+      }),
+    () => [this.search(), this.status(), this.page()],
   );
 }

@@ -10,17 +10,56 @@ import { load } from '../../core/load';
 import { UnsavedChanges } from '../../core/unsaved-changes';
 import { LoadError } from '../../ui/load-error';
 import { PageHeader } from '../../ui/page-header';
+import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { ToastService } from '../../ui/toast';
+import { GuardiansSection } from './guardians-section';
+import { HistorySection } from './history-section';
 
 /** One student's record: details (correctable with student.update), enrollments, where they came from, their login. */
 @Component({
   selector: 'app-student-page',
-  imports: [LoadError, PageHeader, ReactiveFormsModule, RouterLink],
+  imports: [GuardiansSection, HistorySection, LoadError, PageHeader, ReactiveFormsModule, RouterLink],
   template: `
     <div class="page">
       <app-load-error [message]="data.error()" (retry)="data.reload()" />
       @if (data.value(); as student) {
         <app-page-header eyebrow="Student" [title]="student.number + ' · ' + student.full_name" />
+        @if (student.left_on) {
+          <div class="notice notice-warning section" role="status">
+            Left on {{ date(student.left_on) }}{{ exitReason(student) ? ': ' + exitReason(student) : '' }}
+            @if (student.can_reinstate) {
+              <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="reinstate(student)">Reinstate</button>
+            }
+          </div>
+        }
+        @if (student.can_withdraw) {
+          @if (withdrawing()) {
+            <form class="card stack withdraw section" [formGroup]="leaving" (ngSubmit)="withdraw(student)" novalidate>
+              <h2 class="card-title">Withdraw {{ student.full_name }}</h2>
+              <p class="muted small">The record and history stay. The student's login stops working. Fees and refunds are decided separately.</p>
+              <div class="field">
+                <label for="withdraw-date">Leaving date</label>
+                <input id="withdraw-date" type="date" formControlName="effective_on" />
+                @if (errors()['effective_on']; as message) { <span class="field-error">{{ message }}</span> }
+              </div>
+              <div class="field">
+                <label for="withdraw-reason">Reason</label>
+                <input id="withdraw-reason" formControlName="reason" />
+                @if (errors()['reason']; as message) { <span class="field-error">{{ message }}</span> }
+              </div>
+              <div class="field">
+                <label for="withdraw-clearance">Clearance note (optional)</label>
+                <textarea id="withdraw-clearance" rows="2" formControlName="clearance_note" placeholder="Books returned, certificates issued…"></textarea>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-danger" [disabled]="busy()">Withdraw</button>
+                <button type="button" class="btn btn-secondary" (click)="withdrawing.set(false)">Cancel</button>
+              </div>
+            </form>
+          } @else {
+            <div class="section"><button type="button" class="btn btn-secondary btn-sm" (click)="startWithdraw()">Withdraw</button></div>
+          }
+        }
         <div class="grid-2 section">
           <form class="card stack" [formGroup]="form" (ngSubmit)="save(student)" novalidate>
             <h2 class="card-title">Details</h2>
@@ -68,7 +107,7 @@ import { ToastService } from '../../ui/toast';
                 @for (e of student.enrollments; track $index) {
                   <li>
                     <strong>{{ e.place_label }}</strong> · {{ e.academic_year }}{{ e.campus_name ? ' · ' + e.campus_name : '' }}
-                    <span class="muted small">from {{ date(e.entry_date) }} · {{ e.status }}</span>
+                    <span class="muted small">from {{ date(e.entry_date) }}{{ e.exit_date ? ' to ' + date(e.exit_date) : '' }} · {{ e.status }}</span>
                   </li>
                 }
               </ul>
@@ -81,6 +120,7 @@ import { ToastService } from '../../ui/toast';
                   <a [routerLink]="['/app/admissions/applications', application.id]">{{ application.number }}</a></p>
               }
             </section>
+            <app-guardians-section [student]="student" />
             <section class="card">
               <h2 class="card-title">Sign-in</h2>
               @if (student.login) {
@@ -92,6 +132,7 @@ import { ToastService } from '../../ui/toast';
             </section>
           </div>
         </div>
+        <div class="section"><app-history-section [studentId]="student.id" /></div>
       } @else if (data.loading()) {
         <p class="muted" role="status">Loading…</p>
       }
@@ -133,6 +174,9 @@ export class StudentPage {
     address: [''],
   });
   protected readonly busy = signal(false);
+  protected readonly withdrawing = signal(false);
+  protected readonly leaving = inject(NonNullableFormBuilder).group({ effective_on: [''], reason: [''], clearance_note: [''] });
+  private readonly confirm = inject(ConfirmDialog);
   protected readonly conflict = signal(false);
   protected readonly errors = signal<Record<string, string>>({});
 
@@ -181,5 +225,60 @@ export class StudentPage {
           }
         },
       });
+  }
+
+  protected exitReason(student: StudentRecord): string {
+    return student.enrollments.find((e) => e.exit_date)?.exit_reason ?? '';
+  }
+
+  protected startWithdraw(): void {
+    this.leaving.reset({ effective_on: new Date().toLocaleDateString('en-CA'), reason: '', clearance_note: '' });
+    this.errors.set({});
+    this.withdrawing.set(true);
+  }
+
+  private moved(student: StudentRecord, message: string): void {
+    this.busy.set(false);
+    this.withdrawing.set(false);
+    this.data.value.set(student);
+    this.toasts.show(message);
+  }
+
+  protected withdraw(student: StudentRecord): void {
+    this.busy.set(true);
+    this.errors.set({});
+    this.api
+      .post<StudentRecord>(`institution/students/${student.id}/withdraw`, { version: student.version, ...this.leaving.getRawValue() })
+      .subscribe({
+        next: (updated) => this.moved(updated, `${student.full_name} withdrawn.`),
+        error: (err) => {
+          this.busy.set(false);
+          this.errors.set(fieldErrors(err));
+          if (!Object.keys(fieldErrors(err)).length) {
+            this.toasts.show(apiErrorMessage(err), 'danger');
+            this.data.reload();
+          }
+        },
+      });
+  }
+
+  protected async reinstate(student: StudentRecord): Promise<void> {
+    const yes = await this.confirm.ask({
+      title: `Reinstate ${student.full_name}?`,
+      message: 'Their enrollment reopens and their login works again.',
+      confirmLabel: 'Reinstate',
+    });
+    if (!yes) {
+      return;
+    }
+    this.busy.set(true);
+    this.api.post<StudentRecord>(`institution/students/${student.id}/reinstate`, { version: student.version }).subscribe({
+      next: (updated) => this.moved(updated, `${student.full_name} reinstated.`),
+      error: (err) => {
+        this.busy.set(false);
+        this.toasts.show(apiErrorMessage(err), 'danger');
+        this.data.reload();
+      },
+    });
   }
 }

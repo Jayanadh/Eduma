@@ -59,6 +59,15 @@ export function groupAssignments(rows: readonly Assignment[]) {
                   <label for="detail-mobile">Mobile</label>
                   <input id="detail-mobile" type="tel" formControlName="mobile" />
                 </div>
+                <div class="field">
+                  <label for="detail-employee">Employee number</label>
+                  <input id="detail-employee" formControlName="employee_number" />
+                  @if (detailErrors()['employee_number']; as message) { <span class="field-error">{{ message }}</span> }
+                </div>
+                <div class="field">
+                  <label for="detail-joined">Joined on</label>
+                  <input id="detail-joined" type="date" formControlName="joined_on" />
+                </div>
                 <div class="form-actions">
                   <button type="submit" class="btn btn-primary" [disabled]="busy() || details.pristine">Save details</button>
                 </div>
@@ -68,6 +77,10 @@ export function groupAssignments(rows: readonly Assignment[]) {
               <div><dt>Login ID</dt><dd class="url">{{ person.username }}</dd></div>
               @if (!person.can_manage) {
                 <div><dt>Email</dt><dd>{{ person.email || '—' }}</dd></div>
+                <div><dt>Employee number</dt><dd>{{ person.employee.number || '—' }}</dd></div>
+              }
+              @if (person.employee.left_on) {
+                <div><dt>Left on</dt><dd>{{ date(person.employee.left_on) }}</dd></div>
               }
               <div>
                 <dt>Signed in</dt>
@@ -209,6 +222,8 @@ export class StaffDetailPage {
     full_name: ['', Validators.required],
     email: [''],
     mobile: [''],
+    employee_number: [''],
+    joined_on: [''],
   });
   protected readonly detailErrors = signal<Record<string, string>>({});
   protected readonly role = signal('');
@@ -222,7 +237,13 @@ export class StaffDetailPage {
     effect(() => {
       const person = this.data.value();
       if (person) {
-        this.details.reset({ full_name: person.full_name, email: person.email, mobile: person.mobile });
+        this.details.reset({
+          full_name: person.full_name,
+          email: person.email,
+          mobile: person.mobile,
+          employee_number: person.employee.number,
+          joined_on: person.employee.joined_on ?? '',
+        });
       }
     });
   }
@@ -244,7 +265,11 @@ export class StaffDetailPage {
     this.busy.set(true);
     this.detailErrors.set({});
     this.api
-      .patch<StaffDetail>(`institution/staff/${person.id}`, { version: person.version, ...this.details.getRawValue() })
+      .patch<StaffDetail>(`institution/staff/${person.id}`, {
+        version: person.version,
+        ...this.details.getRawValue(),
+        joined_on: this.details.getRawValue().joined_on || null,
+      })
       .subscribe({
         next: (updated) => this.apply(updated, 'Details saved.'),
         error: (err) => {

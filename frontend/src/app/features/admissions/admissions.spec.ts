@@ -40,6 +40,7 @@ function staffApplication(overrides: Partial<StaffApplication> = {}): StaffAppli
     submissions: [],
     notes: [],
     student_id: null,
+    possible_duplicates: [],
     actions: ['reject', 'offer'],
     can_review: true,
     can_approve: true,
@@ -172,6 +173,13 @@ describe('Staff admissions pages', () => {
     await fixture.whenStable();
     const request = http.expectOne('/api/v1/institution/admissions/applications/a1/offer');
     expect(request.request.body).toEqual({ version: 5, expires_on: '2026-11-01' });
+  });
+
+  it('warns about a possible duplicate student', async () => {
+    const fixture = await review(
+      staffApplication({ possible_duplicates: [{ id: 's9', number: '2027-0001', full_name: 'Arjun Demo' }] }),
+    );
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Possible duplicate of 2027-0001 Arjun Demo');
   });
 
   it('asks for a first password to enroll', async () => {

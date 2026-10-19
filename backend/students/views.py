@@ -54,6 +54,7 @@ class StudentView(GenericAPIView):
             **student_item(student),
             "can_withdraw": allowed and student.status == Student.Status.ACTIVE,
             "can_reinstate": allowed and withdrawal.can_reinstate(student),
+            "can_manage_guardians": guardians.can_manage_links(self.request.user, student),
         }
 
     def student(self) -> Student:

@@ -98,6 +98,7 @@ export type StaffDetail = StaffItem & {
   can_manage: boolean;
   /** The viewer may give this person roles (each role and place is checked when sent). */
   can_give: boolean;
+  employee: { number: string; joined_on: string | null; left_on: string | null };
 };
 
 export type ModuleInfo = {
@@ -464,6 +465,8 @@ export type StaffApplication = Omit<ApplicantApplication, 'missing' | 'allowed_a
   submissions: { revision: number; submitted_at: string; snapshot: Record<string, unknown> }[];
   notes: { id: string; author: string; text: string; created_at: string }[];
   student_id: string | null;
+  /** Existing students with the same name and date of birth: a warning, never a merge. */
+  possible_duplicates: { id: string; number: string; full_name: string }[];
   actions: ('start_review' | 'request_information' | 'eligible' | 'reject' | 'offer' | 'enroll')[];
   can_review: boolean;
   can_approve: boolean;
@@ -500,6 +503,40 @@ export type StudentRecord = StudentListItem & {
   application: { id: string; number: string } | null;
   login: string | null;
   last_login: string | null;
+  left_on: string | null;
+  can_withdraw: boolean;
+  can_reinstate: boolean;
+  can_manage_guardians: boolean;
+};
+
+/** A guardian link as staff see it; the evidence fields come only to those who manage links. */
+export type GuardianLink = {
+  id: string;
+  version: number;
+  adult: { full_name: string; phone: string; email: string };
+  relationship: string;
+  status: 'proposed' | 'active' | 'revoked';
+  status_label: string;
+  in_effect: boolean;
+  access: { record: boolean; fees: boolean; messages: boolean };
+  starts_on: string | null;
+  ends_on: string | null;
+  has_login: boolean;
+  source: 'enrollment' | 'staff';
+  needs_adult_review: boolean;
+  restrictions?: string;
+  authority_basis?: string;
+  verification_method?: string;
+  verification_reference?: string;
+  revoke_reason?: string;
+};
+
+export type HistoryEntry = {
+  at: string;
+  actor: string | null;
+  action: string;
+  summary: string;
+  changes: Record<string, unknown>;
 };
 
 /** What students see of their own record. */

@@ -14,13 +14,15 @@ from accounts.role_views import holds_any
 from common import audit
 from common.pagination import Pages
 from configuration.gates import require_module
-from students import guardians
+from configuration.serializers import VersionInput
+from students import guardians, withdrawal
 from students.models import GuardianLink, Student
 from students.serializers import (
     ProposeInput,
     RevokeInput,
     StudentInput,
     VerifyInput,
+    WithdrawInput,
     link_item,
     student_item,
     student_list_item,
@@ -44,6 +46,15 @@ class StudentView(GenericAPIView):
         super().initial(request, *args, **kwargs)
         require_module(request.institution, "students")
 
+    def detail(self, student: Student) -> dict:
+        """The record with what this viewer may do to it now."""
+        allowed = has_perm(self.request.user, self.request.institution, "student.update", student.scope)
+        return {
+            **student_item(student),
+            "can_withdraw": allowed and student.status == Student.Status.ACTIVE,
+            "can_reinstate": allowed and withdrawal.can_reinstate(student),
+        }
+
     def student(self) -> Student:
         found = visible_students(self.request.user, self.request.institution).filter(pk=self.kwargs["pk"]).first()
         if found is None:
@@ -66,7 +77,7 @@ class StudentList(StudentView):
 
 class StudentDetail(StudentView):
     def get(self, request, pk):
-        return Response(student_item(self.student()))
+        return Response(self.detail(self.student()))
 
     def patch(self, request, pk):
         found = self.student()
@@ -92,7 +103,7 @@ class StudentDetail(StudentView):
                 audit.log(
                     request.user, "student.updated", student, f"Corrected {student.number}'s details", changes=diff
                 )
-        return Response(student_item(student))
+        return Response(self.detail(student))
 
 
 class OwnRecord(GenericAPIView):
@@ -169,3 +180,23 @@ class GuardianRevoke(GuardianView):
         data = self.body(RevokeInput)
         found = guardians.revoke(request.user, link, data["version"], data["reason"])
         return Response(self.item(found, student))
+
+
+class Withdraw(StudentView):
+    def post(self, request, pk):
+        found = self.student()
+        data = WithdrawInput(data=request.data)
+        data.is_valid(raise_exception=True)
+        values = data.validated_data
+        student = withdrawal.withdraw(
+            request.user, found, values["version"], values["effective_on"], values["reason"], values["clearance_note"]
+        )
+        return Response(self.detail(student))
+
+
+class Reinstate(StudentView):
+    def post(self, request, pk):
+        found = self.student()
+        data = VersionInput(data=request.data)
+        data.is_valid(raise_exception=True)
+        return Response(self.detail(withdrawal.reinstate(request.user, found, data.validated_data["version"])))

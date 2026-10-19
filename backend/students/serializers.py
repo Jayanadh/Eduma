@@ -26,6 +26,8 @@ def enrollment_item(enrollment) -> dict | None:
         "campus_name": enrollment.campus.name if enrollment.campus_id else None,
         "entry_date": enrollment.entry_date,
         "status": enrollment.status,
+        "exit_date": enrollment.exit_date,
+        "exit_reason": enrollment.exit_reason,
     }
 
 
@@ -36,6 +38,7 @@ def student_list_item(student: Student) -> dict:
         "number": student.number,
         "full_name": student.person.full_name,
         "status": student.status,
+        "left_on": student.left_on,
         "enrollment": enrollment_item(current),
     }
 
@@ -91,6 +94,13 @@ class VerifyInput(serializers.Serializer):
     access = AccessInput(required=False)
     restrictions = serializers.CharField(max_length=1000, allow_blank=True, required=False, default="")
     login = LoginInput(required=False, allow_null=True, default=None)
+
+
+class WithdrawInput(serializers.Serializer):
+    version = serializers.IntegerField()
+    effective_on = serializers.DateField()
+    reason = serializers.CharField(max_length=500, allow_blank=True)
+    clearance_note = serializers.CharField(max_length=1000, allow_blank=True, required=False, default="")
 
 
 class RevokeInput(serializers.Serializer):

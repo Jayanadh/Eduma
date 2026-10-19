@@ -18,6 +18,7 @@ from common import audit
 from common.exceptions import Problem
 from configuration.registry import setting
 from institutions.models import Institution
+from students.guardians import propose_from_application
 from students.models import Enrollment, Person, Student
 
 
@@ -84,6 +85,15 @@ def enroll(actor, application: Application, version: int, password: str) -> Stud
             campus=place.campus,
             entry_date=max(year_starts, today),
         )
+        audit.log(
+            actor,
+            "student.enrolled",
+            student,
+            f"{number} enrolled from application {application.number}",
+            institution=institution,
+            changes={"application": application.number, "login": login.username},
+        )
+        propose_from_application(actor, student, application)
         application.stage = Stage.ENROLLED
         application.decided_by = actor
         application.save()

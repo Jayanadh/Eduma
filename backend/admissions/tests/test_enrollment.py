@@ -39,7 +39,7 @@ def test_enrolling_twice_makes_one_student(world, cycle, accepted, registrar):
     again = registrar.post(f"{STAFF}/{accepted['id']}/enroll", {"version": 1, "password": FIRST}, format="json")
     assert again.status_code == 200
     assert first.json()["student_id"] == again.json()["student_id"]
-    assert (Student.objects.count(), Enrollment.objects.count(), Person.objects.count()) == (1, 1, 1)
+    assert (Student.objects.count(), Enrollment.objects.count(), Person.objects.count()) == (1, 1, 2)  # learner, adult
     student = Student.objects.get()
     assert student.number == f"{cycle['entry_year']}-0001" and student.person.full_name == "Meera Rao"
     assert student.application_id is not None

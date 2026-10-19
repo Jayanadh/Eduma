@@ -100,6 +100,10 @@ Every demo login uses the password **`Demo-pass-2026`**.
 | `aster.campus` | http://aster.localhost:4201/login | Campus Admin for City campus: sees and adds staff at City only; cannot make anyone an Institution Admin. |
 | `aster.teacher`, `aster.office` | http://aster.localhost:4201/login | A Science teacher (home only, for now) and a custom "Front office" role at City (sees City staff). |
 | `aster.deputy` | http://aster.localhost:4201/login | A second Institution Admin. With two admins, try **Settings → Approval for powerful roles**: one admin sends it, the other approves it from Home. Then a Campus Admin's request to give a powerful role waits for an admin's approval. |
+| `aster.admissions` | http://aster.localhost:4201/login | Admissions Officer: **Applications** — check documents, ask the family for more, mark eligible or decline. Cannot offer places. |
+| `aster.registrar` | http://aster.localhost:4201/login | Registrar: offers places (within the seats left), enrolls accepted applicants with the student's first password, and keeps **Students** (search, open a record, correct details). |
+| `aster.parent` | http://aster.localhost:4201/login | An applicant with two applications: Meera Demo (Class 1, submitted) and Arjun Demo (Class 6, enrolled). New families make their own account from **Apply** on the school's page (http://aster.localhost:4201/apply). |
+| `aster.2027-0001` | http://aster.localhost:4201/login | Arjun Demo, the enrolled student: their own record (student number and class). A new student's login is `<school>.<student number>`, with the first password the registrar chose. |
 | `meridian.admin`, `summit.admin` | their own address | The same for their institutions. Signing in at another institution's address is refused. |
 | `vector.admin` | http://vector.localhost:4201/login | A first sign-in: the app asks for a new password before anything else. |
 
@@ -127,7 +131,9 @@ The backend tests cover:
 - page content validation;
 - drafts, publishing and edit conflicts;
 - image upload checks;
-- the public page in every lifecycle state.
+- the public page in every lifecycle state;
+- admissions: cycles, applying, documents, review, seats, offers, enrollment and who may see what;
+- student records and the student's own record.
 
 ## Settings
 
@@ -145,4 +151,5 @@ manager.
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | `http://localhost:4201,http://*.localhost:4201` | On a server: `https://eduma.app,https://*.eduma.app` |
 | `DJANGO_PROXY_COUNT` | `0` | Number of reverse proxies in front of Django |
 | `DJANGO_MEDIA_ROOT` | `backend/media` | Where uploaded brand images are kept |
+| `DJANGO_PRIVATE_MEDIA_ROOT` | `backend/private_media` | Where admission documents are kept; never served as public files |
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT` | `eduma` ×3, `localhost`, `5434` | Database |

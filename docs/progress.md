@@ -3,7 +3,39 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (18 October 2026, slice 3)
+## Where things stand (19 October 2026, slice 4a)
+
+**Slice 4a is built and checked locally: the first half of BUILD-04**, from an admission cycle to an enrolled student
+with their own login. Spec: `docs/superpowers/specs/2026-10-19-slice4a-admissions-students-design.md`. Plan:
+`docs/superpowers/plans/2026-10-19-slice4a-admissions-students.md`. Branch `slice-4-admissions`, cut from
+`slice-3-configuration`. Left for slice 4b: guardian records and parent logins, a fuller student portal, enquiries,
+withdrawal after enrollment and staged CSV imports (TST-025).
+
+| Built in slice 4a | Where |
+|---|---|
+| Membership kinds (staff, applicant, student) and routing by kind | `backend/accounts/`, `frontend/src/app/core/guards.ts` |
+| Admission cycles with places and seats, questions and required documents; draft → published → closed | `backend/admissions/cycles.py`, `frontend/src/app/features/admissions/` |
+| Public admissions page, applicant sign-up, applications with private document uploads, submit with snapshots, withdraw, accept | `backend/admissions/public.py`, `applicant_*.py`, `applications.py`, `documents.py`, `frontend/src/app/features/apply/` |
+| Staff review: documents checked or sent back, more information, eligible / not offered, offers within seats, internal notes | `backend/admissions/review.py`, `staff_views.py` |
+| Enrollment: Person, Student number, Enrollment and student login in one step, once only | `backend/admissions/enrollment.py`, `backend/students/` |
+| Students directory and record (corrections with version check); the student's own record at `/student` | `backend/students/views.py`, `frontend/src/app/features/students/`, `features/student/` |
+| Demo: Aster's Admissions 2027 cycle, `aster.admissions`, `aster.registrar`, `aster.parent`, student `aster.2027-0001` | `backend/institutions/management/commands/seed_demo.py` |
+
+Checks on 19 Oct 2026: backend `pytest` 329 passed; `ruff check` and `ruff format --check` (120 columns, migrations
+excluded) clean; frontend `ng test` 150 passed; `ng build` clean.
+Browser (built-in, Chromium), at 1280 px unless noted: a new parent signed up on Aster's Apply page, filled in a Class 1
+application, uploaded a PDF and a PNG and submitted (A2027-0003); as `aster.admissions` started the review, checked both
+documents and asked for more information; the parent saw the question, added it and resubmitted; the officer marked it
+eligible and had no Offer button; as `aster.registrar` offered the place until 15 Nov; the parent accepted at 390 px;
+the registrar enrolled with a first password (student 2027-0002, login `aster.2027-0002`), corrected a detail on the
+record and found the student by search; the new student signed in at 390 px, was made to change the password and saw
+their number and class, with no sideways scroll; `/app` sent the student away and the staff API refused them.
+Found and fixed during the check: every search box's label pointed at the wrong element (the id sat on both the
+component and its input), so clicking the label did not focus the box; the enroll dialog's button said "Set password".
+The check's applicant, application and student remain in the local database; `seed_demo` does not remove them.
+
+
+## Slice 3 (18 October 2026)
 
 **Slice 3 is built and checked locally, finishing BUILD-03** except the parts the pack places elsewhere (support access
 → BUILD-11, groups and affiliation grants → BUILD-05, guardian grants → BUILD-04, invitations/recovery → after D-12).

@@ -69,3 +69,22 @@ Full table and reasons: `docs/superpowers/specs/2026-10-19-slice3-configuration-
 | S3-09 | No campus overrides yet. |
 | S3-10 | Workspace menu grouped: Home · People · Administration. |
 | S3-11 | Support access → BUILD-11; groups and affiliation grants → BUILD-05; guardian grants → BUILD-04; invitations and recovery wait for D-12. |
+
+## Slice 4a (admissions to enrollment, student records)
+
+Full table and reasons: `docs/superpowers/specs/2026-10-19-slice4a-admissions-students-design.md` §2.
+
+| ID | Decision |
+|---|---|
+| S4-01 | Memberships have a kind: staff, applicant or student. Only staff get the `/app` workspace; applicants land on `/apply/applications`, students on `/student`. |
+| S4-02 | Applicants make their own account on the institution's address; no email/SMS check yet (D-12 open). |
+| S4-03 | An admission cycle holds its places (with seats), questions and required documents; editable while draft, frozen when published. |
+| S4-04 | Applications have fixed core fields plus the cycle's questions; every submission keeps a snapshot. Stages run draft → submitted → under review ⇄ more information → eligible / not offered → offered → accepted → enrolled, with withdrawn and offer expired. |
+| S4-05 | Reviewers (`application.review`) check and decide eligibility; approvers (`admission.approve`) offer and enroll; scope follows the place's campus. |
+| S4-06 | Offers, acceptances and enrollments use seats; an offer locks the place and is refused when full. |
+| S4-07 | Enrolling makes a Person, a Student (`<year>-NNNN`), an Enrollment and a student login `<slug>.<number>` with a first password, once only. |
+| S4-08 | No admission payment until Fees (BUILD-08). |
+| S4-09 | Documents are private PDF/JPEG/PNG files ≤ 5 MB, checked by content, served only to the family and to staff who may review. |
+| S4-10 | Admissions and Students routes need their module switched on; otherwise 404. |
+| S4-11 | New permissions `admission_cycle.manage`, `application.review`, `admission.approve`, `student.read`, `student.update`, given to Registrar, Admissions Officer and Principal as listed in the spec. |
+| S4-12 | Applicant routes live under `/api/v1/applicant/` on the institution's own host. |

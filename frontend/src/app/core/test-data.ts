@@ -139,11 +139,11 @@ export const MODULE_CATALOGUE: ModuleInfo[] = (
   available: false,
 }));
 
-/** A signed-in member of another kind (applicant or student), with no staff permissions. */
-export function makeMember(kind: 'applicant' | 'student'): Me {
+/** A signed-in member of another kind (applicant, student or guardian), with no staff permissions. */
+export function makeMember(kind: 'applicant' | 'student' | 'guardian'): Me {
   return makeMe({
     username: `${kind}.one`,
-    full_name: kind === 'applicant' ? 'Asha Parent' : 'Meera Rao',
+    full_name: kind === 'student' ? 'Meera Rao' : 'Asha Parent',
     membership: { kind, roles: [], permissions: [], restricted: false, status_reason: '' },
   });
 }

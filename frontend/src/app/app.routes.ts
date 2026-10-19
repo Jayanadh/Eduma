@@ -1,5 +1,14 @@
 import { Routes } from '@angular/router';
-import { applicantOnly, guestOnly, memberOnly, platformOnly, requires, signedIn, studentOnly } from './core/guards';
+import {
+  applicantOnly,
+  guardianOnly,
+  guestOnly,
+  memberOnly,
+  platformOnly,
+  requires,
+  signedIn,
+  studentOnly,
+} from './core/guards';
 import { leaveGuard } from './core/unsaved-changes';
 
 export const routes: Routes = [
@@ -81,6 +90,18 @@ export const routes: Routes = [
     canActivate: [signedIn, applicantOnly],
     canDeactivate: [leaveGuard],
     loadComponent: () => import('./features/apply/application-form-page').then((m) => m.ApplicationFormPage),
+  },
+  {
+    path: 'family',
+    title: 'Your children',
+    canActivate: [signedIn, guardianOnly],
+    loadComponent: () => import('./features/family/family-home').then((m) => m.FamilyHome),
+  },
+  {
+    path: 'family/children/:id',
+    title: 'Your child',
+    canActivate: [signedIn, guardianOnly],
+    loadComponent: () => import('./features/family/family-child-page').then((m) => m.FamilyChildPage),
   },
   {
     path: 'student',

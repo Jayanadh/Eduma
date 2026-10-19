@@ -42,7 +42,8 @@ export class AuthStore {
       return '/console';
     }
     const kind = this.current()?.membership?.kind;
-    return kind === 'applicant' ? '/apply/applications' : kind === 'student' ? '/student' : '/app';
+    const portals = { applicant: '/apply/applications', student: '/student', guardian: '/family' } as const;
+    return kind && kind !== 'staff' ? portals[kind] : '/app';
   });
   /** The first word of the name longer than two letters, so "K. Lakshmi" greets as "Lakshmi". */
   readonly firstName = computed(() => {

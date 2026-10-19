@@ -34,14 +34,19 @@ export const platformOnly: CanActivateFn = () =>
 /** An institution's workspace: its own address, its staff only. */
 export const memberOnly: CanActivateFn = () => kindOnly('staff');
 
-/** A portal for one kind of member (applicants, students) on the institution's own address. */
-export function kindOnly(kind: 'staff' | 'applicant' | 'student'): boolean | ReturnType<Router['parseUrl']> {
-  const ok = inject(SiteStore).kind() === 'institution' && inject(AuthStore).user()?.membership?.kind === kind;
+type Kind = 'staff' | 'applicant' | 'student' | 'guardian';
+
+/** A portal for some kinds of member (applicants, students, guardians) on the institution's own address. */
+export function kindOnly(...kinds: Kind[]): boolean | ReturnType<Router['parseUrl']> {
+  const kind = inject(AuthStore).user()?.membership?.kind;
+  const ok = inject(SiteStore).kind() === 'institution' && kind !== undefined && kinds.includes(kind);
   return ok ? true : inject(Router).parseUrl('/');
 }
 
-export const applicantOnly: CanActivateFn = () => kindOnly('applicant');
+/** Guardians keep the applicant pages: they may apply for a brother or sister. */
+export const applicantOnly: CanActivateFn = () => kindOnly('applicant', 'guardian');
 export const studentOnly: CanActivateFn = () => kindOnly('student');
+export const guardianOnly: CanActivateFn = () => kindOnly('guardian');
 
 /** A workspace page that needs a permission (or any one of several): anyone without it goes to the workspace home. */
 export function requires(perm: string | string[]): CanActivateFn {

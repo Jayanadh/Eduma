@@ -3,7 +3,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, CanActivateFn, provideRouter, Router, RouterStateSnapshot } from '@angular/router';
 import { AuthStore } from './auth-store';
-import { guestOnly, memberOnly, platformOnly, requires, signedIn } from './guards';
+import { applicantOnly, guardianOnly, guestOnly, memberOnly, platformOnly, requires, signedIn } from './guards';
 import { makeMe, makeMember, makeSite, onSite, PLATFORM_ADMIN, signInAs } from './test-data';
 
 const route = {} as ActivatedRouteSnapshot;
@@ -103,5 +103,16 @@ describe('guards', () => {
     expect(TestBed.inject(AuthStore).home()).toBe('/student');
     await signInAs(makeMe());
     expect(TestBed.inject(AuthStore).home()).toBe('/app');
+  });
+
+  it('guardians land on /family and keep the applicant pages', async () => {
+    await onSite(makeSite('institution'));
+    await signInAs(makeMember('guardian'));
+    expect(TestBed.inject(AuthStore).home()).toBe('/family');
+    expect(run(guardianOnly, '/family')).toBe(true);
+    expect(run(applicantOnly, '/apply/applications')).toBe(true);
+    expect(run(memberOnly, '/app')).toBe('/');
+    await signInAs(makeMember('applicant'));
+    expect(run(guardianOnly, '/family')).toBe('/');
   });
 });

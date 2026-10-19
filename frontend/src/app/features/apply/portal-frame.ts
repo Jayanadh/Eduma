@@ -1,5 +1,5 @@
 import { Component, inject, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthStore } from '../../core/auth-store';
 import { SiteStore } from '../../core/site-store';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
@@ -8,7 +8,7 @@ import { Icon } from '../../ui/icon';
 /** The light frame around applicants' and students' pages: the institution, who is signed in, and a way out. */
 @Component({
   selector: 'app-portal-frame',
-  imports: [Icon, RouterLink],
+  imports: [Icon, RouterLink, RouterLinkActive],
   template: `
     <header class="portal-bar">
       <a class="brand" routerLink="/">
@@ -20,6 +20,12 @@ import { Icon } from '../../ui/icon';
       <button type="button" class="btn btn-secondary btn-sm" (click)="signOut()">Sign out</button>
     </header>
     <main class="portal">
+      @if (auth.user()?.membership?.kind === 'guardian') {
+        <nav class="portal-nav" aria-label="Family">
+          <a routerLink="/family" routerLinkActive="active">Your children</a>
+          <a routerLink="/apply/applications" routerLinkActive="active">Applications</a>
+        </nav>
+      }
       <h1 class="page-title">{{ heading() }}</h1>
       <ng-content />
     </main>
@@ -47,6 +53,23 @@ import { Icon } from '../../ui/icon';
       margin-right: auto;
       color: inherit;
       text-decoration: none;
+    }
+
+    .portal-nav {
+      display: flex;
+      gap: 16px;
+
+      a {
+        color: var(--muted);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      a.active {
+        color: var(--primary-text, var(--text));
+        text-decoration: underline;
+        text-underline-offset: 4px;
+      }
     }
 
     .portal {

@@ -16,8 +16,8 @@ export type Me = {
 
 /** The signed-in person's place in this address's institution. Permissions are for menus; the server checks scope. */
 export type Membership = {
-  /** Staff work in /app; applicants and students have their own portals. */
-  kind: 'staff' | 'applicant' | 'student';
+  /** Staff work in /app; applicants, students and guardians have their own portals. */
+  kind: 'staff' | 'applicant' | 'student' | 'guardian';
   /** Modules switched on here, for menus; the server gates every module route too. */
   modules_enabled?: string[];
   roles: RoleLine[];
@@ -476,6 +476,8 @@ export type StudentEnrollment = {
   campus_name: string | null;
   entry_date: string;
   status: string;
+  exit_date?: string | null;
+  exit_reason?: string;
 };
 
 export type StudentListItem = {
@@ -502,3 +504,14 @@ export type StudentRecord = StudentListItem & {
 
 /** What students see of their own record. */
 export type OwnStudentRecord = Pick<StudentRecord, 'number' | 'full_name' | 'date_of_birth' | 'status' | 'enrollment'>;
+
+/** A child as their guardian sees them: the number and class only when the school shares the record. */
+export type FamilyChild = {
+  id: string;
+  full_name: string;
+  shared: boolean;
+  number?: string;
+  status?: string;
+  left_on?: string | null;
+  enrollment?: StudentEnrollment | null;
+};

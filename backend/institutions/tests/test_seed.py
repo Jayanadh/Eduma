@@ -42,6 +42,9 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     ]
     assert Membership.objects.get(user__username="aster.parent").kind == "guardian"
     assert Employee.objects.get(membership__user__username="aster.admin").employee_number == "AST-001"
+    from admissions.models import Enquiry
+
+    assert sorted(Enquiry.objects.values_list("source", "status")) == [("walk_in", "following_up"), ("website", "open")]
     office = RoleAssignment.objects.get(membership__user__username="aster.office")
     assert (office.custom_role.name, office.custom_role.permissions, office.campus.code) == (
         "Front office",

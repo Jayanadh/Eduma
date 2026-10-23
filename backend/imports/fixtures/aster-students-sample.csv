@@ -1,0 +1,9 @@
+source_record_id,full_name,date_of_birth,phone,email,address,admitted_on,academic_year,place_code,place_label,campus_code,entry_date,guardian_name,guardian_relationship,guardian_phone,guardian_email
+OLD-1001,Kiran Rao,2019-04-02,,,7 Lake Road,2025-04-10,2026–27,C2,Class 2,MAIN,2026-06-01,Lata Rao,Mother,+91 90000 33331,
+OLD-1002,Ananya Iyer,2018-11-23,,,12 Temple Street,2024-04-12,2026–27,C3,Class 3,MAIN,2026-06-01,Suresh Iyer,Father,+91 90000 33332,
+OLD-1003,Farhan Shaikh,2017-02-14,,,3 Canal Road,2023-04-15,2026–27,C4,Class 4,CITY,2026-06-01,Nasreen Shaikh,Mother,+91 90000 33333,
+OLD-1004,Divya Menon,2016-07-30,,,44 Hill View,2022-04-11,2026–27,C5,Class 5,CITY,2026-06-01,,,,
+OLD-1005,Rohan Das,2019-09-09,,,9 River Lane,2025-04-10,2026–27,C2,Class 2,MAIN,2026-06-01,Mita Das,Mother,+91 90000 33335,
+OLD-1006,Sara Thomas,2018-01-05,,,21 Church Road,2024-04-12,2026–27,C3,Class 3,MAIN,2026-06-01,Joseph Thomas,Father,+91 90000 33336,
+OLD-1007,Vikram Singh,2018-02-31,,,5 Fort Road,2024-04-12,2026–27,C3,Class 3,MAIN,2026-06-01,,,,
+OLD-1008,Arjun Demo,2020-05-17,,,1 Lake Road,2025-04-10,2026–27,C1,Class 1,MAIN,2026-06-01,,,,

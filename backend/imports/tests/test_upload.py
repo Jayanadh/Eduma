@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from accounts.permissions import today_for
 from imports.contract import checksum, parse
 from imports.models import ImportedRecord, ImportJob
+from testing import factories
 
 from .helpers import HEADER, URL, csv_file, line, upload
 
@@ -166,3 +167,17 @@ def test_contract_parse_limits():
 def test_empty_file_is_refused(world, on, client_for):
     admin = client_for(world.a.slug, world.a_admin)
     assert upload(admin, SimpleUploadedFile("empty.csv", b"", "text/csv")).status_code == 422
+
+
+def test_sample_file_dry_run(world, on, main, client_for):
+    """The README's sample file: six ready, one impossible date, one possible duplicate of Arjun Demo."""
+    from pathlib import Path
+
+    from students.models import Person, Student
+
+    factories.campus(world.a, code="CITY", name="City campus")
+    arjun = Person.objects.create(institution=world.a, full_name="Arjun Demo", date_of_birth=dt.date(2020, 5, 17))
+    Student.objects.create(institution=world.a, person=arjun, number="2027-0001", admitted_on=dt.date(2026, 10, 1))
+    content = (Path(__file__).parent.parent / "fixtures" / "aster-students-sample.csv").read_bytes()
+    job = upload(client_for(world.a.slug, world.a_admin), SimpleUploadedFile("sample.csv", content, "text/csv")).json()
+    assert job["totals"] == {"rows": 8, "valid": 6, "error": 1, "duplicate": 1, "unchanged": 0, "changed": 0}

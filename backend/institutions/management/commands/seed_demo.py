@@ -76,6 +76,7 @@ class Command(BaseCommand):
         self._aster_admissions()
         self._aster_families()
         self._aster_employees()
+        self._aster_enquiries()
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -274,3 +275,35 @@ class Command(BaseCommand):
                 membership=membership,
                 defaults={"employee_number": f"AST-{number:03d}", "joined_on": dt.date(2024, 6, 1)},
             )
+
+    def _aster_enquiries(self) -> None:
+        """One question from the website, one walk-in being followed up (sample import file:
+        backend/imports/fixtures/aster-students-sample.csv)."""
+        from admissions import enquiries
+
+        aster = Institution.objects.get(slug="aster")
+        if aster.enquiries.exists():
+            return
+        officer = User.objects.get(username="aster.admissions")
+        question = {"contact_name": "Ravi Kumar", "phone": "+91 90000 11111", "learner_name": "Kiran"}
+        enquiries.create(aster, {**question, "message": "Is there a school bus to Benz Circle?"}, "website")
+        walk_in = enquiries.create(
+            aster,
+            {
+                "contact_name": "Priya Nair",
+                "phone": "+91 90000 22222",
+                "learner_name": "Anika",
+                "message": "Class 6 fees",
+            },
+            "walk_in",
+            actor=officer,
+        )
+        enquiries.add_follow_up(
+            officer,
+            walk_in,
+            {
+                "how": "phone",
+                "note": "Sent the fee sheet; will call after the open day.",
+                "next_follow_up_on": today_for(aster),
+            },
+        )

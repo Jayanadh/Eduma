@@ -20,7 +20,9 @@ def require_manageable(actor, section: Section) -> None:
 
 def _locked(section: Section) -> Section:
     return (
-        Section.objects.select_for_update().select_related("year", "grade", "campus", "institution").get(pk=section.pk)
+        Section.objects.select_for_update(of=("self",))
+        .select_related("year", "grade", "campus", "institution")
+        .get(pk=section.pk)
     )
 
 

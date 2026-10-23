@@ -92,6 +92,11 @@ class Enrollment(VersionedModel):
     campus = models.ForeignKey("organization.Campus", null=True, blank=True, on_delete=models.PROTECT, related_name="+")
     entry_date = models.DateField()
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
+    # The program and regulation a college student follows (slice 5b S5B-07); schools leave both empty.
+    program = models.ForeignKey("academics.Program", null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    curriculum = models.ForeignKey(
+        "academics.CurriculumVersion", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
     exit_date = models.DateField(null=True, blank=True)
     exit_reason = models.CharField(max_length=500, blank=True)
 

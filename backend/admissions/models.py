@@ -54,6 +54,8 @@ class Place(models.Model):
     label = models.CharField(max_length=80)
     campus = models.ForeignKey("organization.Campus", null=True, blank=True, on_delete=models.PROTECT, related_name="+")
     seats = models.PositiveIntegerField()
+    # A college place admits into a program; enrolling pins the student to it (slice 5b S5B-07).
+    program = models.ForeignKey("academics.Program", null=True, blank=True, on_delete=models.PROTECT, related_name="+")
     order = models.PositiveIntegerField(default=0)
 
     class Meta:

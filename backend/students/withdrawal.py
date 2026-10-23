@@ -50,7 +50,10 @@ def withdraw(actor, student: Student, version: int, effective_on, reason: str, c
             enrollment.status = Enrollment.Status.ENDED
             enrollment.exit_date, enrollment.exit_reason = effective_on, reason
             enrollment.save()
-            enrollment.periods.filter(state="active").update(state="ended", version=F("version") + 1)  # off the rosters
+            # Off this year's rosters; a closed year's placement is history and stays as it was.
+            enrollment.periods.filter(state="active").exclude(year__status="closed").update(
+                state="ended", ended_because="withdrawn", version=F("version") + 1
+            )
         student.status, student.left_on = Student.Status.WITHDRAWN, effective_on
         student.save()
         _login(student, Membership.Status.REVOKED)
@@ -77,8 +80,8 @@ def reinstate(actor, student: Student, version: int) -> Student:
         latest.status, latest.exit_date, latest.exit_reason = Enrollment.Status.ACTIVE, None, ""
         latest.save()
         # Back into the sections the withdrawal took them out of (closed years stay as they were).
-        reopened = latest.periods.filter(state="ended").exclude(year__status="closed")
-        reopened.update(state="active", version=F("version") + 1)
+        reopened = latest.periods.filter(state="ended", ended_because="withdrawn").exclude(year__status="closed")
+        reopened.update(state="active", ended_because="", version=F("version") + 1)
         student.status, student.left_on = Student.Status.ACTIVE, None
         student.save()
         _login(student, Membership.Status.ACTIVE)

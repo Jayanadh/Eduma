@@ -148,9 +148,7 @@ class SubjectDetail(NamedDetail):
 class SectionView(AcademicsView):
     def section(self) -> Section:
         found = Section.objects.filter(institution=self.request.institution, pk=self.kwargs["pk"])
-        return self.found(
-            found.select_related("year", "grade", "campus", "class_teacher__user", "institution"), self.kwargs["pk"]
-        )
+        return self.found(found.select_related("year", "grade", "campus", "institution"), self.kwargs["pk"])
 
 
 class SectionList(SectionView):
@@ -158,7 +156,7 @@ class SectionList(SectionView):
 
     def get(self, request):
         rows = Section.objects.filter(institution=request.institution).select_related(
-            "year", "grade", "campus", "class_teacher__user", "institution"
+            "year", "grade", "campus", "institution"
         )
         for name in ("year", "grade", "campus"):
             if value := request.query_params.get(name):

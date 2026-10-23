@@ -56,9 +56,7 @@ def test_an_ended_assignment_closes_the_roster(world, admin, school, client_for)
 def test_class_teacher_flag(world, admin, school, client_for):
     teacher = factories.member(world.a, role="teacher")
     section = make_section(school)
-    section.class_teacher = Membership.objects.get(user=teacher)
-    section.save()
-    teach(admin, section, teacher)
+    teach(admin, section, teacher)  # no subject: the whole class, i.e. the class teacher
     assert client_for(world.a.slug, teacher).get(CLASSES).json()[0]["class_teacher"] is True
 
 

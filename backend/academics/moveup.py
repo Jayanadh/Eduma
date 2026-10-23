@@ -2,10 +2,11 @@
 student's existing study episode; last year's placement stays; a re-run places nobody twice."""
 
 from django.db import transaction
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from academics.models import EnrollmentPeriod, Section
 from academics.placement import check_room, require_manageable
+from academics.sections import can_manage_section
 from common import audit
 from students.models import Enrollment, Student
 
@@ -29,7 +30,8 @@ def _rows(source: Section, target: Section) -> list[dict]:
         ).values_list("enrollment__student_id", flat=True)
     )
     rows = []
-    periods = source.placements.select_related("enrollment__student__person").order_by("enrollment__student__number")
+    periods = source.placements.exclude(ended_because=EnrollmentPeriod.EndedBecause.TAKEN_OUT)
+    periods = periods.select_related("enrollment__student__person").order_by("enrollment__student__number")
     for period in periods:
         student, episode = period.enrollment.student, period.enrollment
         if student.status == Student.Status.WITHDRAWN:
@@ -50,8 +52,14 @@ def _rows(source: Section, target: Section) -> list[dict]:
     return rows
 
 
+def _source(actor, source: Section) -> None:
+    """Moving up only reads the source, so it may be in a closed year; the target must be open."""
+    if not can_manage_section(actor, source):
+        raise PermissionDenied("Your role does not cover this section's campus.")
+
+
 def preview(actor, source: Section, target: Section, mode: str) -> list[dict]:
-    require_manageable(actor, source)
+    _source(actor, source)
     require_manageable(actor, target)
     _check(source, target, mode)
     return [{key: value for key, value in row.items() if key != "episode"} for row in _rows(source, target)]
@@ -63,7 +71,7 @@ def commit(actor, source: Section, target: Section, mode: str, student_ids: list
         list(Section.objects.select_for_update().filter(pk__in=[source.pk, target.pk]).order_by("pk"))  # fixed order
         fresh = Section.objects.select_related("year", "grade", "campus", "institution")
         source, target = fresh.get(pk=source.pk), fresh.get(pk=target.pk)
-        require_manageable(actor, source)
+        _source(actor, source)
         require_manageable(actor, target)
         _check(source, target, mode)
         moving = [row for row in _rows(source, target) if row["action"] == "move" and row["student"]["id"] in wanted]

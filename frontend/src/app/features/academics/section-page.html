@@ -104,7 +104,14 @@
             @if (preview(); as rows) {
               <ul class="rows">
                 @for (row of rows; track row.student.id) {
-                  <li><span>{{ row.student.number }} {{ row.student.full_name }}</span><span class="muted small">{{ actions[row.action] }}</span></li>
+                  <li>
+                    @if (row.action === 'move') {
+                      <label class="check"><input type="checkbox" [id]="'moving-' + row.student.id" [checked]="!staying().has(row.student.id)" (change)="toggle(row.student.id, $any($event.target).checked)" /> {{ row.student.number }} {{ row.student.full_name }}</label>
+                    } @else {
+                      <span>{{ row.student.number }} {{ row.student.full_name }}</span>
+                    }
+                    <span class="muted small">{{ actions[row.action] }}</span>
+                  </li>
                 }
               </ul>
               <div><button type="button" class="btn btn-primary btn-sm" [disabled]="busy() || !moving().length" (click)="moveUp()">Move {{ moving().length }} student{{ moving().length === 1 ? '' : 's' }}</button></div>

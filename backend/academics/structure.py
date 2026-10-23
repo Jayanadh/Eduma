@@ -10,6 +10,8 @@ from common import audit
 from common.exceptions import Problem
 
 MANAGE = "academic_structure.manage"
+# Years only move forward: planned → current → closed (or planned → closed).
+FORWARD = {("planned", "current"), ("current", "closed"), ("planned", "closed")}
 
 
 def require_whole(actor, institution) -> None:
@@ -28,6 +30,11 @@ def save_year(actor, institution, year: AcademicYear | None, data: dict, version
         if year is not None:
             year = AcademicYear.objects.select_for_update().get(pk=year.pk)
             year.check_version(version)
+            wanted = data.get("status", year.status)
+            if wanted != year.status and (year.status, wanted) not in FORWARD:
+                raise Problem(
+                    409, "invalid_transition", f"A {year.get_status_display().lower()} year can't become {wanted}."
+                )
         else:
             year = AcademicYear(institution=institution)
         for name in ("code", "starts_on", "ends_on", "status"):

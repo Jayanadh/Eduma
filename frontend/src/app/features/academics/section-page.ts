@@ -7,6 +7,7 @@ import { load } from '../../core/load';
 import { LoadError } from '../../ui/load-error';
 import { PageHeader } from '../../ui/page-header';
 import { SearchBox } from '../../ui/search-box';
+import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { ToastService } from '../../ui/toast';
 
 const ACTIONS: Record<MoveUpRow['action'], string> = {
@@ -27,6 +28,7 @@ export class SectionPage {
   readonly id = input.required<string>();
   private readonly api = inject(Api);
   private readonly toasts = inject(ToastService);
+  private readonly confirm = inject(ConfirmDialog);
   protected readonly actions = ACTIONS;
   private base(): string {
     return `institution/academics/sections/${this.id()}`;
@@ -63,7 +65,23 @@ export class SectionPage {
   protected readonly target = signal('');
   protected readonly mode = signal<'promote' | 'repeat'>('promote');
   protected readonly preview = signal<MoveUpRow[] | null>(null);
-  protected readonly moving = computed(() => (this.preview() ?? []).filter((row) => row.action === 'move'));
+  /** Students the registrar unticked: they stay behind (e.g. held back) while the rest move up. */
+  protected readonly staying = signal<ReadonlySet<string>>(new Set());
+  protected readonly moving = computed(() =>
+    (this.preview() ?? []).filter((row) => row.action === 'move' && !this.staying().has(row.student.id)),
+  );
+
+  protected toggle(id: string, moves: boolean): void {
+    this.staying.update((ids) => {
+      const next = new Set(ids);
+      if (moves) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
 
   protected choose(id: string, label: string): void {
     this.chosen.update((rows) => (rows.some((r) => r.id === id) ? rows : [...rows, { id, label }]));
@@ -95,8 +113,15 @@ export class SectionPage {
     this.run(this.api.post(`${this.base()}/students`, { students: ids }), `${ids.length} placed.`, () => this.chosen.set([]));
   }
 
-  protected remove(row: RosterRow): void {
-    this.run(this.api.delete(`${this.base()}/students/${row.student.id}`), `${row.student.full_name} taken out.`);
+  protected async remove(row: RosterRow): Promise<void> {
+    const yes = await this.confirm.ask({
+      title: `Take ${row.student.full_name} out of this class?`,
+      message: 'They can be placed in another class this year.',
+      confirmLabel: 'Take out',
+    });
+    if (yes) {
+      this.run(this.api.delete(`${this.base()}/students/${row.student.id}`), `${row.student.full_name} taken out.`);
+    }
   }
 
   protected moveTo(row: RosterRow, section: string): void {
@@ -119,6 +144,7 @@ export class SectionPage {
     this.api.post<MoveUpRow[]>(`${this.base()}/move-up/preview`, { target: this.target(), mode: this.mode() }).subscribe({
       next: (rows) => {
         this.busy.set(false);
+        this.staying.set(new Set());
         this.preview.set(rows);
       },
       error: (err) => {

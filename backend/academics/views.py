@@ -1,0 +1,136 @@
+"""Academic structure for staff, under institution/academics/ (slice 5a §5)."""
+
+from rest_framework import status
+from rest_framework.exceptions import NotFound
+from rest_framework.generics import GenericAPIView
+from rest_framework.response import Response
+
+from academics import structure
+from academics.models import GradeLevel, Subject, Term
+from academics.serializers import (
+    GradeInput,
+    GradePatch,
+    SubjectInput,
+    SubjectPatch,
+    TermInput,
+    TermPatch,
+    YearInput,
+    YearPatch,
+    named_item,
+    term_item,
+    year_item,
+)
+from accounts.role_views import holds_any
+from configuration.gates import require_module
+
+
+def valid(serializer_class, data) -> dict:
+    found = serializer_class(data=data)
+    found.is_valid(raise_exception=True)
+    return dict(found.validated_data)
+
+
+class AcademicsView(GenericAPIView):
+    """Any staff member reads the structure; changes need academic_structure.manage (checked again for scope)."""
+
+    def get_permissions(self):
+        return [holds_any("institution.read" if self.request.method == "GET" else structure.MANAGE)()]
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        require_module(request.institution, "academics")
+
+    def found(self, queryset, pk):
+        row = queryset.filter(pk=pk).first()
+        if row is None:
+            raise NotFound()
+        return row
+
+
+class YearList(AcademicsView):
+    def get(self, request):
+        years = request.institution.academic_years.prefetch_related("terms")
+        return Response([year_item(year) for year in years])
+
+    def post(self, request):
+        year = structure.save_year(request.user, request.institution, None, valid(YearInput, request.data))
+        return Response(year_item(year), status=status.HTTP_201_CREATED)
+
+
+class YearDetail(AcademicsView):
+    def get(self, request, pk):
+        return Response(year_item(self.found(request.institution.academic_years, pk)))
+
+    def patch(self, request, pk):
+        year = self.found(request.institution.academic_years, pk)
+        data = valid(YearPatch, request.data)
+        return Response(
+            year_item(structure.save_year(request.user, request.institution, year, data, data.pop("version")))
+        )
+
+    def delete(self, request, pk):
+        structure.delete_year(request.user, self.found(request.institution.academic_years, pk))
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TermList(AcademicsView):
+    def post(self, request, pk):
+        year = self.found(request.institution.academic_years, pk)
+        term = structure.save_term(request.user, year, None, valid(TermInput, request.data))
+        return Response(term_item(term), status=status.HTTP_201_CREATED)
+
+
+class TermDetail(AcademicsView):
+    def term(self, pk) -> Term:
+        return self.found(Term.objects.filter(year__institution=self.request.institution), pk)
+
+    def patch(self, request, pk):
+        term = self.term(pk)
+        return Response(term_item(structure.save_term(request.user, term.year, term, valid(TermPatch, request.data))))
+
+    def delete(self, request, pk):
+        term = self.term(pk)
+        structure.require_whole(request.user, request.institution)
+        term.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class NamedList(AcademicsView):
+    model = GradeLevel
+    create = GradeInput
+
+    def get(self, request):
+        return Response([named_item(row) for row in self.model.objects.filter(institution=request.institution)])
+
+    def post(self, request):
+        row = structure.save_named(
+            request.user, request.institution, self.model, None, valid(self.create, request.data)
+        )
+        return Response(named_item(row), status=status.HTTP_201_CREATED)
+
+
+class NamedDetail(AcademicsView):
+    model = GradeLevel
+    patch_input = GradePatch
+
+    def patch(self, request, pk):
+        row = self.found(self.model.objects.filter(institution=request.institution), pk)
+        data = valid(self.patch_input, request.data)
+        row = structure.save_named(request.user, request.institution, self.model, row, data, data.pop("version"))
+        return Response(named_item(row))
+
+
+class GradeList(NamedList):
+    model, create = GradeLevel, GradeInput
+
+
+class GradeDetail(NamedDetail):
+    model, patch_input = GradeLevel, GradePatch
+
+
+class SubjectList(NamedList):
+    model, create = Subject, SubjectInput
+
+
+class SubjectDetail(NamedDetail):
+    model, patch_input = Subject, SubjectPatch

@@ -1,0 +1,16 @@
+"""Academic structure, under institution/academics/ on an institution's own host."""
+
+from django.urls import path
+
+from academics import views
+
+urlpatterns = [
+    path("years", views.YearList.as_view()),
+    path("years/<uuid:pk>", views.YearDetail.as_view()),
+    path("years/<uuid:pk>/terms", views.TermList.as_view()),
+    path("terms/<uuid:pk>", views.TermDetail.as_view()),
+    path("grades", views.GradeList.as_view()),
+    path("grades/<uuid:pk>", views.GradeDetail.as_view()),
+    path("subjects", views.SubjectList.as_view()),
+    path("subjects/<uuid:pk>", views.SubjectDetail.as_view()),
+]

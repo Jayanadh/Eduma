@@ -87,3 +87,26 @@ def named_item(row) -> dict:
     if hasattr(row, "order"):
         item["order"] = row.order
     return item
+
+
+class SectionInput(serializers.Serializer):
+    year = serializers.UUIDField()
+    grade = serializers.UUIDField()
+    campus = serializers.UUIDField()
+    code = serializers.CharField(max_length=20)
+    capacity = serializers.IntegerField(min_value=1, max_value=1000)
+    class_teacher = serializers.UUIDField(required=False, allow_null=True)
+
+
+class SectionPatch(SectionInput):
+    version = serializers.IntegerField()
+    year = serializers.UUIDField(required=False)
+    grade = serializers.UUIDField(required=False)
+    campus = serializers.UUIDField(required=False)
+    code = serializers.CharField(max_length=20, required=False)
+    capacity = serializers.IntegerField(min_value=1, max_value=1000, required=False)
+
+
+class TeacherInput(serializers.Serializer):
+    membership = serializers.UUIDField()
+    subject = serializers.UUIDField(required=False, allow_null=True, default=None)

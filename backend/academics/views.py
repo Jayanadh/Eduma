@@ -5,13 +5,16 @@ from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from academics import structure
-from academics.models import GradeLevel, Subject, Term
+from academics import sections, structure
+from academics.models import GradeLevel, Section, Subject, Term
 from academics.serializers import (
     GradeInput,
     GradePatch,
+    SectionInput,
+    SectionPatch,
     SubjectInput,
     SubjectPatch,
+    TeacherInput,
     TermInput,
     TermPatch,
     YearInput,
@@ -21,6 +24,7 @@ from academics.serializers import (
     year_item,
 )
 from accounts.role_views import holds_any
+from common.pagination import Pages
 from configuration.gates import require_module
 
 
@@ -134,3 +138,56 @@ class SubjectList(NamedList):
 
 class SubjectDetail(NamedDetail):
     model, patch_input = Subject, SubjectPatch
+
+
+class SectionView(AcademicsView):
+    def section(self) -> Section:
+        found = Section.objects.filter(institution=self.request.institution, pk=self.kwargs["pk"])
+        return self.found(
+            found.select_related("year", "grade", "campus", "class_teacher__user", "institution"), self.kwargs["pk"]
+        )
+
+
+class SectionList(SectionView):
+    pagination_class = Pages
+
+    def get(self, request):
+        rows = Section.objects.filter(institution=request.institution).select_related(
+            "year", "grade", "campus", "class_teacher__user", "institution"
+        )
+        for name in ("year", "grade", "campus"):
+            if value := request.query_params.get(name):
+                rows = rows.filter(**{f"{name}_id": value})
+        page = self.paginate_queryset(rows.order_by("-year__starts_on", "grade__order", "code"))
+        return self.get_paginated_response([sections.section_item(row, request.user) for row in page])
+
+    def post(self, request):
+        section = sections.save_section(request.user, request.institution, None, valid(SectionInput, request.data))
+        return Response(sections.section_item(section, request.user), status=status.HTTP_201_CREATED)
+
+
+class SectionDetail(SectionView):
+    def get(self, request, pk):
+        return Response(sections.section_item(self.section(), request.user))
+
+    def patch(self, request, pk):
+        found = self.section()
+        data = valid(SectionPatch, request.data)
+        section = sections.save_section(request.user, request.institution, found, data, data.pop("version"))
+        return Response(sections.section_item(section, request.user))
+
+
+class Teachers(SectionView):
+    def post(self, request, pk):
+        section = self.section()
+        data = valid(TeacherInput, request.data)
+        sections.assign_teacher(request.user, section, data["membership"], data["subject"])
+        return Response(sections.section_item(section, request.user), status=status.HTTP_201_CREATED)
+
+
+class EndTeaching(SectionView):
+    def post(self, request, pk, assignment):
+        section = self.section()
+        found = self.found(section.teaching.all(), assignment)
+        sections.end_teaching(request.user, found)
+        return Response(sections.section_item(section, request.user))

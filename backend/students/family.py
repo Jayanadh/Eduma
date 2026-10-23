@@ -14,6 +14,14 @@ from students.models import GuardianLink, Student
 from students.serializers import enrollment_item
 
 
+def _family_enrollment(enrollment) -> dict | None:
+    """The enrollment without the staff's leaving reason, which can be safeguarding-sensitive."""
+    item = enrollment_item(enrollment)
+    if item is not None:
+        item.pop("exit_reason")
+    return item
+
+
 def child_item(student: Student, shared: bool) -> dict:
     item = {"id": str(student.id), "full_name": student.person.full_name, "shared": shared}
     if shared:
@@ -22,7 +30,7 @@ def child_item(student: Student, shared: bool) -> dict:
             number=student.number,
             status=student.status,
             left_on=student.left_on,
-            enrollment=enrollment_item(current),
+            enrollment=_family_enrollment(current),
         )
     return item
 

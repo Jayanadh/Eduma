@@ -136,3 +136,18 @@ def test_module_off_family_sees_nothing(world, enrolled, client_for):
     family = asha(world, client_for)
     assert family.get(FAMILY).json() == []
     assert family.get(f"{FAMILY}/{enrolled.id}").status_code == 404
+
+
+def test_withdrawal_reason_stays_with_staff(world, enrolled, client_for):
+    """Final review 1: the registrar's leaving reason is staff record-keeping, not for families."""
+    from students import withdrawal
+
+    verified(world, enrolled.guardian_links.get())
+    secret = "Mother relocating with child; do not disclose new school to father."
+    enrolled.refresh_from_db()
+    withdrawal.withdraw(world.a_admin, enrolled, enrolled.version, today_for(world.a), secret)
+    family = asha(world, client_for)
+    listed, one = family.get(FAMILY).json(), family.get(f"{FAMILY}/{enrolled.id}").json()
+    assert one["left_on"] == str(today_for(world.a)) and one["status"] == "withdrawn"
+    assert "relocating" not in str(listed) + str(one)
+    assert "exit_reason" not in one["enrollment"]

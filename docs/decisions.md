@@ -103,7 +103,7 @@ Full table and reasons: `docs/superpowers/specs/2026-10-19-slice4b-guardians-wit
 | S4B-06 | Verified adults get a guardian login (or keep their applicant login, which becomes one). Staff and student logins cannot be guardians at the same school. |
 | S4B-07 | New permission `guardian_link.manage` (Registrar, Institution Admin); `student.read` sees links without notes or evidence. |
 | S4B-08 | Family portal `/family`: only children with an active, in-effect link, and only what it shares. |
-| S4B-09 | Withdrawal (`student.update`) on or before today and not before the enrollment starts; ends the enrollment and the student's login; reinstate undoes it. Fees untouched. |
+| S4B-09 | Withdrawal (`student.update`) on or before today and not before the enrollment starts (or, for one that has not started, not before the admission); ends the enrollment and the student's login; reinstate undoes it. Fees untouched. |
 | S4B-10 | Employee number (unique per school) and joining/leaving dates on staff. |
 | S4B-11 | Every student record shows its own history, without guardian notes or evidence. |
 | S4B-12 | Applications show possible duplicate students (same name and date of birth) as a warning; enrolling never merges. |

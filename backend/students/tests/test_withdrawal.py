@@ -46,12 +46,25 @@ def test_future_date_422(world, started, registrar):
     assert refused.status_code == 422 and refused.json()["errors"][0]["field"] == "effective_on"
 
 
-def test_before_entry_422(world, enrolled, registrar):
-    """Review Focus 3: enrolled for next year, withdrawn today."""
-    refused = withdraw(registrar, enrolled)
-    assert refused.status_code == 422
+def test_next_year_enrollment_can_be_cancelled(world, enrolled, registrar):
+    """Final review 2: enrolled for next year (entry in the future), the family withdraws now."""
+    done = withdraw(registrar, enrolled)
+    assert done.status_code == 200, done.json()
+    enrollment = enrolled.enrollments.get()
+    assert (enrollment.status, enrollment.exit_date) == ("ended", today_for(world.a))
+
+
+def test_not_before_admission_or_a_started_enrollment(world, started, enrolled, registrar):
+    """Review Focus 3, as ruled after the final review: the earliest date is the enrollment's start once it has
+    started, else the admission day."""
+    before_start = str(today_for(world.a) - dt.timedelta(days=40))
+    refused = withdraw(registrar, started, effective_on=before_start)
     error = refused.json()["errors"][0]
     assert (error["field"], error["message"]) == ("effective_on", "That is before the enrollment starts.")
+    Enrollment.objects.filter(student=started).update(entry_date=today_for(world.a) + dt.timedelta(days=200))
+    early = withdraw(registrar, started, effective_on=str(started.admitted_on - dt.timedelta(days=1)))
+    error = early.json()["errors"][0]
+    assert (error["field"], error["message"]) == ("effective_on", "That is before the student was admitted.")
 
 
 def test_reason_required(world, started, registrar):

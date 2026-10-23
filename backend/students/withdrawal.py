@@ -39,8 +39,12 @@ def withdraw(actor, student: Student, version: int, effective_on, reason: str, c
         if effective_on > today_for(student.institution):
             raise ValidationError({"effective_on": ["Withdrawal can't be scheduled yet; record it on the day."]})
         enrollment = student.enrollments.filter(status=Enrollment.Status.ACTIVE).first()
-        if enrollment is not None and effective_on < enrollment.entry_date:
-            raise ValidationError({"effective_on": ["That is before the enrollment starts."]})
+        # An enrollment for next year can be cancelled before it starts, but never back to before the admission.
+        if enrollment is not None and enrollment.entry_date <= today_for(student.institution):
+            if effective_on < enrollment.entry_date:
+                raise ValidationError({"effective_on": ["That is before the enrollment starts."]})
+        elif effective_on < student.admitted_on:
+            raise ValidationError({"effective_on": ["That is before the student was admitted."]})
         if enrollment is not None:
             enrollment.status = Enrollment.Status.ENDED
             enrollment.exit_date, enrollment.exit_reason = effective_on, reason

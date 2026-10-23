@@ -45,6 +45,12 @@ PERMISSIONS: dict[str, Permission] = {
             False,
         ),
         Permission("data.import", "Settings", "Import students from a spreadsheet", True),
+        Permission(
+            "academic_structure.manage",
+            "Academics",
+            "Set up years, grades, subjects and sections, place students and assign teachers",
+            False,
+        ),
         Permission("student.read", "Students", "See student records", False),
         Permission("student.update", "Students", "Correct student details", False),
         Permission(
@@ -112,6 +118,7 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "student.update",
             "guardian_link.manage",
             "enquiry.manage",
+            "academic_structure.manage",
         ),
         _role("teacher", "Teacher / Faculty", f"{TODAY} Teaching permissions arrive with Academics and Attendance."),
         _role(

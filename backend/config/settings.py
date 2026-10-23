@@ -80,6 +80,7 @@ LOCAL_APPS = [
     "configuration",
     "admissions",
     "students",
+    "academics",
     "imports",
     "sites",
 ]

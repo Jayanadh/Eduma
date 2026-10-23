@@ -32,7 +32,7 @@ MODULES: dict[str, Module] = {
     for m in (
         _core("admissions", "Admissions and enrollment", "students", available=True),
         _core("students", "Students and guardians", available=True),
-        _core("academics", "Academic structure and timetable"),
+        _core("academics", "Academic structure and timetable", available=True),
         _core("attendance", "Attendance", "academics"),
         _core("exams", "Assessment and results", "academics"),
         _core(

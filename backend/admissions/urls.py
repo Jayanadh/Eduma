@@ -2,13 +2,19 @@
 
 from django.urls import path
 
-from admissions import cycle_views, staff_views
+from admissions import cycle_views, enquiry_views, staff_views
 
 urlpatterns = [
     path("cycles", cycle_views.CycleList.as_view()),
     path("cycles/<uuid:pk>", cycle_views.CycleDetail.as_view()),
     path("cycles/<uuid:pk>/publish", cycle_views.Publish.as_view()),
     path("cycles/<uuid:pk>/close", cycle_views.Close.as_view()),
+    path("enquiries", enquiry_views.EnquiryList.as_view()),
+    path("enquiries/<uuid:pk>", enquiry_views.EnquiryDetail.as_view()),
+    path("enquiries/<uuid:pk>/follow-ups", enquiry_views.FollowUps.as_view()),
+    path("enquiries/<uuid:pk>/convert", enquiry_views.Convert.as_view()),
+    path("enquiries/<uuid:pk>/close", enquiry_views.Close.as_view()),
+    path("enquiries/<uuid:pk>/reopen", enquiry_views.Reopen.as_view()),
     path("applications", staff_views.ApplicationList.as_view()),
     path("applications/<uuid:pk>", staff_views.ApplicationDetail.as_view()),
     path("applications/<uuid:pk>/start-review", staff_views.StartReview.as_view()),

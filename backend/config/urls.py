@@ -4,6 +4,7 @@ from django.urls import include, path
 
 from accounts.views import ChangePasswordView, LoginView, LogoutView, SessionView
 from admissions.applicant_auth import SignupView
+from admissions.enquiry_views import PublicEnquiry
 from admissions.public import public_admissions
 from common.views import AuditEventList, health
 from institutions.urls import platform_patterns
@@ -21,6 +22,7 @@ urlpatterns = [
     path("api/v1/public/site", PublicSiteView.as_view(), name="public-site"),
     path("api/v1/public/assets/<uuid:asset_id>", public_asset, name="public-asset"),
     path("api/v1/public/admissions", public_admissions, name="public-admissions"),
+    path("api/v1/public/enquiries", PublicEnquiry.as_view(), name="public-enquiries"),
     path("api/v1/applicant/signup", SignupView.as_view(), name="applicant-signup"),
     path("api/v1/applicant/", include("admissions.applicant_urls")),
     path("api/v1/institution/site/", include(site_patterns)),

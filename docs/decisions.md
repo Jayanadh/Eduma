@@ -108,3 +108,22 @@ Full table and reasons: `docs/superpowers/specs/2026-10-19-slice4b-guardians-wit
 | S4B-11 | Every student record shows its own history, without guardian notes or evidence. |
 | S4B-12 | Applications show possible duplicate students (same name and date of birth) as a warning; enrolling never merges. |
 
+## Slice 4c (enquiries and staged student imports)
+
+Full table and reasons: `docs/superpowers/specs/2026-10-19-slice4c-enquiries-imports-design.md` §2.
+
+| ID | Decision |
+|---|---|
+| S4C-01 | Enquiries `E<year>-NNNN` with contact, child, place, message and source; open → following up → applied or closed; follow-ups with a next date. |
+| S4C-02 | Families ask from the Apply page without an account; throttled (10 an hour per address) with a hidden honeypot field. |
+| S4C-03 | New permission `enquiry.manage` (Registrar, Admissions Officer, Institution Admin), scoped by the place's campus. |
+| S4C-04 | An enquiry is linked to an application by its number (final) or closed with a reason (can be reopened). |
+| S4C-05 | Imports (`data.import`, Institution Admin): CSV UTF-8, ≤2 MB, ≤5,000 rows; checked in a dry run, imported only on commit, all or nothing. Synchronous for now. |
+| S4C-06 | Contract `students-v1` (16 columns; template downloadable). |
+| S4C-07 | Provenance per student (source system + source id + row checksum); a re-run never creates twice; changed rows are listed, not applied. |
+| S4C-08 | Possible duplicates (same name and birth date, existing or earlier row) must be decided — create or skip; never merged. |
+| S4C-09 | A commit makes Person, Student (`<year>-NNNN` from the academic year), Enrollment, provenance and a proposed guardian link; no logins. |
+| S4C-10 | The error file lists row, column, code, message and source id only, with formula-like cells neutralised. |
+| S4C-11 | A committed import can be undone while nothing it created has changed; a discarded file is deleted. |
+| S4C-12 | Staff can give a student without a login one (`<school>.<number>`, first password). |
+

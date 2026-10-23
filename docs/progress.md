@@ -3,7 +3,35 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (19 October 2026, slice 4b)
+## Where things stand (23 October 2026, slice 4c — BUILD-04 complete)
+
+**Slice 4c is built and checked locally, finishing BUILD-04** (admissions, people and imports). Spec:
+`docs/superpowers/specs/2026-10-19-slice4c-enquiries-imports-design.md`. Plan:
+`docs/superpowers/plans/2026-10-19-slice4c-enquiries-imports.md`. Branch `slice-4c-enquiries-imports`, cut from
+`slice-4b-guardians` (with its review fixes merged). Next: BUILD-05, academic structures.
+
+| Built in slice 4c | Where |
+|---|---|
+| Enquiries: public question form (throttled, honeypot), staff list with counts and filters, follow-ups, assignment, link to an application, close/reopen; `enquiry.manage` | `backend/admissions/enquiries.py`, `enquiry_views.py`, `frontend/src/app/features/admissions/enquir*`, `features/apply/apply-page.ts` |
+| Staged student imports: `students-v1` contract, dry run with row errors, duplicate decisions, commit with provenance and proposed guardian links, re-runs that create nothing twice, error file, discard, undo; `data.import` | `backend/imports/`, `frontend/src/app/features/settings/data-page.ts`, `import-page.*` |
+| Give a student a login | `backend/students/logins.py`, `features/students/student-page.ts` |
+| Demo: two Aster enquiries; sample file `backend/imports/fixtures/aster-students-sample.csv` (6 ready, 1 error, 1 duplicate of Arjun Demo) | `seed_demo.py` |
+
+Checks on 23 Oct 2026: backend `pytest` 426 passed; `ruff check` and `ruff format --check` clean; frontend `ng test`
+175 passed; `ng build` clean.
+Browser (built-in, Chromium): at 390 px a parent asked a question from Aster's Apply page and got reference E2026-0003
+(no sideways scroll); as `aster.admissions` at 1280 px the Enquiries list showed counts by status, and the enquiry was
+assigned, followed up and linked to application A2027-0001; as `aster.admin` the sample file's dry run showed 8 rows,
+6 ready, 1 possible duplicate (of 2027-0001 Arjun Demo), 1 error; Import stayed disabled until the duplicate was
+skipped, then imported 6; the error file listed row 8's impossible date; re-uploading the file showed 6 already
+imported and created nothing; a one-row import was undone and its student was gone; Kiran Rao (2026-0001, imported)
+was given a login and signed in at 390 px, changed the password and saw his record. Found and fixed: the enquiry
+reference and its full stop wrapped onto separate lines; Settings and Data transfer were both highlighted in the menu
+(Data transfer now lives at `/app/data`). The check's enquiry, the six imported students and Kiran's login remain in
+the local database.
+
+
+## Slice 4b (19 October 2026)
 
 **Slice 4b is built and checked locally: the second part of BUILD-04.** Spec:
 `docs/superpowers/specs/2026-10-19-slice4b-guardians-withdrawal-design.md`. Plan:

@@ -80,9 +80,6 @@ class Section(VersionedModel):
     campus = models.ForeignKey("organization.Campus", on_delete=models.PROTECT, related_name="sections")
     code = models.CharField(max_length=20)
     capacity = models.PositiveIntegerField()
-    class_teacher = models.ForeignKey(
-        "accounts.Membership", null=True, blank=True, on_delete=models.PROTECT, related_name="class_sections"
-    )
 
     class Meta:
         ordering = ["grade__order", "code"]
@@ -114,6 +111,11 @@ class EnrollmentPeriod(VersionedModel):
         ACTIVE = "active", "Active"
         ENDED = "ended", "Ended"
 
+    class EndedBecause(models.TextChoices):
+        NOT_ENDED = "", "—"
+        TAKEN_OUT = "taken_out", "Taken out of the class"
+        WITHDRAWN = "withdrawn", "Withdrawn"
+
     enrollment = models.ForeignKey("students.Enrollment", on_delete=models.PROTECT, related_name="periods")
     institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="+")
     year = models.ForeignKey(AcademicYear, on_delete=models.PROTECT, related_name="placements")
@@ -121,6 +123,8 @@ class EnrollmentPeriod(VersionedModel):
     grade = models.ForeignKey(GradeLevel, on_delete=models.PROTECT, related_name="+")
     campus = models.ForeignKey("organization.Campus", on_delete=models.PROTECT, related_name="+")
     state = models.CharField(max_length=8, choices=State.choices, default=State.ACTIVE)
+    # Why it ended: a withdrawal is undone by reinstating; a student taken out can be placed again this year.
+    ended_because = models.CharField(max_length=10, choices=EndedBecause.choices, blank=True, default="")
     is_repeat = models.BooleanField(default=False)
     placed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"

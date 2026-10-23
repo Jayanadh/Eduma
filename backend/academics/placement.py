@@ -57,26 +57,22 @@ def place(actor, section: Section, student_ids: list) -> list[EnrollmentPeriod]:
         section = _locked(section)
         require_manageable(actor, section)
         episodes = _episodes(section, student_ids)
-        taken = EnrollmentPeriod.objects.filter(enrollment__in=episodes, year=section.year).select_related(
-            "enrollment__student", "section"
-        )
+        this_year = EnrollmentPeriod.objects.filter(enrollment__in=episodes, year=section.year)
+        taken = this_year.filter(state=EnrollmentPeriod.State.ACTIVE).select_related("enrollment__student", "section")
         if taken:
             names = ", ".join(f"{row.enrollment.student.number} ({row.section.code})" for row in taken)
             raise Problem(409, "already_placed", f"Already placed this year: {names}.")
         check_room(section, len(episodes))
+        earlier = {row.enrollment_id: row for row in this_year}  # taken out earlier this year: placed again
         made = []
         for episode in episodes:
-            made.append(
-                EnrollmentPeriod.objects.create(
-                    enrollment=episode,
-                    institution=section.institution,
-                    year=section.year,
-                    section=section,
-                    grade=section.grade,
-                    campus=section.campus,
-                    placed_by=actor,
-                )
+            period = earlier.get(episode.id) or EnrollmentPeriod(
+                enrollment=episode, institution=section.institution, year=section.year
             )
+            period.section, period.grade, period.campus = section, section.grade, section.campus
+            period.state, period.ended_because, period.placed_by = EnrollmentPeriod.State.ACTIVE, "", actor
+            period.save()
+            made.append(period)
             audit.log(
                 actor,
                 "student.placed",
@@ -115,7 +111,7 @@ def move(actor, period: EnrollmentPeriod, target: Section) -> EnrollmentPeriod:
 
 def end(actor, period: EnrollmentPeriod) -> EnrollmentPeriod:
     require_manageable(actor, period.section)
-    period.state = EnrollmentPeriod.State.ENDED
+    period.state, period.ended_because = EnrollmentPeriod.State.ENDED, EnrollmentPeriod.EndedBecause.TAKEN_OUT
     period.save()
     student = period.enrollment.student
     audit.log(actor, "student.placement_ended", student, f"{student.number} taken out of {period.section.code}")

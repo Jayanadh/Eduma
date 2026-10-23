@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ClassSection } from '../../core/api/types';
+import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { ToastService } from '../../ui/toast';
 import { SectionPage } from './section-page';
 import { SectionsPage } from './sections-page';
@@ -36,7 +37,14 @@ describe('Sections', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ConfirmDialog, useValue: { ask: () => Promise.resolve(true) } },
+      ],
+    });
     http = TestBed.inject(HttpTestingController);
   });
 
@@ -128,10 +136,16 @@ describe('Sections', () => {
     expect(preview.request.body).toEqual({ target: 's7a', mode: 'promote' });
     preview.flush([
       { student: { id: 'st1', number: '2026-0001', full_name: 'Kiran Rao' }, action: 'move' },
+      { student: { id: 'st2', number: '2026-0002', full_name: 'Held Back' }, action: 'move' },
       { student: { id: 'st3', number: '2026-0003', full_name: 'Left Early' }, action: 'withdrawn' },
     ]);
     await fixture.whenStable();
     expect(root.textContent).toContain('Withdrawn');
+    const held = root.querySelector<HTMLInputElement>('#moving-st2')!;
+    expect(held.checked).toBe(true);
+    held.checked = false;
+    held.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
     button(root, 'Move 1 student').click();
     const commit = http.expectOne('/api/v1/institution/academics/sections/s6a/move-up');
     expect(commit.request.body).toEqual({ target: 's7a', mode: 'promote', students: ['st1'] });
@@ -152,5 +166,15 @@ describe('Sections', () => {
     http.expectOne('/api/v1/teaching/classes/s6a/students').flush([{ number: '2026-0001', full_name: 'Kiran Rao', status: 'active' }]);
     await roster.whenStable();
     expect((roster.nativeElement as HTMLElement).textContent).toContain('Kiran Rao');
+  });
+
+  it('asks before taking a student out', async () => {
+    const ask = vi.fn().mockResolvedValue(false);
+    TestBed.inject(ConfirmDialog).ask = ask;
+    const fixture = await open(section());
+    [...(fixture.nativeElement as HTMLElement).querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Take out')!.click();
+    await fixture.whenStable();
+    expect(ask).toHaveBeenCalled();
+    http.expectNone((r) => r.method === 'DELETE');
   });
 });

@@ -54,9 +54,10 @@ class Classes(TeachingView):
                         "year": section.year.code,
                     },
                     "subjects": [],
-                    "class_teacher": section.class_teacher_id == row.membership_id,
+                    "class_teacher": False,
                 },
             )
+            entry["class_teacher"] = entry["class_teacher"] or row.subject_id is None
             if row.subject_id and row.subject.name not in entry["subjects"]:
                 entry["subjects"].append(row.subject.name)
         return Response(list(found.values()))

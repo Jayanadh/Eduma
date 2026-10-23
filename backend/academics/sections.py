@@ -49,6 +49,15 @@ def save_section(actor, institution, section: Section | None, data: dict, versio
             section.check_version(version)
             if not can_manage_section(actor, section):
                 raise PermissionDenied("Your role does not cover this section's campus.")
+            _open(section.year)  # the year it is in now: a closed year's section can't be moved out of it
+            if placed(section):
+                # Placements carry the section's year, grade and campus; changing them would contradict the rosters.
+                moving = {name: data[name] for name in ("year", "grade", "campus") if name in data}
+                current = {"year": section.year_id, "grade": section.grade_id, "campus": section.campus_id}
+                if changed := [name for name, value in moving.items() if str(value) != str(current[name])]:
+                    raise ValidationError(
+                        {changed[0]: ["Students are placed here; take them out before changing this."]}
+                    )
         else:
             section = Section(institution=institution)
         if "year" in data:
@@ -72,13 +81,16 @@ def save_section(actor, institution, section: Section | None, data: dict, versio
         for name in ("code", "capacity"):
             if name in data:
                 setattr(section, name, data[name])
-        if "class_teacher" in data:
-            section.class_teacher = _staff(institution, data["class_teacher"], "class_teacher")
+        class_teacher = (
+            _staff(institution, data["class_teacher"], "class_teacher") if data.get("class_teacher") else None
+        )
         if Section.objects.filter(year=section.year, code=section.code).exclude(pk=section.pk).exists():
             raise ValidationError({"code": ["Another section this year has this name."]})
         if section.pk and section.capacity < placed(section):
             raise ValidationError({"capacity": [f"{placed(section)} students are already placed here."]})
         section.save()
+        if class_teacher is not None:
+            _make_class_teacher(actor, section, class_teacher)
         audit.log(
             actor,
             "section.saved",
@@ -87,6 +99,20 @@ def save_section(actor, institution, section: Section | None, data: dict, versio
             institution=institution,
         )
         return section
+
+
+def _make_class_teacher(actor, section: Section, membership: Membership) -> TeachingAssignment:
+    """The class teacher is the section's one whole-class assignment: a new one ends the one before."""
+    today = today_for(section.institution)
+    current = [row for row in section.teaching.filter(subject__isnull=True) if in_effect(row, today)]
+    for row in current:
+        if row.membership_id == membership.id:
+            return row
+        row.ends_on = today - dt.timedelta(days=1)
+        row.save(update_fields=["ends_on"])
+    return TeachingAssignment.objects.create(
+        section=section, subject=None, membership=membership, starts_on=today, created_by=actor
+    )
 
 
 def assign_teacher(actor, section: Section, membership_id, subject_id) -> TeachingAssignment:
@@ -99,13 +125,16 @@ def assign_teacher(actor, section: Section, membership_id, subject_id) -> Teachi
         subject = Subject.objects.filter(pk=subject_id, institution=section.institution, is_active=True).first()
         if subject is None:
             raise ValidationError({"subject": ["Choose an active subject."]})
-    assignment = TeachingAssignment.objects.create(
-        section=section,
-        subject=subject,
-        membership=membership,
-        starts_on=today_for(section.institution),
-        created_by=actor,
-    )
+    if subject is None:
+        assignment = _make_class_teacher(actor, section, membership)
+    else:
+        assignment = TeachingAssignment.objects.create(
+            section=section,
+            subject=subject,
+            membership=membership,
+            starts_on=today_for(section.institution),
+            created_by=actor,
+        )
     what = subject.name if subject else "the class"
     audit.log(
         actor,
@@ -140,7 +169,8 @@ def in_effect(assignment: TeachingAssignment, today) -> bool:
 
 def section_item(section: Section, viewer) -> dict:
     today = today_for(section.institution)
-    teacher = section.class_teacher
+    rows = list(section.teaching.select_related("membership__user", "subject"))
+    teacher = next((row.membership for row in rows if row.subject_id is None and in_effect(row, today)), None)
     return {
         "id": str(section.id),
         "version": section.version,
@@ -160,7 +190,7 @@ def section_item(section: Section, viewer) -> dict:
                 "ends_on": row.ends_on,
                 "in_effect": in_effect(row, today),
             }
-            for row in section.teaching.select_related("membership__user", "subject")
+            for row in rows
         ],
         "can_manage": can_manage_section(viewer, section),
     }

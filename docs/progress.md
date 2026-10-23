@@ -29,6 +29,22 @@ sections (one as class teacher) and 6A's list, while the student records API ans
 as Kiran at 390 px the record showed the class. Found and fixed: the record showed next year's class while this year
 was current. The check's 6C section and the placements remain in the local database.
 
+Final review (fresh reviewer, 23 Oct 2026), fixed with a failing test first: a student taken out of a class can be
+placed again that year (they were stuck with "already placed"); a placement now records why it ended, so taken-out
+students don't move up and reinstating reopens only what the withdrawal ended; withdrawing leaves closed years'
+placements alone; a section can be moved up after its year is closed; a year's status only moves forward
+(planned → current → closed); the class teacher is the section's one whole-class teaching assignment (it opens the
+class list; setting a new one ends the old); a section with students keeps its year, grade and campus, and a closed
+year's section can't be moved out of it; the move-up screen lets staff untick students who stay behind; Take out asks
+first. Backend `pytest` 482 passed, frontend `ng test` 186 passed, lint and build clean. Deferred minors: teachers get
+placement ids on the managers' roster route; two placements of one student at once can 500; one-current-year and
+year overlap aren't safe under concurrent requests; ending an ended assignment moves its end; duplicate subject
+assignments; terms aren't audited and stay editable in closed years; the current section shows with Academics off;
+year names aren't normalised (hyphen vs en dash); the section page loads every section for its dropdowns and they
+include other campuses and earlier years; place-search results go stale; an out-of-scope roster shows "Nobody placed";
+the setup status dropdown keeps a refused value; the new-section year defaults to the newest; no Back links on the
+section and class-list pages; the setup route is `/app/academics/setup`; the Registrar description omits Academics.
+
 
 ## Slice 4c (23 October 2026) — BUILD-04 complete
 

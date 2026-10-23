@@ -30,6 +30,26 @@ reference and its full stop wrapped onto separate lines; Settings and Data trans
 (Data transfer now lives at `/app/data`). The check's enquiry, the six imported students and Kiran's login remain in
 the local database.
 
+Final review (fresh reviewer, 23 Oct 2026), fixed with a failing test first: undo is refused once staff have added or
+checked a guardian on an imported student (it had deleted staff-added guardians); campus-scoped officers must pick a
+place on their campus before an enquiry is saved (they got a server error after the save, and retries duplicated
+it), and an assignee is checked against the enquiry's new place; enquiries can no longer point at a draft cycle's
+places (that locked the cycle editor); numbering, the undo check and undo run in a few queries per batch, and files
+are limited to 2,000 rows until imports move to the job queue; a re-import under a differently spelled source system
+finds the earlier one; the public question form takes JSON only (another site can't post into it through visitors'
+browsers); a malformed CSV, an over-long source id or email are a file or row error, not a server error; a refused
+link to an application now says why. Backend `pytest` 436 passed, frontend `ng test` 176 passed, lint and build clean.
+Deferred minors: undo locks students but not links being verified at that moment; the checksum covers raw rather than
+normalised values (an en dash vs hyphen reads as changed); no duplicate re-check at commit; no byte-order mark on the
+template and error files (Excel shows the en dash oddly); the question form shows only while a cycle is open; counts
+by source aren't shown on the list; Import is enabled when only skipped duplicates remain; the assignee dropdown can
+disagree with the text after a refusal or a lost permission; a PATCH can clear both phone and email; converting
+doesn't check the actor can see that application; totals after commit mix dry-run and commit counts; unknown header
+columns are ignored silently; imports routes add `urls.W002` warnings; a discarded or failed upload's file is deleted
+or left outside the transaction; the New enquiry page's place list is empty for a role with only `enquiry.manage`;
+Data transfer lives at `/app/data` (deliberate); two old migrations had their imports reordered; some isolation tests
+are thinner than they look.
+
 
 ## Slice 4b (19 October 2026)
 

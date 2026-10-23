@@ -118,7 +118,7 @@ Full table and reasons: `docs/superpowers/specs/2026-10-19-slice4c-enquiries-imp
 | S4C-02 | Families ask from the Apply page without an account; throttled (10 an hour per address) with a hidden honeypot field. |
 | S4C-03 | New permission `enquiry.manage` (Registrar, Admissions Officer, Institution Admin), scoped by the place's campus. |
 | S4C-04 | An enquiry is linked to an application by its number (final) or closed with a reason (can be reopened). |
-| S4C-05 | Imports (`data.import`, Institution Admin): CSV UTF-8, ≤2 MB, ≤5,000 rows; checked in a dry run, imported only on commit, all or nothing. Synchronous for now. |
+| S4C-05 | Imports (`data.import`, Institution Admin): CSV UTF-8, ≤2 MB, ≤2,000 rows (until imports move to the job queue); checked in a dry run, imported only on commit, all or nothing. Synchronous for now. |
 | S4C-06 | Contract `students-v1` (16 columns; template downloadable). |
 | S4C-07 | Provenance per student (source system + source id + row checksum); a re-run never creates twice; changed rows are listed, not applied. |
 | S4C-08 | Possible duplicates (same name and birth date, existing or earlier row) must be decided — create or skip; never merged. |

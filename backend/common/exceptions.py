@@ -56,6 +56,7 @@ _KNOWN = [
     (drf.PermissionDenied, 403, "permission_denied", "Not allowed"),
     (drf.NotFound, 404, "not_found", "Not found"),
     (drf.MethodNotAllowed, 405, "method_not_allowed", "Method not allowed"),
+    (drf.UnsupportedMediaType, 415, "unsupported_media_type", "Send JSON"),
     (drf.ValidationError, 422, "validation_failed", "Check the highlighted fields"),
     (drf.Throttled, 429, "rate_limited", "Too many attempts"),
 ]

@@ -35,6 +35,8 @@ REQUIRED = frozenset(
 )  # fmt: skip
 LIMITS = {
     "source_record_id": 100,
+    "email": 254,
+    "guardian_email": 254,
     "full_name": 150,
     "phone": 30,
     "address": 500,
@@ -44,7 +46,8 @@ LIMITS = {
     "guardian_relationship": 40,
     "guardian_phone": 30,
 }
-MAX_ROWS = 5000
+# shortcut: imports run inside one request, so files stay small; raise this when imports move to the job queue.
+MAX_ROWS = 2000
 YEAR = re.compile(r"^(\d{4})\s*[–-]\s*(\d{2})$")
 
 
@@ -65,12 +68,15 @@ def parse(content: bytes) -> list[tuple[int, dict]]:
     if missing := sorted(REQUIRED - set(reader.fieldnames)):
         raise _refuse(f"These columns are missing: {', '.join(missing)}.")
     rows = []
-    for raw in reader:
-        values = {column: (raw.get(column) or "").strip() for column in COLUMNS}
-        if any(values.values()):
-            rows.append((reader.line_num, values))
-        if len(rows) > MAX_ROWS:
-            raise _refuse(f"Import at most {MAX_ROWS} rows at a time; split the file.")
+    try:
+        for raw in reader:
+            values = {column: (raw.get(column) or "").strip() for column in COLUMNS}
+            if any(values.values()):
+                rows.append((reader.line_num, values))
+            if len(rows) > MAX_ROWS:
+                raise _refuse(f"Import at most {MAX_ROWS} rows at a time; split the file.")
+    except csv.Error as error:  # e.g. a quote opened and never closed
+        raise _refuse(f"Line {reader.line_num} can't be read as CSV: check its quotes.") from error
     if not rows:
         raise _refuse("The file has no rows to import.")
     return rows

@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import { Enquiry } from '../../core/api/types';
 import { makeMe, signInAs } from '../../core/test-data';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
+import { ToastService } from '../../ui/toast';
 import { EnquiriesPage } from './enquiries-page';
 import { EnquiryPage } from './enquiry-page';
 
@@ -126,5 +127,24 @@ describe('Enquiry pages', () => {
     await fixture.whenStable();
     const close = http.expectOne('/api/v1/institution/admissions/enquiries/e1/close');
     expect(close.request.body).toEqual({ version: 4, reason: 'No reply after two calls.' });
+  });
+
+  it('says why a link to an application was refused', async () => {
+    const fixture = await open(enquiry());
+    const show = vi.spyOn(TestBed.inject(ToastService), 'show');
+    answer = 'A1999-0001';
+    button(fixture.nativeElement as HTMLElement, 'Link to an application').click();
+    await fixture.whenStable();
+    http.expectOne('/api/v1/institution/admissions/enquiries/e1/convert').flush(
+      {
+        title: 'Check the highlighted fields',
+        status: 422,
+        detail: 'No application here has that number.',
+        code: 'validation_failed',
+        errors: [{ field: 'application_number', code: 'invalid', message: 'No application here has that number.' }],
+      },
+      { status: 422, statusText: 'Unprocessable Entity' },
+    );
+    expect(show).toHaveBeenCalledWith('No application here has that number.', 'danger');
   });
 });

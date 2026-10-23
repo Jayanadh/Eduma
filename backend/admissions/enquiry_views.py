@@ -4,6 +4,7 @@ from django.db.models import Count, Q
 from rest_framework import serializers, status
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
@@ -83,6 +84,8 @@ def _valid(serializer_class, data) -> dict:
 class PublicEnquiry(APIView):
     permission_classes = [AllowAny]
     throttle_classes = [EnquiryThrottle]
+    # JSON only: a plain HTML form on another site can't send it, so visitors' browsers can't be used to post here.
+    parser_classes = [JSONParser]
 
     def post(self, request):
         if request.site_kind != "institution":

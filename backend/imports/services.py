@@ -6,6 +6,7 @@ import io
 
 from django.core.files.base import ContentFile
 from django.db import transaction
+from django.db.models import Count
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
@@ -44,7 +45,7 @@ def _rows(institution, source_system: str, parsed: list) -> list[ImportRow]:
                 {"field": "source_record_id", "code": "repeated_source_id", "message": "This id is on an earlier row."}
             )
         seen_ids.add(source_id)
-        row = ImportRow(row_number=number, source_record_id=source_id, raw=values, errors=errors)
+        row = ImportRow(row_number=number, source_record_id=source_id[:100], raw=values, errors=errors)
         row.checksum = contract.checksum(values)
         earlier = _provenance(institution, source_system, source_id) if source_id else None
         if errors:
@@ -79,7 +80,15 @@ def totals(rows) -> dict:
     return counted
 
 
+def canonical_source(institution, source_system: str) -> str:
+    """The spelling already used here for this source, so "old  erp" finds what "Old ERP" imported."""
+    wanted = " ".join(source_system.split())
+    used = ImportJob.objects.filter(institution=institution).values_list("source_system", flat=True).distinct()
+    return next((name for name in used if name.casefold() == wanted.casefold()), wanted)
+
+
 def upload(actor, institution, file, source_system: str) -> ImportJob:
+    source_system = canonical_source(institution, source_system)
     if file.size > MAX_BYTES:
         raise ValidationError({"file": ["Upload a file of at most 2 MB; split larger ones."]})
     content = file.read()
@@ -132,7 +141,7 @@ def _not_validated(job: ImportJob) -> Problem:
     return Problem(409, "invalid_transition", f"This file is {job.get_status_display().lower()}.")
 
 
-def _create(actor, institution, job: ImportJob, row: ImportRow, clean: dict) -> Student:
+def _create(actor, institution, job: ImportJob, row: ImportRow, clean: dict, number: str) -> Student:
     values = row.raw
     person = Person.objects.create(
         institution=institution,
@@ -145,7 +154,7 @@ def _create(actor, institution, job: ImportJob, row: ImportRow, clean: dict) -> 
     student = Student.objects.create(
         institution=institution,
         person=person,
-        number=Student.objects.next_number(institution, clean["entry_year"]),
+        number=number,
         admitted_on=clean["admitted_on"],
     )
     Enrollment.objects.create(
@@ -198,6 +207,7 @@ def commit(actor, job: ImportJob, version: int) -> ImportJob:
         campuses = {c.lower(): pk for pk, c in institution.campuses.filter(is_active=True).values_list("id", "code")}
         today = today_for(institution)
         counts = {"created": 0, "skipped": 0, "unchanged": 0, "changed": 0, "error": 0}
+        next_numbers: dict[int, int] = {}  # entry year -> next sequence, read once under the institution lock
         for row in job.rows.all():
             if row.state in (ImportRow.State.ERROR, ImportRow.State.UNCHANGED, ImportRow.State.CHANGED):
                 counts[row.state] += 1
@@ -216,7 +226,11 @@ def commit(actor, job: ImportJob, version: int) -> ImportJob:
                 row.save(update_fields=["state", "errors"])
                 counts[row.state] += 1
                 continue
-            row.student = _create(actor, institution, job, row, clean)
+            year = clean["entry_year"]
+            if year not in next_numbers:
+                next_numbers[year] = int(Student.objects.next_number(institution, year).split("-")[1])
+            row.student = _create(actor, institution, job, row, clean, f"{year}-{next_numbers[year]:04d}")
+            next_numbers[year] += 1
             row.save(update_fields=["student"])
             counts["created"] += 1
         job.status, job.committed_by, job.committed_at = ImportJob.Status.COMMITTED, actor, timezone.now()
@@ -245,18 +259,19 @@ def discard(actor, job: ImportJob, version: int) -> ImportJob:
         return job
 
 
-def undo_blocker(job: ImportJob) -> str | None:
-    """Why the batch can no longer be undone, or None: anything it created has been touched since."""
-    for record in job.records.select_related("student"):
-        student = record.student
-        if student.user_id is not None:
-            return f"{student.number} has a login."
-        if student.enrollments.count() != 1:
-            return f"{student.number} has another enrollment."
-        if student.guardian_links.exclude(status=GuardianLink.Status.PROPOSED).exists():
-            return f"{student.number} has a verified or revoked guardian."
-        if student.version != 1:
-            return f"{student.number} has changed since it was imported."
+def undo_blocker(job: ImportJob, students=None) -> str | None:
+    """Why the batch can no longer be undone, or None: anything it created has been touched since. A few queries
+    over the whole batch, whatever its size."""
+    students = students if students is not None else Student.objects.filter(provenance__job=job)
+    if found := students.filter(user__isnull=False).first():
+        return f"{found.number} has a login."
+    if found := students.annotate(episodes=Count("enrollments")).filter(episodes__gt=1).first():
+        return f"{found.number} has another enrollment."
+    links = GuardianLink.objects.filter(student__in=students)
+    if found := links.exclude(source=GuardianLink.Source.IMPORT, status=GuardianLink.Status.PROPOSED).first():
+        return f"{found.student.number} has a guardian added or checked since the import."
+    if found := students.exclude(version=1).first():
+        return f"{found.number} has changed since it was imported."
     return None
 
 
@@ -265,30 +280,27 @@ def undo(actor, job: ImportJob, version: int) -> ImportJob:
         job = _job(version, job)
         if job.status != ImportJob.Status.COMMITTED:
             raise Problem(409, "invalid_transition", "Only an imported file can be undone.")
-        if reason := undo_blocker(job):
+        ids = list(Student.objects.select_for_update().filter(provenance__job=job).values_list("id", flat=True))
+        students = Student.objects.filter(pk__in=ids)
+        if reason := undo_blocker(job, students):
             raise Problem(409, "undo_blocked", f"This import can't be undone: {reason} Correct the records instead.")
-        removed = 0
-        for record in job.records.select_related("student__person"):
-            student = record.student
-            for link in student.guardian_links.select_related("adult"):
-                adult = link.adult
-                link.delete()
-                adult.delete()
-            student.enrollments.all().delete()
-            person = student.person
-            record.delete()
-            student.delete()
-            person.delete()
-            removed += 1
+        links = GuardianLink.objects.filter(student_id__in=ids)
+        adults = list(links.values_list("adult_id", flat=True))
+        people = list(students.values_list("person_id", flat=True))
+        links.delete()
+        Enrollment.objects.filter(student_id__in=ids).delete()
+        ImportedRecord.objects.filter(job=job).delete()
+        students.delete()
+        Person.objects.filter(pk__in=[*adults, *people]).delete()
         job.status, job.undone_by, job.undone_at = ImportJob.Status.UNDONE, actor, timezone.now()
         job.save()
         audit.log(
             actor,
             "import.undone",
             job,
-            f"Undid the import of {job.original_name}: {removed} students removed",
+            f"Undid the import of {job.original_name}: {len(ids)} students removed",
             institution=job.institution,
-            changes={"removed": removed},
+            changes={"removed": len(ids)},
         )
         return job
 

@@ -2,7 +2,7 @@ export type NavItem = {
   label: string;
   icon: string;
   link: string;
-  group?: 'People' | 'Admissions' | 'Administration';
+  group?: 'People' | 'Admissions' | 'Academics' | 'Administration';
 };
 
 /** `needs`: the permission, or any one of several, that opens the page; `module`: shown only while it is on. */
@@ -36,6 +36,14 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string })[] = 
     module: 'admissions',
   },
   {
+    label: 'Academic setup',
+    icon: 'calendar',
+    link: '/app/academics/setup',
+    group: 'Academics',
+    needs: 'academic_structure.manage',
+    module: 'academics',
+  },
+  {
     label: 'Organization',
     icon: 'building',
     link: '/app/organization',
@@ -63,7 +71,7 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string })[] = 
 
 /**
  * The sidebar: the console's pages on Eduma's address; on an institution's, the pages the member's roles open, under
- * at most three headings (spec pack 04 §1: six or fewer top-level groups).
+ * at most four headings (spec pack 04 §1: six or fewer top-level groups).
  */
 export function navFor(
   kind: 'platform' | 'institution',

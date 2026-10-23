@@ -618,3 +618,19 @@ export type ImportRow = {
   decision: '' | 'create' | 'skip';
   student: { id: string; number: string } | null;
 };
+
+export type Term = { id: string; name: string; ordinal: number; starts_on: string; ends_on: string };
+
+export type AcademicYear = {
+  id: string;
+  version: number;
+  code: string;
+  starts_on: string;
+  ends_on: string;
+  status: 'planned' | 'current' | 'closed';
+  status_label: string;
+  terms: Term[];
+};
+
+export type Grade = { id: string; version: number; code: string; name: string; order: number; is_active: boolean };
+export type Subject = { id: string; version: number; code: string; name: string; is_active: boolean };

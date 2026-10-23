@@ -1,0 +1,127 @@
+<div class="page">
+  <app-page-header eyebrow="Academics" title="Academic setup" subtitle="Years and terms, the grades you teach and your subjects. Sections are set up per year under Sections." />
+
+  <section class="card stack section">
+    <h2 class="card-title">Academic years</h2>
+    <app-load-error [message]="years.error()" (retry)="years.reload()" />
+    @for (y of years.value() ?? []; track y.id) {
+      <div class="year">
+        <div class="year-head">
+          <strong>{{ y.code }}</strong>
+          <span class="muted small">{{ date(y.starts_on) }} – {{ date(y.ends_on) }}</span>
+          <span class="badge" [class.badge-success]="y.status === 'current'" [class.badge-info]="y.status === 'planned'">{{ y.status_label }}</span>
+          <label class="sr-only" [for]="'status-' + y.id">Status of {{ y.code }}</label>
+          <select [id]="'status-' + y.id" [disabled]="busy()" (change)="setStatus(y, $any($event.target).value)">
+            <option value="planned" [selected]="y.status === 'planned'">Planned</option>
+            <option value="current" [selected]="y.status === 'current'">Current</option>
+            <option value="closed" [selected]="y.status === 'closed'">Closed</option>
+          </select>
+        </div>
+        @if (problem('status-' + y.id, 'ends_on') || problem('status-' + y.id, 'starts_on'); as m) { <span class="field-error">{{ m }}</span> }
+        <ul class="terms">
+          @for (t of y.terms; track t.id) {
+            <li>{{ t.name }} <span class="muted small">{{ date(t.starts_on) }} – {{ date(t.ends_on) }}</span></li>
+          }
+        </ul>
+        @if (y.status !== 'closed') {
+          <form class="add-term inline-form" (submit)="$event.preventDefault(); addTerm(y, $any($event.target))">
+            <div class="field">
+              <label [for]="'term-name-' + y.id">Term</label>
+              <input [id]="'term-name-' + y.id" [placeholder]="'Term ' + (y.terms.length + 1)" />
+              @if (problem('term-' + y.id, 'name'); as m) { <span class="field-error">{{ m }}</span> }
+            </div>
+            <div class="field">
+              <label [for]="'term-start-' + y.id">From</label>
+              <input [id]="'term-start-' + y.id" type="date" />
+              @if (problem('term-' + y.id, 'starts_on'); as m) { <span class="field-error">{{ m }}</span> }
+            </div>
+            <div class="field">
+              <label [for]="'term-end-' + y.id">To</label>
+              <input [id]="'term-end-' + y.id" type="date" />
+              @if (problem('term-' + y.id, 'ends_on'); as m) { <span class="field-error">{{ m }}</span> }
+            </div>
+            <button type="submit" class="btn btn-secondary btn-sm" [disabled]="busy()">Add term</button>
+          </form>
+        }
+      </div>
+    } @empty {
+      <p class="muted small">No academic years yet.</p>
+    }
+    <form class="add-year inline-form" (submit)="$event.preventDefault(); addYear($any($event.target))">
+      <div class="field">
+        <label for="year-code">New year</label>
+        <input id="year-code" placeholder="2027–28" />
+        @if (problem('year', 'code'); as m) { <span class="field-error">{{ m }}</span> }
+      </div>
+      <div class="field">
+        <label for="year-start">Starts</label>
+        <input id="year-start" type="date" />
+        @if (problem('year', 'starts_on'); as m) { <span class="field-error">{{ m }}</span> }
+      </div>
+      <div class="field">
+        <label for="year-end">Ends</label>
+        <input id="year-end" type="date" />
+        @if (problem('year', 'ends_on'); as m) { <span class="field-error">{{ m }}</span> }
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm" [disabled]="busy()">Add year</button>
+    </form>
+  </section>
+
+  <div class="grid-2 section">
+    <section class="card stack">
+      <h2 class="card-title">Grades</h2>
+      <ul class="names">
+        @for (g of grades.value() ?? []; track g.id) {
+          <li>
+            <span><strong>{{ g.name }}</strong> <span class="muted small">{{ g.code }}</span></span>
+            <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Rename ' + g.name" [disabled]="busy()" (click)="rename('grades', g)">Rename</button>
+          </li>
+        } @empty {
+          <li class="muted small">No grades yet.</li>
+        }
+      </ul>
+      @if (problem('grades', 'name'); as m) { <span class="field-error">{{ m }}</span> }
+      <form class="add-grade inline-form" (submit)="$event.preventDefault(); addGrade($any($event.target))">
+        <div class="field">
+          <label for="grade-code">Code</label>
+          <input id="grade-code" placeholder="C6" />
+          @if (problem('grade', 'code'); as m) { <span class="field-error">{{ m }}</span> }
+        </div>
+        <div class="field">
+          <label for="grade-name">Name</label>
+          <input id="grade-name" placeholder="Class 6" />
+          @if (problem('grade', 'name'); as m) { <span class="field-error">{{ m }}</span> }
+        </div>
+        <button type="submit" class="btn btn-secondary btn-sm" [disabled]="busy()">Add grade</button>
+      </form>
+    </section>
+
+    <section class="card stack">
+      <h2 class="card-title">Subjects</h2>
+      <ul class="names">
+        @for (s of subjects.value() ?? []; track s.id) {
+          <li>
+            <span><strong>{{ s.name }}</strong> <span class="muted small">{{ s.code }}</span></span>
+            <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Rename ' + s.name" [disabled]="busy()" (click)="rename('subjects', s)">Rename</button>
+          </li>
+        } @empty {
+          <li class="muted small">No subjects yet.</li>
+        }
+      </ul>
+      @if (problem('subjects', 'name'); as m) { <span class="field-error">{{ m }}</span> }
+      <form class="add-subject inline-form" (submit)="$event.preventDefault(); addSubject($any($event.target))">
+        <div class="field">
+          <label for="subject-code">Code</label>
+          <input id="subject-code" placeholder="SCI" />
+          @if (problem('subject', 'code'); as m) { <span class="field-error">{{ m }}</span> }
+        </div>
+        <div class="field">
+          <label for="subject-name">Name</label>
+          <input id="subject-name" placeholder="Science" />
+          @if (problem('subject', 'name'); as m) { <span class="field-error">{{ m }}</span> }
+        </div>
+        <button type="submit" class="btn btn-secondary btn-sm" [disabled]="busy()">Add subject</button>
+      </form>
+    </section>
+  </div>
+</div>

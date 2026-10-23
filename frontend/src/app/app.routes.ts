@@ -252,6 +252,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admissions/application-review-page').then((m) => m.ApplicationReviewPage),
       },
       {
+        path: 'academics/setup',
+        title: 'Academic setup',
+        canActivate: [requires('academic_structure.manage')],
+        loadComponent: () => import('./features/academics/setup-page').then((m) => m.SetupPage),
+      },
+      {
         path: 'organization',
         title: 'Organization',
         canActivate: [requires('organization.manage')],

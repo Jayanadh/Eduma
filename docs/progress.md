@@ -3,7 +3,34 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (23 October 2026, slice 4c — BUILD-04 complete)
+## Where things stand (23 October 2026, slice 5a — BUILD-05 part 1)
+
+**Slice 5a is built and checked locally.** Spec: `docs/superpowers/specs/2026-10-23-slice5a-school-structure-design.md`.
+Plan: `docs/superpowers/plans/2026-10-23-slice5a-school-structure.md`. Branch `slice-5a-school-structure`, cut from
+`slice-4c-enquiries-imports` (with its review fixes merged). Next in BUILD-05: 5b programs, curricula, courses and
+offerings; 5c course registration; 5d attempts, equivalence and degree progress; 5e university affiliation.
+
+| Built in slice 5a | Where |
+|---|---|
+| Academic years and terms, grades, subjects; `academic_structure.manage`; module `academics` | `backend/academics/structure.py`, `frontend/src/app/features/academics/setup-page.*` |
+| Sections with capacity, class teacher and subject teachers | `backend/academics/sections.py`, `features/academics/sections-page.*`, `section-page.*` |
+| Placement (EnrollmentPeriod): place, move, take out; withdrawal ends it and reinstating reopens it; records, the student's page and the family portal show this year's class | `backend/academics/placement.py`, `students/` |
+| My classes and class lists for teachers | `backend/academics/teaching.py`, `features/academics/teaching-*.ts` |
+| Move up / repeat into next year (TST-035) | `backend/academics/moveup.py`, section page |
+| Demo: 2026–27 and 2027–28 with terms, Classes 1–10, four subjects, sections 6A/6B and 6A/7A, `aster.teacher` teaching Science, Arjun in 2027–28 6A | `seed_demo.py` |
+
+Checks on 23 Oct 2026: backend `pytest` 474 passed; `ruff check` and `ruff format --check` clean; frontend `ng test`
+185 passed; `ng build` clean.
+Browser (built-in, Chromium): as `aster.registrar` at 1280 px the Sections list showed the seeded sections; a new
+one-place section 6C refused two students ("6C has room for 1 more", nobody placed); Kiran Rao and Ananya Iyer were
+placed in 2026–27 6A; 6A was moved up into 2027–28 7A (preview: both "Moves up"; afterwards a second preview showed
+both "already placed"; Kiran's record kept 6A and gained 7A); as `aster.teacher` at 390 px My classes showed both 6A
+sections (one as class teacher) and 6A's list, while the student records API answered 403 and an untaught class 404;
+as Kiran at 390 px the record showed the class. Found and fixed: the record showed next year's class while this year
+was current. The check's 6C section and the placements remain in the local database.
+
+
+## Slice 4c (23 October 2026) — BUILD-04 complete
 
 **Slice 4c is built and checked locally, finishing BUILD-04** (admissions, people and imports). Spec:
 `docs/superpowers/specs/2026-10-19-slice4c-enquiries-imports-design.md`. Plan:

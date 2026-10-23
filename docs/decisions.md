@@ -127,3 +127,20 @@ Full table and reasons: `docs/superpowers/specs/2026-10-19-slice4c-enquiries-imp
 | S4C-11 | A committed import can be undone while nothing it created has changed; a discarded file is deleted. |
 | S4C-12 | Staff can give a student without a login one (`<school>.<number>`, first password). |
 
+## Slice 5a (academic calendar, grades, sections, class placement, teaching assignments)
+
+Full table and reasons: `docs/superpowers/specs/2026-10-23-slice5a-school-structure-design.md` §2.
+
+| ID | Decision |
+|---|---|
+| S5A-01 | Academic years (no overlaps, one current) with terms inside them that don't overlap. |
+| S5A-02 | Grades and subjects are institution-wide lists; school grades are not college programs (5b). |
+| S5A-03 | Sections per year, grade and campus, with capacity and a class teacher; closed years are read-only. |
+| S5A-04 | One placement per study episode per year (EnrollmentPeriod); full sections refuse; moves within a year are audited. |
+| S5A-05 | Teaching assignments open a teacher's own class lists (number, name, status) — a relationship, not a campus permission. |
+| S5A-06 | Move up / repeat into a later year's section: preview, then one transaction, idempotent; last year's placement stays. |
+| S5A-07 | New permission `academic_structure.manage` (Registrar, Institution Admin), campus-scoped for sections. |
+| S5A-08 | A placement can't be earlier than the year the student is enrolled for. |
+| S5A-09 | Records, the student's page and the family portal show this year's class; staff see the history. |
+| S5A-10 | Module `academics` gates every route. |
+

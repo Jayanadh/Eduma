@@ -1,0 +1,82 @@
+<div class="page">
+  <app-load-error [message]="job.error()" (retry)="job.reload()" />
+  @if (job.value(); as j) {
+    <app-page-header eyebrow="Data transfer" [title]="j.original_name" [subtitle]="j.source_system + ' · ' + j.status_label + ' · ' + dateTime(j.created_at)" />
+    <section class="card stack section">
+      <ul class="totals">
+        <li><strong>{{ j.totals['rows'] }}</strong> rows</li>
+        <li><strong>{{ j.totals['valid'] ?? 0 }}</strong> ready</li>
+        <li><strong>{{ j.totals['duplicate'] ?? 0 }}</strong> possible duplicates</li>
+        <li><strong>{{ j.totals['error'] ?? 0 }}</strong> with errors</li>
+        <li><strong>{{ j.totals['unchanged'] ?? 0 }}</strong> already imported</li>
+        <li><strong>{{ j.totals['changed'] ?? 0 }}</strong> changed since the last import</li>
+        @if (j.status === 'committed') {
+          <li><strong>{{ j.totals['created'] ?? 0 }}</strong> imported</li>
+          <li><strong>{{ j.totals['skipped'] ?? 0 }}</strong> skipped</li>
+        }
+      </ul>
+      @if (j.status === 'validated') {
+        @if (j.undecided) {
+          <p class="notice notice-warning small">Decide the {{ j.undecided }} possible duplicate{{ j.undecided === 1 ? '' : 's' }} below before importing. Nothing is ever merged: "Create" makes a separate student.</p>
+        }
+        <p class="muted small">Rows with errors, already imported or changed are not imported. Fix them in your file and upload it again; imported rows are recognised by their source id.</p>
+      }
+      <div class="actions">
+        @if (j.status === 'validated') {
+          <button type="button" class="btn btn-primary" [disabled]="busy() || !importable()" (click)="commit(j)">Import</button>
+          <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="discard(j)">Discard</button>
+        }
+        @if ((j.totals['error'] ?? 0) > 0) {
+          <a class="btn btn-secondary" [href]="'/api/v1/institution/imports/' + j.id + '/errors.csv'" download>Download errors</a>
+        }
+        @if (j.status === 'committed') {
+          @if (j.undo_blocker) {
+            <span class="muted small">Can't be undone: {{ j.undo_blocker }}</span>
+          } @else {
+            <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="undo(j)">Undo this import</button>
+          }
+        }
+        <a class="btn btn-secondary" routerLink="/app/settings/data">All imports</a>
+      </div>
+    </section>
+    <div class="field section">
+      <label for="row-state">Show</label>
+      <select id="row-state" (change)="filter($any($event.target).value)">
+        @for (s of states; track s[0]) { <option [value]="s[0]">{{ s[1] }}</option> }
+      </select>
+    </div>
+    @if (rows.value(); as result) {
+      <div class="card list-card section">
+        <ul class="list">
+          @for (row of result.results; track row.id) {
+            <li class="list-row">
+              <span class="list-main">
+                <span class="list-title">Row {{ row.row_number }} · {{ row.source_record_id || '—' }} · {{ row.full_name || '—' }}</span>
+                <span class="muted small">{{ row.state_label }}{{ row.student ? ' · student ' + row.student.number : '' }}</span>
+                @if (row.errors.length) {
+                  <ul class="problems small">
+                    @for (e of row.errors; track e.field) { <li><strong>{{ e.field }}</strong>: {{ e.message }}</li> }
+                  </ul>
+                }
+                @for (d of row.duplicate_of; track $index) {
+                  <span class="small">Same name and birth date as {{ d.label }}</span>
+                }
+              </span>
+              @if (row.state === 'duplicate' && j.status === 'validated') {
+                <span class="row-actions">
+                  <button type="button" class="btn btn-sm" [class.btn-primary]="row.decision === 'create'" [class.btn-secondary]="row.decision !== 'create'" [disabled]="busy()" (click)="decide(row, 'create')">Create</button>
+                  <button type="button" class="btn btn-sm" [class.btn-primary]="row.decision === 'skip'" [class.btn-secondary]="row.decision !== 'skip'" [disabled]="busy()" (click)="decide(row, 'skip')">Skip</button>
+                </span>
+              }
+            </li>
+          } @empty {
+            <li class="list-row muted small">No rows here.</li>
+          }
+        </ul>
+      </div>
+      <app-pager [page]="page()" [count]="result.count" (go)="page.set($event)" />
+    }
+  } @else if (job.loading()) {
+    <p class="muted" role="status">Loading…</p>
+  }
+</div>

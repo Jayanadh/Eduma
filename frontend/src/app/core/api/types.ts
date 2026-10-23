@@ -589,3 +589,32 @@ export type Enquiry = {
 export type EnquiryPageResult = Page<Enquiry> & {
   summary: { status: Partial<Record<EnquiryStatus, number>>; source: Record<string, number> };
 };
+
+export type ImportJob = {
+  id: string;
+  version: number;
+  source_system: string;
+  original_name: string;
+  status: 'validated' | 'committed' | 'discarded' | 'undone';
+  status_label: string;
+  totals: Record<string, number>;
+  undecided: number;
+  created_at: string;
+  created_by: string | null;
+  committed_at: string | null;
+  /** Why a committed import can no longer be undone; null when it can. */
+  undo_blocker?: string | null;
+};
+
+export type ImportRow = {
+  id: string;
+  row_number: number;
+  source_record_id: string;
+  full_name: string;
+  state: 'valid' | 'error' | 'duplicate' | 'unchanged' | 'changed';
+  state_label: string;
+  errors: { field: string; code: string; message: string }[];
+  duplicate_of: { kind: 'student' | 'row'; id?: string; row_number?: number; label: string }[];
+  decision: '' | 'create' | 'skip';
+  student: { id: string; number: string } | null;
+};

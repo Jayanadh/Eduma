@@ -54,7 +54,10 @@ describe('Student pages', () => {
         provideRouter([]),
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: ConfirmDialog, useValue: { prompt: () => Promise.resolve('Moved away') } },
+        {
+          provide: ConfirmDialog,
+          useValue: { prompt: () => Promise.resolve('Moved away'), firstPassword: () => Promise.resolve('Welcome-2027-pass') },
+        },
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -234,5 +237,21 @@ describe('Student pages', () => {
     await fixture.whenStable();
     const request = http.expectOne((r) => r.url === '/api/v1/institution/students');
     expect(request.request.params.get('status')).toBe('withdrawn');
+  });
+
+  it('gives a student without a login one', async () => {
+    await signInAs(makeMe());
+    const fixture = TestBed.createComponent(StudentPage);
+    fixture.componentRef.setInput('id', 's1');
+    await fixture.whenStable();
+    http.expectOne('/api/v1/institution/students/s1').flush(record({ login: null }));
+    await fixture.whenStable();
+    for (const request of http.match(() => true)) {
+      request.flush(request.request.url.endsWith('history') ? { count: 0, next: null, previous: null, results: [] } : []);
+    }
+    buttonNamed(fixture.nativeElement as HTMLElement, 'Give a login').click();
+    await fixture.whenStable();
+    const request = http.expectOne('/api/v1/institution/students/s1/login');
+    expect(request.request.body).toEqual({ version: 3, password: 'Welcome-2027-pass' });
   });
 });

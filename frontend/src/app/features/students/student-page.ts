@@ -128,6 +128,9 @@ import { HistorySection } from './history-section';
                 <p class="muted small">{{ student.last_login ? 'Last signed in ' + dateTime(student.last_login) : 'Has not signed in yet.' }}</p>
               } @else {
                 <p class="muted small">No login.</p>
+                @if (student.can_withdraw) {
+                  <div><button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="giveLogin(student)">Give a login</button></div>
+                }
               }
             </section>
           </div>
@@ -274,6 +277,26 @@ export class StudentPage {
     this.busy.set(true);
     this.api.post<StudentRecord>(`institution/students/${student.id}/reinstate`, { version: student.version }).subscribe({
       next: (updated) => this.moved(updated, `${student.full_name} reinstated.`),
+      error: (err) => {
+        this.busy.set(false);
+        this.toasts.show(apiErrorMessage(err), 'danger');
+        this.data.reload();
+      },
+    });
+  }
+
+  protected async giveLogin(student: StudentRecord): Promise<void> {
+    const password = await this.confirm.firstPassword(
+      `First password for ${student.full_name}`,
+      'Hand the password over in person; they change it at first sign-in.',
+      'Give login',
+    );
+    if (password === null) {
+      return;
+    }
+    this.busy.set(true);
+    this.api.post<StudentRecord>(`institution/students/${student.id}/login`, { version: student.version, password }).subscribe({
+      next: (updated) => this.moved(updated, `Login ${updated.login} made.`),
       error: (err) => {
         this.busy.set(false);
         this.toasts.show(apiErrorMessage(err), 'danger');

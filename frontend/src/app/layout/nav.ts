@@ -49,6 +49,14 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string })[] = 
     group: 'Administration',
     needs: ['configuration.edit', 'configuration.publish'],
   },
+  {
+    label: 'Data transfer',
+    icon: 'upload',
+    link: '/app/settings/data',
+    group: 'Administration',
+    needs: 'data.import',
+    module: 'students',
+  },
   { label: 'Public site', icon: 'globe', link: '/app/site', group: 'Administration', needs: 'institution_brand.update' },
   { label: 'Profile', icon: 'user', link: '/app/profile', group: 'Administration' },
 ];

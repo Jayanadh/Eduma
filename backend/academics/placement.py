@@ -11,7 +11,7 @@ from common.exceptions import Problem
 from students.models import Enrollment, Student
 
 
-def _manage(actor, section: Section) -> None:
+def require_manageable(actor, section: Section) -> None:
     if not can_manage_section(actor, section):
         raise PermissionDenied("Your role does not cover this section's campus.")
     if section.year.status == AcademicYear.Status.CLOSED:
@@ -24,7 +24,7 @@ def _locked(section: Section) -> Section:
     )
 
 
-def _check_room(section: Section, adding: int) -> None:
+def check_room(section: Section, adding: int) -> None:
     left = section.capacity - placed(section)
     if adding > left:
         raise Problem(409, "section_full", f"{section.code} has room for {max(left, 0)} more.", room=max(left, 0))
@@ -55,7 +55,7 @@ def _episodes(section: Section, student_ids: list) -> list[Enrollment]:
 def place(actor, section: Section, student_ids: list) -> list[EnrollmentPeriod]:
     with transaction.atomic():
         section = _locked(section)
-        _manage(actor, section)
+        require_manageable(actor, section)
         episodes = _episodes(section, student_ids)
         taken = EnrollmentPeriod.objects.filter(enrollment__in=episodes, year=section.year).select_related(
             "enrollment__student", "section"
@@ -63,7 +63,7 @@ def place(actor, section: Section, student_ids: list) -> list[EnrollmentPeriod]:
         if taken:
             names = ", ".join(f"{row.enrollment.student.number} ({row.section.code})" for row in taken)
             raise Problem(409, "already_placed", f"Already placed this year: {names}.")
-        _check_room(section, len(episodes))
+        check_room(section, len(episodes))
         made = []
         for episode in episodes:
             made.append(
@@ -92,13 +92,13 @@ def move(actor, period: EnrollmentPeriod, target: Section) -> EnrollmentPeriod:
         raise ValidationError({"section": ["Choose a section in the same academic year."]})
     with transaction.atomic():
         source = period.section
-        _manage(actor, source)
+        require_manageable(actor, source)
         target = _locked(target)
-        _manage(actor, target)
+        require_manageable(actor, target)
         period = EnrollmentPeriod.objects.select_for_update().get(pk=period.pk)
         if period.section_id == target.pk:
             return period
-        _check_room(target, 1)
+        check_room(target, 1)
         period.section, period.grade, period.campus = target, target.grade, target.campus
         period.save()
         student = period.enrollment.student
@@ -114,7 +114,7 @@ def move(actor, period: EnrollmentPeriod, target: Section) -> EnrollmentPeriod:
 
 
 def end(actor, period: EnrollmentPeriod) -> EnrollmentPeriod:
-    _manage(actor, period.section)
+    require_manageable(actor, period.section)
     period.state = EnrollmentPeriod.State.ENDED
     period.save()
     student = period.enrollment.student

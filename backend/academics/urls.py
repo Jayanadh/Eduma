@@ -17,6 +17,8 @@ urlpatterns = [
     path("sections/<uuid:pk>", views.SectionDetail.as_view()),
     path("sections/<uuid:pk>/teachers", views.Teachers.as_view()),
     path("sections/<uuid:pk>/students", views.Roster.as_view()),
+    path("sections/<uuid:pk>/move-up/preview", views.MoveUpPreview.as_view()),
+    path("sections/<uuid:pk>/move-up", views.MoveUp.as_view()),
     path("sections/<uuid:pk>/students/<uuid:student>", views.Placement.as_view()),
     path("sections/<uuid:pk>/students/<uuid:student>/move", views.Move.as_view()),
     path("sections/<uuid:pk>/teachers/<uuid:assignment>/end", views.EndTeaching.as_view()),

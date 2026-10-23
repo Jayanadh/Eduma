@@ -118,3 +118,9 @@ class PlaceInput(serializers.Serializer):
 
 class MoveInput(serializers.Serializer):
     section = serializers.UUIDField()
+
+
+class MoveUpInput(serializers.Serializer):
+    target = serializers.UUIDField()
+    mode = serializers.ChoiceField(["promote", "repeat"])
+    students = serializers.ListField(child=serializers.UUIDField(), required=False, default=list, max_length=1000)

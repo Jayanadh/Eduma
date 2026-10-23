@@ -6,12 +6,13 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from academics import placement, sections, structure, teaching
+from academics import moveup, placement, sections, structure, teaching
 from academics.models import EnrollmentPeriod, GradeLevel, Section, Subject, Term
 from academics.serializers import (
     GradeInput,
     GradePatch,
     MoveInput,
+    MoveUpInput,
     PlaceInput,
     SectionInput,
     SectionPatch,
@@ -247,3 +248,23 @@ class Move(Placement):
             Section.objects.filter(institution=request.institution), valid(MoveInput, request.data)["section"]
         )
         return Response(placement.roster_item(placement.move(request.user, period, target)))
+
+
+class MoveUpView(SectionView):
+    def sections(self):
+        source = self.section()
+        data = valid(MoveUpInput, self.request.data)
+        found = Section.objects.filter(institution=self.request.institution).select_related("year", "grade", "campus")
+        return source, self.found(found, data["target"]), data
+
+
+class MoveUpPreview(MoveUpView):
+    def post(self, request, pk):
+        source, target, data = self.sections()
+        return Response(moveup.preview(request.user, source, target, data["mode"]))
+
+
+class MoveUp(MoveUpView):
+    def post(self, request, pk):
+        source, target, data = self.sections()
+        return Response(moveup.commit(request.user, source, target, data["mode"], data["students"]))

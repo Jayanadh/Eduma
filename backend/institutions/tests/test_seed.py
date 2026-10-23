@@ -45,6 +45,16 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     from admissions.models import Enquiry
 
     assert sorted(Enquiry.objects.values_list("source", "status")) == [("walk_in", "following_up"), ("website", "open")]
+    from academics.models import EnrollmentPeriod, Section
+
+    assert sorted(Section.objects.values_list("year__code", "code")) == [
+        ("2026–27", "6A"),
+        ("2026–27", "6B"),
+        ("2027–28", "6A"),
+        ("2027–28", "7A"),
+    ]
+    arjun = EnrollmentPeriod.objects.get(enrollment__student__application__learner_name="Arjun Demo")
+    assert (arjun.year.code, arjun.section.code) == ("2027–28", "6A")
     office = RoleAssignment.objects.get(membership__user__username="aster.office")
     assert (office.custom_role.name, office.custom_role.permissions, office.campus.code) == (
         "Front office",
@@ -56,7 +66,7 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     from configuration.models import SettingRevision
     from configuration.registry import setting
 
-    assert setting(aster_inst, "modules.enabled") == ["admissions", "students"]
+    assert setting(aster_inst, "modules.enabled") == ["academics", "admissions", "students"]
     assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 1
     assert setting(aster_inst, "access.role_approval") is False
     deputy = User.objects.get(username="aster.deputy")

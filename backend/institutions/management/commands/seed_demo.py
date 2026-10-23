@@ -77,6 +77,7 @@ class Command(BaseCommand):
         self._aster_families()
         self._aster_employees()
         self._aster_enquiries()
+        self._aster_academics()
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -307,3 +308,74 @@ class Command(BaseCommand):
                 "next_follow_up_on": today_for(aster),
             },
         )
+
+    def _aster_academics(self) -> None:
+        """Academics switched on; 2026–27 (current) and 2027–28 with two terms each; Classes 1–10; four subjects;
+        sections 6A and 6B this year, 6A and 7A next; aster.teacher teaching Science; Arjun in next year's 6A."""
+        import datetime as dt
+
+        from academics import placement, sections, structure
+        from academics.models import GradeLevel, Subject
+        from configuration import services as settings_services
+        from configuration.registry import setting
+
+        aster = Institution.objects.get(slug="aster")
+        admin = User.objects.get(username="aster.admin")
+        modules = setting(aster, "modules.enabled")
+        if "academics" not in modules:
+            draft = settings_services.open_draft(aster, admin, "modules.enabled")
+            value = sorted({*modules, "academics"})
+            draft = settings_services.save_draft(aster, admin, "modules.enabled", draft.version, value)
+            settings_services.submit(aster, admin, "modules.enabled", draft.version, today_for(aster), "Demo data")
+        if aster.academic_years.exists():
+            return
+        years = {}
+        for code, start, status in (("2026–27", 2026, "current"), ("2027–28", 2027, "planned")):
+            data = {
+                "code": code,
+                "starts_on": dt.date(start, 6, 1),
+                "ends_on": dt.date(start + 1, 3, 31),
+                "status": status,
+            }
+            years[code] = year = structure.save_year(admin, aster, None, data)
+            for ordinal, (begins, ends) in enumerate(
+                ((dt.date(start, 6, 1), dt.date(start, 10, 31)), (dt.date(start, 11, 1), dt.date(start + 1, 3, 31))), 1
+            ):
+                structure.save_term(
+                    admin,
+                    year,
+                    None,
+                    {"name": f"Term {ordinal}", "ordinal": ordinal, "starts_on": begins, "ends_on": ends},
+                )
+        grades = {
+            n: structure.save_named(admin, aster, GradeLevel, None, {"code": f"C{n}", "name": f"Class {n}", "order": n})
+            for n in range(1, 11)
+        }
+        science = None
+        for code, name in (("ENG", "English"), ("MATH", "Mathematics"), ("SCI", "Science"), ("TEL", "Telugu")):
+            subject = structure.save_named(admin, aster, Subject, None, {"code": code, "name": name})
+            science = subject if code == "SCI" else science
+        main = aster.campuses.get(code="MAIN")
+        teacher = Membership.objects.get(institution=aster, user__username="aster.teacher")
+        made = {}
+        for year_code, code, grade in (
+            ("2026–27", "6A", 6),
+            ("2026–27", "6B", 6),
+            ("2027–28", "6A", 6),
+            ("2027–28", "7A", 7),
+        ):
+            data = {
+                "year": years[year_code].id,
+                "grade": grades[grade].id,
+                "campus": main.id,
+                "code": code,
+                "capacity": 40,
+            }
+            made[(year_code, code)] = sections.save_section(admin, aster, None, data)
+        this_6a, next_6a = made[("2026–27", "6A")], made[("2027–28", "6A")]
+        sections.save_section(admin, aster, this_6a, {"class_teacher": teacher.id}, this_6a.version)
+        for section in (this_6a, next_6a):
+            sections.assign_teacher(admin, section, teacher.id, science.id)
+        arjun = aster.students.filter(application__learner_name="Arjun Demo").first()
+        if arjun is not None:
+            placement.place(admin, next_6a, [arjun.id])

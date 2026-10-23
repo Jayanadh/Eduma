@@ -8,6 +8,7 @@ urlpatterns = [
     path("students", views.StudentList.as_view()),
     path("students/<uuid:pk>", views.StudentDetail.as_view()),
     path("students/<uuid:pk>/history", views.StudentHistory.as_view()),
+    path("students/<uuid:pk>/login", views.GiveLogin.as_view()),
     path("students/<uuid:pk>/withdraw", views.Withdraw.as_view()),
     path("students/<uuid:pk>/reinstate", views.Reinstate.as_view()),
     path("students/<uuid:pk>/guardians", views.GuardianList.as_view()),

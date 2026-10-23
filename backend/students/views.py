@@ -2,7 +2,7 @@
 
 from django.db import transaction
 from django.db.models import Q
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -16,7 +16,7 @@ from common.models import AuditEvent
 from common.pagination import Pages
 from configuration.gates import require_module
 from configuration.serializers import VersionInput
-from students import guardians, withdrawal
+from students import guardians, logins, withdrawal
 from students.models import GuardianLink, Student
 from students.serializers import (
     ProposeInput,
@@ -223,3 +223,17 @@ class StudentHistory(StudentView):
                 for event in page
             ]
         )
+
+
+class LoginInput(serializers.Serializer):
+    version = serializers.IntegerField()
+    password = serializers.CharField(trim_whitespace=False, write_only=True)
+
+
+class GiveLogin(StudentView):
+    def post(self, request, pk):
+        found = self.student()
+        data = LoginInput(data=request.data)
+        data.is_valid(raise_exception=True)
+        values = data.validated_data
+        return Response(self.detail(logins.give_login(request.user, found, values["version"], values["password"])))

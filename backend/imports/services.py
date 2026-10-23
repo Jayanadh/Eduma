@@ -249,14 +249,14 @@ def undo_blocker(job: ImportJob) -> str | None:
     """Why the batch can no longer be undone, or None: anything it created has been touched since."""
     for record in job.records.select_related("student"):
         student = record.student
-        if student.version != 1:
-            return f"{student.number} has changed since it was imported."
         if student.user_id is not None:
             return f"{student.number} has a login."
         if student.enrollments.count() != 1:
             return f"{student.number} has another enrollment."
         if student.guardian_links.exclude(status=GuardianLink.Status.PROPOSED).exists():
             return f"{student.number} has a verified or revoked guardian."
+        if student.version != 1:
+            return f"{student.number} has changed since it was imported."
     return None
 
 

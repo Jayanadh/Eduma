@@ -4,21 +4,18 @@ student."""
 
 import datetime as dt
 
-from django.contrib.auth import password_validation
-from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied
 
-from accounts.models import Membership, User
 from accounts.permissions import today_for
 from admissions.applications import Stage, wrong_stage
 from admissions.models import Application
 from admissions.review import can_approve
 from common import audit
-from common.exceptions import Problem
 from configuration.registry import setting
 from institutions.models import Institution
 from students.guardians import propose_from_application
+from students.logins import make_login
 from students.models import Enrollment, Person, Student
 
 
@@ -40,26 +37,7 @@ def enroll(actor, application: Application, version: int, password: str) -> Stud
             raise wrong_stage(application)
         cycle, place = application.cycle, application.place
         number = Student.objects.next_number(institution, cycle.entry_year)
-        if User.objects.filter(username=f"{institution.slug}.{number}").exists():
-            raise Problem(
-                409,
-                "login_taken",
-                f"The student login {institution.slug}.{number} already belongs to another account. Contact Eduma "
-                "support to free it before enrolling.",
-            )
-        login = User(
-            username=f"{institution.slug}.{number}",
-            full_name=application.learner_name,
-            must_change_password=True,
-            created_by=actor,
-        )
-        try:
-            password_validation.validate_password(password, login)
-        except DjangoValidationError as error:
-            raise ValidationError({"password": error.messages}) from error
-        login.set_password(password)
-        login.save()
-        Membership.objects.create(institution=institution, user=login, kind=Membership.Kind.STUDENT, created_by=actor)
+        login = make_login(actor, institution, number, application.learner_name, password)
         person = Person.objects.create(
             institution=institution,
             full_name=application.learner_name,

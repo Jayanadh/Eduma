@@ -43,10 +43,37 @@ def student_list_item(student: Student) -> dict:
     }
 
 
+def placements(student: Student) -> list[dict]:
+    from academics.models import EnrollmentPeriod
+
+    rows = EnrollmentPeriod.objects.filter(enrollment__student=student).select_related(
+        "year", "grade", "section", "campus"
+    )
+    return [
+        {
+            "year": row.year.code,
+            "grade": row.grade.name,
+            "section": row.section.code,
+            "campus": row.campus.name,
+            "state": row.state,
+            "is_repeat": row.is_repeat,
+        }
+        for row in rows
+    ]
+
+
+def current_section(student: Student) -> str | None:
+    from academics import placement
+
+    return placement.label(placement.current_period(student))
+
+
 def student_item(student: Student) -> dict:
     person = student.person
     return {
         **student_list_item(student),
+        "placements": placements(student),
+        "current_section": current_section(student),
         "version": student.version,
         "date_of_birth": person.date_of_birth,
         "phone": person.phone,

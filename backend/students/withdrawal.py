@@ -2,6 +2,7 @@
 ends with its date and reason, the student's login stops, and fees are left to the Fees module."""
 
 from django.db import transaction
+from django.db.models import F
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from accounts.models import Membership
@@ -49,6 +50,7 @@ def withdraw(actor, student: Student, version: int, effective_on, reason: str, c
             enrollment.status = Enrollment.Status.ENDED
             enrollment.exit_date, enrollment.exit_reason = effective_on, reason
             enrollment.save()
+            enrollment.periods.filter(state="active").update(state="ended", version=F("version") + 1)  # off the rosters
         student.status, student.left_on = Student.Status.WITHDRAWN, effective_on
         student.save()
         _login(student, Membership.Status.REVOKED)
@@ -74,6 +76,9 @@ def reinstate(actor, student: Student, version: int) -> Student:
         latest = student.enrollments.order_by("-entry_date", "-created_at").first()
         latest.status, latest.exit_date, latest.exit_reason = Enrollment.Status.ACTIVE, None, ""
         latest.save()
+        # Back into the sections the withdrawal took them out of (closed years stay as they were).
+        reopened = latest.periods.filter(state="ended").exclude(year__status="closed")
+        reopened.update(state="active", version=F("version") + 1)
         student.status, student.left_on = Student.Status.ACTIVE, None
         student.save()
         _login(student, Membership.Status.ACTIVE)

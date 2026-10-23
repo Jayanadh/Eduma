@@ -124,7 +124,12 @@ class OwnRecord(GenericAPIView):
         if student is None:
             raise NotFound()
         item = student_item(student)
-        return Response({key: item[key] for key in ("number", "full_name", "date_of_birth", "status", "enrollment")})
+        return Response(
+            {
+                key: item[key]
+                for key in ("number", "full_name", "date_of_birth", "status", "enrollment", "current_section")
+            }
+        )
 
 
 class GuardianView(StudentView):

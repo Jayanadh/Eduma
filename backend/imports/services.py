@@ -265,6 +265,8 @@ def undo_blocker(job: ImportJob, students=None) -> str | None:
     students = students if students is not None else Student.objects.filter(provenance__job=job)
     if found := students.filter(user__isnull=False).first():
         return f"{found.number} has a login."
+    if found := students.filter(enrollments__periods__isnull=False).first():
+        return f"{found.number} has been placed in a class."
     if found := students.annotate(episodes=Count("enrollments")).filter(episodes__gt=1).first():
         return f"{found.number} has another enrollment."
     links = GuardianLink.objects.filter(student__in=students)

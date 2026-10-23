@@ -3,13 +3,16 @@
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from academics import sections, structure
-from academics.models import GradeLevel, Section, Subject, Term
+from academics import placement, sections, structure, teaching
+from academics.models import EnrollmentPeriod, GradeLevel, Section, Subject, Term
 from academics.serializers import (
     GradeInput,
     GradePatch,
+    MoveInput,
+    PlaceInput,
     SectionInput,
     SectionPatch,
     SubjectInput,
@@ -191,3 +194,56 @@ class EndTeaching(SectionView):
         found = self.found(section.teaching.all(), assignment)
         sections.end_teaching(request.user, found)
         return Response(sections.section_item(section, request.user))
+
+
+class Roster(SectionView):
+    """Managers of the section's campus and the section's own teachers read it; managers place students."""
+
+    def get_permissions(self):
+        return [IsAuthenticated()] if self.request.method == "GET" else super().get_permissions()
+
+    def get(self, request, pk):
+        section = self.section_for_roster()
+        rows = section.placements.filter(state=EnrollmentPeriod.State.ACTIVE).select_related(
+            "enrollment__student__person"
+        )
+        return Response([placement.roster_item(row) for row in rows.order_by("enrollment__student__number")])
+
+    def section_for_roster(self) -> Section:
+        if self.request.site_kind != "institution":
+            raise NotFound()
+        section = self.section()
+        if not (
+            sections.can_manage_section(self.request.user, section) or teaching.teaches(self.request.user, section)
+        ):
+            raise NotFound()
+        return section
+
+    def post(self, request, pk):
+        section = self.section()
+        made = placement.place(request.user, section, valid(PlaceInput, request.data)["students"])
+        return Response([placement.roster_item(row) for row in made], status=status.HTTP_201_CREATED)
+
+
+class Placement(SectionView):
+    def period(self) -> EnrollmentPeriod:
+        rows = self.section().placements.filter(state=EnrollmentPeriod.State.ACTIVE)
+        found = rows.select_related("enrollment__student__person", "section__year").filter(
+            enrollment__student_id=self.kwargs["student"]
+        )
+        if (period := found.first()) is None:
+            raise NotFound()
+        return period
+
+    def delete(self, request, pk, student):
+        placement.end(request.user, self.period())
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class Move(Placement):
+    def post(self, request, pk, student):
+        period = self.period()
+        target = self.found(
+            Section.objects.filter(institution=request.institution), valid(MoveInput, request.data)["section"]
+        )
+        return Response(placement.roster_item(placement.move(request.user, period, target)))

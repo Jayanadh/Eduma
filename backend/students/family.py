@@ -11,7 +11,7 @@ from accounts.models import Membership
 from accounts.permissions import active_membership, today_for
 from configuration.gates import module_on
 from students.models import GuardianLink, Student
-from students.serializers import enrollment_item
+from students.serializers import current_section, enrollment_item
 
 
 def _family_enrollment(enrollment) -> dict | None:
@@ -31,6 +31,7 @@ def child_item(student: Student, shared: bool) -> dict:
             status=student.status,
             left_on=student.left_on,
             enrollment=_family_enrollment(current),
+            current_section=current_section(student),
         )
     return item
 

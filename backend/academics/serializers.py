@@ -110,3 +110,11 @@ class SectionPatch(SectionInput):
 class TeacherInput(serializers.Serializer):
     membership = serializers.UUIDField()
     subject = serializers.UUIDField(required=False, allow_null=True, default=None)
+
+
+class PlaceInput(serializers.Serializer):
+    students = serializers.ListField(child=serializers.UUIDField(), min_length=1, max_length=200)
+
+
+class MoveInput(serializers.Serializer):
+    section = serializers.UUIDField()

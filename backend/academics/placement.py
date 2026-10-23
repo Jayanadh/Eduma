@@ -127,13 +127,11 @@ def label(period: EnrollmentPeriod | None) -> str | None:
 
 
 def current_period(student: Student) -> EnrollmentPeriod | None:
-    """The student's latest active placement (this year's, or next year's once placed)."""
-    return (
-        EnrollmentPeriod.objects.filter(enrollment__student=student, state=EnrollmentPeriod.State.ACTIVE)
-        .select_related("grade", "section", "year", "campus")
-        .order_by("-year__starts_on")
-        .first()
-    )
+    """This year's placement; before or between years, the latest one."""
+    active = EnrollmentPeriod.objects.filter(enrollment__student=student, state=EnrollmentPeriod.State.ACTIVE)
+    active = active.select_related("grade", "section", "year", "campus")
+    this_year = active.filter(year__status=AcademicYear.Status.CURRENT).first()
+    return this_year or active.order_by("-year__starts_on").first()
 
 
 def roster_item(period: EnrollmentPeriod) -> dict:

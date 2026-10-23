@@ -169,3 +169,18 @@ def test_placed_imports_cannot_be_undone(world, admin, school):
     place(admin, make_section(school), ImportedRecord.objects.get().student)
     refused = admin.post(f"{URL}/{job['id']}/undo", {"version": committed["version"]}, format="json")
     assert refused.status_code == 409 and "class" in refused.json()["detail"]
+
+
+def test_current_section_is_this_years_class(world, admin, school):
+    """Found in the browser check: placed for next year too, a record still shows this year's class."""
+    this_year = make_section(school)
+    next_year = Section.objects.create(
+        institution=world.a, year=school.next_year, grade=school.c7, campus=school.main, code="7A", capacity=40
+    )
+    student = enrolled_student(world.a, "2026-0001")
+    place(admin, this_year, student)
+    place(admin, next_year, student)
+    assert admin.get(f"/api/v1/institution/students/{student.id}").json()["current_section"] == "Class 6 · 6A"
+    school.year.status = "closed"
+    school.year.save()
+    assert admin.get(f"/api/v1/institution/students/{student.id}").json()["current_section"] == "Class 7 · 7A"

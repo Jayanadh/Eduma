@@ -154,7 +154,7 @@ class Command(BaseCommand):
             )
 
     def _aster_settings(self) -> None:
-        """Aster has switched on Admissions and Students, through the same steps an admin takes."""
+        """Aster has switched on Admissions, Students and Academics, through the same steps an admin takes."""
         from configuration import services as settings_services
 
         aster = Institution.objects.get(slug="aster")
@@ -162,7 +162,9 @@ class Command(BaseCommand):
             return
         admin = User.objects.get(username="aster.admin")
         draft = settings_services.open_draft(aster, admin, "modules.enabled")
-        draft = settings_services.save_draft(aster, admin, "modules.enabled", draft.version, ["admissions", "students"])
+        draft = settings_services.save_draft(
+            aster, admin, "modules.enabled", draft.version, ["academics", "admissions", "students"]
+        )
         settings_services.submit(aster, admin, "modules.enabled", draft.version, today_for(aster), "Demo data")
 
     def _aster_admissions(self) -> None:

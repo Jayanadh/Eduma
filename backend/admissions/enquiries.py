@@ -35,7 +35,8 @@ def visible(actor, institution):
 def _place(institution, place_id, public: bool):
     if not place_id:
         return None
-    cycles = AdmissionCycle.objects.filter(institution=institution)
+    # A draft cycle's places are replaced every time it is saved, so enquiries point at published or closed ones.
+    cycles = AdmissionCycle.objects.filter(institution=institution).exclude(status=AdmissionCycle.Status.DRAFT)
     cycles = cycles.filter(status=AdmissionCycle.Status.PUBLISHED) if public else cycles
     place = Place.objects.filter(pk=place_id, cycle__in=cycles).select_related("campus").first()
     if place is None:
@@ -43,10 +44,17 @@ def _place(institution, place_id, public: bool):
     return place
 
 
+def _covers(user, institution, place) -> bool:
+    campus = place.campus_id if place is not None else None
+    return has_perm(user, institution, MANAGE, ("campus", campus) if campus else WHOLE)
+
+
 def create(institution, data: dict, source: str, actor=None) -> Enquiry:
     if not (data.get("phone") or data.get("email")):
         raise ValidationError({"phone": ["Give a phone number or an email so the school can reply."]})
     place = _place(institution, data.get("place"), public=actor is None)
+    if actor is not None and not _covers(actor, institution, place):
+        raise ValidationError({"place": ["Choose a place on a campus your role covers."]})
     with transaction.atomic():
         Institution.objects.select_for_update().get(pk=institution.pk)  # numbers are handed out one at a time
         enquiry = Enquiry.objects.create(
@@ -88,16 +96,19 @@ def _still_open(enquiry: Enquiry) -> None:
 def update(actor, enquiry: Enquiry, version: int, data: dict) -> Enquiry:
     with transaction.atomic():
         enquiry = _locked(actor, enquiry, version)
+        institution = enquiry.institution
+        if "place" in data:
+            enquiry.place = _place(institution, data["place"], public=False)
+            if not _covers(actor, institution, enquiry.place):
+                raise ValidationError({"place": ["Choose a place on a campus your role covers."]})
         if "assigned_to" in data:
             assignee = data["assigned_to"]
-            if assignee is not None:
-                user = User.objects.filter(pk=assignee).first()
-                if user is None or not has_perm(user, enquiry.institution, MANAGE, scope_of(enquiry)):
-                    raise ValidationError({"assigned_to": ["Choose someone whose role answers enquiries here."]})
-                assignee = user
-            enquiry.assigned_to = assignee
-        if "place" in data:
-            enquiry.place = _place(enquiry.institution, data["place"], public=False)
+            enquiry.assigned_to = User.objects.filter(pk=assignee).first() if assignee is not None else None
+            if assignee is not None and enquiry.assigned_to is None:
+                raise ValidationError({"assigned_to": ["Choose someone whose role answers enquiries here."]})
+        # Checked against the place as it now is: an assignee must be able to see the enquiry they answer.
+        if enquiry.assigned_to is not None and not _covers(enquiry.assigned_to, institution, enquiry.place):
+            raise ValidationError({"assigned_to": ["Choose someone whose role answers enquiries for this place."]})
         for name in ("contact_name", "phone", "email", "learner_name", "learner_date_of_birth", "next_follow_up_on"):
             if name in data:
                 setattr(enquiry, name, data[name])

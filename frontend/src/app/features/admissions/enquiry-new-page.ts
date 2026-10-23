@@ -47,11 +47,14 @@ import { ENQUIRY_SOURCES } from './enquiries-page';
           <select id="new-place" formControlName="place">
             <option [ngValue]="null">Not said</option>
             @for (cycle of cycles.value()?.results ?? []; track cycle.id) {
-              @for (place of cycle.places; track place.id) {
-                <option [ngValue]="place.id">{{ cycle.name }} · {{ place.label }}</option>
+              @if (cycle.status !== 'draft') {
+                @for (place of cycle.places; track place.id) {
+                  <option [ngValue]="place.id">{{ cycle.name }} · {{ place.label }}</option>
+                }
               }
             }
           </select>
+          @if (errors()['place']; as m) { <span class="field-error">{{ m }}</span> }
         </div>
         <div class="field">
           <label for="new-message">What they asked</label>

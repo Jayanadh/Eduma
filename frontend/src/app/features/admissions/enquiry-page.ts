@@ -73,7 +73,11 @@ export class EnquiryPage {
     this.busy.set(false);
     const fields = fieldErrors(err);
     this.errors.set(fields);
-    if (!Object.keys(fields).length) {
+    // Fields shown beside their inputs; anything else (e.g. a number typed into a dialog) needs a message.
+    const unshown = Object.entries(fields).find(([field]) => !['note', 'assigned_to'].includes(field));
+    if (unshown) {
+      this.toasts.show(unshown[1], 'danger');
+    } else if (!Object.keys(fields).length) {
       this.toasts.show(apiErrorMessage(err), 'danger');
       this.data.reload();
     }

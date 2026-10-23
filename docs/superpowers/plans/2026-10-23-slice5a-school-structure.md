@@ -51,8 +51,7 @@ subjects and sections, place students and assign teachers", campus-scopable; to 
 
 **Interfaces — produces:** `MANAGE = "academic_structure.manage"`; `save_year(actor, institution, year|None, data,
 version|None) -> AcademicYear` (no overlap with another year → 422 `starts_on`; existing terms must fit → 422
-`ends_on`; status `current` makes any other current year `closed`? — no: refuse a second current year, 409
-`another_current_year`); `save_term(actor, year, term|None, data, version|None)`; grade/subject create/patch with
+`ends_on`; a second current year → 409 `another_current_year`); `save_term(actor, year, term|None, data, version|None)`; grade/subject create/patch with
 unique codes (422 `code`).
 
 - [ ] Failing tests: overlap → 422; term outside year → 422; overlapping terms → 422; shrinking a year past a term →
@@ -126,7 +125,7 @@ capacity check for the whole batch → 409; idempotent; audit `section.moved_up`
 
 - [ ] Seed Aster: years 2026–27 (current) and 2027–28 (planned) with two terms each, grades Class 1–10, subjects
   English, Mathematics, Science, Telugu; sections 6A, 6B (2026–27, Main, 40) and 7A (2027–28); `aster.teacher` teaches
-  Science in 6A; the class teacher of 6A is `aster.principal`? — no: `aster.teacher`; Arjun placed in 6A. Seed twice
+  Science in 6A; and is 6A's class teacher; Arjun placed in 6A. Seed twice
   cleanly; update `test_seed.py`. Commit `Demo academic structure`.
 
 ### Task 8: Frontend — academic setup

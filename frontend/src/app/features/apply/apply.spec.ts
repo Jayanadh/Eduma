@@ -46,6 +46,36 @@ describe('Apply pages', () => {
     expect(page.querySelector('a[href="/apply/signup"]')).not.toBeNull();
   });
 
+  it('takes a question from a family and gives them a reference', async () => {
+    const fixture = TestBed.createComponent(ApplyPage);
+    await fixture.whenStable();
+    http.expectOne('/api/v1/public/admissions').flush(OPEN);
+    await fixture.whenStable();
+    const page = fixture.nativeElement as HTMLElement;
+    const type = (id: string, value: string) => {
+      const field = page.querySelector<HTMLInputElement | HTMLTextAreaElement>(`#${id}`)!;
+      field.value = value;
+      field.dispatchEvent(new Event('input'));
+    };
+    type('ask-name', 'Ravi Kumar');
+    type('ask-phone', '+91 90000 11111');
+    type('ask-learner', 'Kiran');
+    type('ask-message', 'Is there a school bus to Benz Circle?');
+    page.querySelector<HTMLFormElement>('form.ask')!.dispatchEvent(new Event('submit'));
+    const request = http.expectOne('/api/v1/public/enquiries');
+    expect(request.request.body).toMatchObject({
+      contact_name: 'Ravi Kumar',
+      phone: '+91 90000 11111',
+      learner_name: 'Kiran',
+      message: 'Is there a school bus to Benz Circle?',
+      website: '',
+      place: null,
+    });
+    request.flush({ number: 'E2026-0001' });
+    await fixture.whenStable();
+    expect(page.textContent).toContain('E2026-0001');
+  });
+
   it('says plainly when admissions are not open', async () => {
     const page = await apply({ open: false, cycles: [] });
     expect(page.textContent).toContain('Admissions are not open right now.');

@@ -1,0 +1,88 @@
+<div class="page">
+  <app-load-error [message]="data.error()" (retry)="data.reload()" />
+  @if (data.value(); as e) {
+    <app-page-header eyebrow="Enquiry" [title]="e.number + ' · ' + e.contact_name" />
+    <p class="section"><span class="badge badge-info">{{ e.status_label }}</span>
+      @if (e.application; as a) { · applied as <a [routerLink]="['/app/admissions/applications', a.id]">{{ a.number }}</a> }
+      @if (e.close_reason) { · {{ e.close_reason }} }
+    </p>
+    <div class="grid-2 section">
+      <div class="stack">
+        <section class="card stack">
+          <h2 class="card-title">The question</h2>
+          <p>{{ e.message || 'No message.' }}</p>
+          <dl class="facts">
+            <div><dt>Contact</dt><dd>{{ e.contact_name }} · {{ e.phone || '—' }}{{ e.email ? ' · ' + e.email : '' }}</dd></div>
+            <div><dt>Child</dt><dd>{{ e.learner_name || '—' }}{{ e.learner_date_of_birth ? ', born ' + date(e.learner_date_of_birth) : '' }}</dd></div>
+            <div><dt>Interested in</dt><dd>{{ e.place?.label || 'Not said' }}</dd></div>
+            <div><dt>Came from</dt><dd>{{ e.source_label }} · {{ dateTime(e.created_at) }}{{ e.created_by ? ' · recorded by ' + e.created_by.full_name : '' }}</dd></div>
+          </dl>
+        </section>
+        <section class="card stack">
+          <h2 class="card-title">Follow-ups</h2>
+          <ul class="timeline">
+            @for (f of e.follow_ups ?? []; track $index) {
+              <li>
+                <span>{{ f.note }}</span>
+                <span class="muted small">{{ f.how_label }} · {{ dateTime(f.at) }} · {{ f.author }}{{ f.next_follow_up_on ? ' · next ' + date(f.next_follow_up_on) : '' }}</span>
+              </li>
+            } @empty {
+              <li class="muted small">None yet.</li>
+            }
+          </ul>
+          @if (open()) {
+            <form class="follow stack" [formGroup]="follow" (ngSubmit)="addFollowUp(e)" novalidate>
+              <div class="field">
+                <label for="follow-how">How</label>
+                <select id="follow-how" formControlName="how">
+                  <option value="phone">Phone call</option>
+                  <option value="email">Email</option>
+                  <option value="in_person">In person</option>
+                  <option value="message">Message</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="follow-note">What happened</label>
+                <textarea id="follow-note" rows="2" formControlName="note"></textarea>
+                @if (errors()['note']; as m) { <span class="field-error">{{ m }}</span> }
+              </div>
+              <div class="field">
+                <label for="follow-next">Next follow-up (optional)</label>
+                <input id="follow-next" type="date" formControlName="next_follow_up_on" />
+              </div>
+              <div><button type="submit" class="btn btn-secondary" [disabled]="busy()">Add follow-up</button></div>
+            </form>
+          }
+        </section>
+      </div>
+      <section class="card stack">
+        <h2 class="card-title">Next steps</h2>
+        <p class="small">Assigned to <strong>{{ e.assigned_to?.full_name ?? 'nobody' }}</strong>
+          @if (e.next_follow_up_on) { · follow up {{ date(e.next_follow_up_on) }} }</p>
+        @if (open()) {
+          <div class="field">
+            <label for="enquiry-assignee">Assign to</label>
+            <select id="enquiry-assignee" [disabled]="busy()" (change)="assign(e, $any($event.target).value || null)">
+              <option value="">Nobody</option>
+              @for (p of assignees.value() ?? []; track p.id) {
+                <option [value]="p.id" [selected]="p.id === e.assigned_to?.id">{{ p.full_name }}</option>
+              }
+            </select>
+            @if (errors()['assigned_to']; as m) { <span class="field-error">{{ m }}</span> }
+          </div>
+          <div class="actions">
+            @if (e.assigned_to?.id !== auth.user()?.id) {
+              <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="assign(e, auth.user()?.id ?? null)">Assign to me</button>
+            }
+            <button type="button" class="btn btn-primary btn-sm" [disabled]="busy()" (click)="convert(e)">Link to an application</button>
+            <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="close(e)">Close</button>
+          </div>
+        } @else if (e.status === 'closed') {
+          <div><button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="reopen(e)">Reopen</button></div>
+        }
+      </section>
+    </div>
+  } @else if (data.loading()) {
+    <p class="muted" role="status">Loading…</p>
+  }
+</div>

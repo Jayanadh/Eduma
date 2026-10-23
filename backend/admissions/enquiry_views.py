@@ -9,6 +9,8 @@ from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
 from rest_framework.views import APIView
 
+from accounts.models import Membership
+from accounts.permissions import grants
 from accounts.role_views import holds_any
 from admissions import enquiries
 from admissions.models import Enquiry, FollowUp
@@ -183,3 +185,15 @@ class Reopen(EnquiryView):
     def post(self, request, pk):
         found = self.enquiry()
         return self.done(enquiries.reopen(request.user, found, _valid(VersionInput, request.data)["version"]))
+
+
+class Assignees(EnquiryView):
+    """Staff who answer enquiries somewhere here; assigning still checks the enquiry's own campus."""
+
+    def get(self, request):
+        people = []
+        staff = request.institution.memberships.filter(kind=Membership.Kind.STAFF, status=Membership.Status.ACTIVE)
+        for membership in staff.select_related("user", "institution").order_by("user__full_name"):
+            if any(enquiries.MANAGE in perms for perms, _ in grants(membership)):
+                people.append({"id": str(membership.user_id), "full_name": membership.user.full_name})
+        return Response(people)

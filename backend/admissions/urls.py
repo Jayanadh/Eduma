@@ -10,6 +10,7 @@ urlpatterns = [
     path("cycles/<uuid:pk>/publish", cycle_views.Publish.as_view()),
     path("cycles/<uuid:pk>/close", cycle_views.Close.as_view()),
     path("enquiries", enquiry_views.EnquiryList.as_view()),
+    path("enquiries/assignees", enquiry_views.Assignees.as_view()),
     path("enquiries/<uuid:pk>", enquiry_views.EnquiryDetail.as_view()),
     path("enquiries/<uuid:pk>/follow-ups", enquiry_views.FollowUps.as_view()),
     path("enquiries/<uuid:pk>/convert", enquiry_views.Convert.as_view()),

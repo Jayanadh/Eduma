@@ -201,3 +201,12 @@ def test_convert_needs_same_institution(world, on, officer):
         f"{STAFF}/{row.id}/convert", {"version": row.version, "application_number": "A2027-0001"}, format="json"
     )
     assert refused.status_code == 422
+
+
+def test_assignees_are_people_who_answer_enquiries(world, on, officer):
+    factories.member(world.a, role="registrar", full_name="Rekha Registrar")
+    factories.member(world.a, role="teacher", full_name="Tara Teacher")
+    names = [person["full_name"] for person in officer.get(f"{STAFF}/assignees").json()]
+    assert "Rekha Registrar" in names and world.a_admin.full_name in names
+    assert "Tara Teacher" not in names
+    assert all(set(person) == {"id", "full_name"} for person in officer.get(f"{STAFF}/assignees").json())

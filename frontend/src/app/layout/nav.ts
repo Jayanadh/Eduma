@@ -20,6 +20,14 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string })[] = 
     module: 'admissions',
   },
   {
+    label: 'Enquiries',
+    icon: 'message',
+    link: '/app/admissions/enquiries',
+    group: 'Admissions',
+    needs: 'enquiry.manage',
+    module: 'admissions',
+  },
+  {
     label: 'Applications',
     icon: 'file-text',
     link: '/app/admissions/applications',

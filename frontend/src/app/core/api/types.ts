@@ -552,3 +552,40 @@ export type FamilyChild = {
   left_on?: string | null;
   enrollment?: StudentEnrollment | null;
 };
+
+export type EnquiryStatus = 'open' | 'following_up' | 'converted' | 'closed';
+
+export type Enquiry = {
+  id: string;
+  version: number;
+  number: string;
+  contact_name: string;
+  phone: string;
+  email: string;
+  learner_name: string;
+  learner_date_of_birth: string | null;
+  place: { id: string; label: string } | null;
+  message: string;
+  source: string;
+  source_label: string;
+  status: EnquiryStatus;
+  status_label: string;
+  close_reason: string;
+  assigned_to: { id: string; full_name: string } | null;
+  next_follow_up_on: string | null;
+  application: { id: string; number: string } | null;
+  created_at: string;
+  created_by: { id: string; full_name: string } | null;
+  follow_ups?: {
+    how: string;
+    how_label: string;
+    note: string;
+    at: string;
+    author: string;
+    next_follow_up_on: string | null;
+  }[];
+};
+
+export type EnquiryPageResult = Page<Enquiry> & {
+  summary: { status: Partial<Record<EnquiryStatus, number>>; source: Record<string, number> };
+};

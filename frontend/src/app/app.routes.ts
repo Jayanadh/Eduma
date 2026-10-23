@@ -210,6 +210,24 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admissions/cycle-editor-page').then((m) => m.CycleEditorPage),
       },
       {
+        path: 'admissions/enquiries',
+        title: 'Enquiries',
+        canActivate: [requires('enquiry.manage')],
+        loadComponent: () => import('./features/admissions/enquiries-page').then((m) => m.EnquiriesPage),
+      },
+      {
+        path: 'admissions/enquiries/new',
+        title: 'New enquiry',
+        canActivate: [requires('enquiry.manage')],
+        loadComponent: () => import('./features/admissions/enquiry-new-page').then((m) => m.EnquiryNewPage),
+      },
+      {
+        path: 'admissions/enquiries/:id',
+        title: 'Enquiry',
+        canActivate: [requires('enquiry.manage')],
+        loadComponent: () => import('./features/admissions/enquiry-page').then((m) => m.EnquiryPage),
+      },
+      {
         path: 'admissions/applications',
         title: 'Applications',
         canActivate: [requires(['application.review', 'admission.approve'])],

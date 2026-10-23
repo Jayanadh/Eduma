@@ -507,6 +507,8 @@ export type StudentRecord = StudentListItem & {
   can_withdraw: boolean;
   can_reinstate: boolean;
   can_manage_guardians: boolean;
+  placements: Placement[];
+  current_section: string | null;
 };
 
 /** A guardian link as staff see it; the evidence fields come only to those who manage links. */
@@ -540,7 +542,10 @@ export type HistoryEntry = {
 };
 
 /** What students see of their own record. */
-export type OwnStudentRecord = Pick<StudentRecord, 'number' | 'full_name' | 'date_of_birth' | 'status' | 'enrollment'>;
+export type OwnStudentRecord = Pick<
+  StudentRecord,
+  'number' | 'full_name' | 'date_of_birth' | 'status' | 'enrollment' | 'current_section'
+>;
 
 /** A child as their guardian sees them: the number and class only when the school shares the record. */
 export type FamilyChild = {
@@ -551,6 +556,7 @@ export type FamilyChild = {
   status?: string;
   left_on?: string | null;
   enrollment?: StudentEnrollment | null;
+  current_section?: string | null;
 };
 
 export type EnquiryStatus = 'open' | 'following_up' | 'converted' | 'closed';
@@ -634,3 +640,46 @@ export type AcademicYear = {
 
 export type Grade = { id: string; version: number; code: string; name: string; order: number; is_active: boolean };
 export type Subject = { id: string; version: number; code: string; name: string; is_active: boolean };
+
+export type SectionTeacher = {
+  id: string;
+  membership: { id: string; full_name: string };
+  subject: { id: string; name: string } | null;
+  starts_on: string;
+  ends_on: string | null;
+  in_effect: boolean;
+};
+
+export type ClassSection = {
+  id: string;
+  version: number;
+  code: string;
+  capacity: number;
+  placed: number;
+  year: { id: string; code: string; status: string };
+  grade: { id: string; name: string };
+  campus: { id: string; name: string };
+  class_teacher: { id: string; full_name: string } | null;
+  teachers: SectionTeacher[];
+  can_manage: boolean;
+};
+
+export type RosterRow = {
+  period: string;
+  student: { id: string; number: string; full_name: string };
+  status: string;
+  is_repeat: boolean;
+};
+
+export type MoveUpRow = {
+  student: { id: string; number: string; full_name: string };
+  action: 'move' | 'already_placed' | 'withdrawn' | 'not_enrolled';
+};
+
+export type TeachingClass = {
+  section: { id: string; code: string; grade: string; year: string };
+  subjects: string[];
+  class_teacher: boolean;
+};
+
+export type Placement = { year: string; grade: string; section: string; campus: string; state: string; is_repeat: boolean };

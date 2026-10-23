@@ -41,6 +41,8 @@ function record(overrides: Partial<StudentRecord> = {}): StudentRecord {
     can_withdraw: true,
     can_reinstate: false,
     can_manage_guardians: true,
+    placements: [{ year: '2026–27', grade: 'Class 6', section: '6A', campus: 'Main campus', state: 'active', is_repeat: false }],
+    current_section: 'Class 6 · 6A',
     ...overrides,
   };
 }
@@ -253,5 +255,21 @@ describe('Student pages', () => {
     await fixture.whenStable();
     const request = http.expectOne('/api/v1/institution/students/s1/login');
     expect(request.request.body).toEqual({ version: 3, password: 'Welcome-2027-pass' });
+  });
+
+  it('shows the class history on the record', async () => {
+    await signInAs(makeMe());
+    const fixture = TestBed.createComponent(StudentPage);
+    fixture.componentRef.setInput('id', 's1');
+    await fixture.whenStable();
+    http.expectOne('/api/v1/institution/students/s1').flush(record());
+    await fixture.whenStable();
+    for (const request of http.match(() => true)) {
+      request.flush(request.request.url.endsWith('history') ? { count: 0, next: null, previous: null, results: [] } : []);
+    }
+    await fixture.whenStable();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Classes');
+    expect(text).toContain('2026–27 · Class 6 · 6A');
   });
 });

@@ -19,6 +19,9 @@ import { PortalFrame } from '../apply/portal-frame';
           <p class="muted small">Student number</p>
           <p class="number">{{ me.number }}</p>
           <p>{{ me.full_name }}</p>
+          @if (me.current_section) {
+            <p class="small"><strong>{{ me.current_section }}</strong></p>
+          }
           @if (me.enrollment; as now) {
             <p class="small">
               {{ now.place_label }} · {{ now.academic_year }}{{ now.campus_name ? ' · ' + now.campus_name : '' }}

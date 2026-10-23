@@ -27,6 +27,7 @@ from academics.serializers import (
     term_item,
     year_item,
 )
+from accounts.models import Membership
 from accounts.role_views import holds_any
 from common.pagination import Pages
 from configuration.gates import require_module
@@ -268,3 +269,15 @@ class MoveUp(MoveUpView):
     def post(self, request, pk):
         source, target, data = self.sections()
         return Response(moveup.commit(request.user, source, target, data["mode"], data["students"]))
+
+
+class StaffChoices(AcademicsView):
+    """Staff to choose from as class or subject teachers; for those who set up sections."""
+
+    def get_permissions(self):
+        return [holds_any(structure.MANAGE)()]
+
+    def get(self, request):
+        staff = request.institution.memberships.filter(kind=Membership.Kind.STAFF, status=Membership.Status.ACTIVE)
+        rows = staff.select_related("user").order_by("user__full_name")
+        return Response([{"id": str(row.id), "full_name": row.user.full_name} for row in rows])

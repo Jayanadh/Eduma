@@ -1,0 +1,78 @@
+<div class="page">
+  <app-page-header eyebrow="Academics" title="Sections" subtitle="Each year's classes: who is in them and who teaches them." />
+  <div class="filters section">
+    <div class="field">
+      <label for="filter-year">Year</label>
+      <select id="filter-year" (change)="set(year, $any($event.target).value)">
+        <option value="">All years</option>
+        @for (y of years.value() ?? []; track y.id) { <option [value]="y.id">{{ y.code }} · {{ y.status_label }}</option> }
+      </select>
+    </div>
+    <div class="field">
+      <label for="filter-grade">Grade</label>
+      <select id="filter-grade" (change)="set(grade, $any($event.target).value)">
+        <option value="">All grades</option>
+        @for (g of grades.value() ?? []; track g.id) { <option [value]="g.id">{{ g.name }}</option> }
+      </select>
+    </div>
+  </div>
+  <app-load-error [message]="data.error()" (retry)="data.reload()" />
+  @if (data.value(); as result) {
+    @if (result.results.length) {
+      <div class="card list-card section">
+        <ul class="list">
+          @for (s of result.results; track s.id) {
+            <li>
+              <a class="list-row" [routerLink]="['/app/academics/sections', s.id]">
+                <span class="list-main">
+                  <span class="list-title">{{ s.code }} · {{ s.grade.name }} · {{ s.year.code }}</span>
+                  <span class="muted small">{{ s.campus.name }} · {{ s.placed }} of {{ s.capacity }} placed{{ s.class_teacher ? ' · class teacher ' + s.class_teacher.full_name : '' }}</span>
+                </span>
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+      <app-pager [page]="page()" [count]="result.count" (go)="page.set($event)" />
+    } @else {
+      <app-empty-state icon="layers" title="No sections" text="Add the sections of each grade for a year below." />
+    }
+  }
+  <form class="card stack section" (submit)="$event.preventDefault(); add($any($event.target))">
+    <h2 class="card-title">Add a section</h2>
+    <div class="add">
+      <div class="field">
+        <label for="new-year">Year</label>
+        <select id="new-year">
+          @for (y of years.value() ?? []; track y.id) { @if (y.status !== 'closed') { <option [value]="y.id">{{ y.code }}</option> } }
+        </select>
+        @if (errors()['year']; as m) { <span class="field-error">{{ m }}</span> }
+      </div>
+      <div class="field">
+        <label for="new-grade">Grade</label>
+        <select id="new-grade">
+          @for (g of grades.value() ?? []; track g.id) { <option [value]="g.id">{{ g.name }}</option> }
+        </select>
+        @if (errors()['grade']; as m) { <span class="field-error">{{ m }}</span> }
+      </div>
+      <div class="field">
+        <label for="new-campus">Campus</label>
+        <select id="new-campus">
+          @for (c of campuses.value()?.results ?? []; track c.id) { <option [value]="c.id">{{ c.name }}</option> }
+        </select>
+        @if (errors()['campus']; as m) { <span class="field-error">{{ m }}</span> }
+      </div>
+      <div class="field">
+        <label for="new-code">Name</label>
+        <input id="new-code" placeholder="6A" />
+        @if (errors()['code']; as m) { <span class="field-error">{{ m }}</span> }
+      </div>
+      <div class="field">
+        <label for="new-capacity">Places</label>
+        <input id="new-capacity" type="number" min="1" value="40" />
+        @if (errors()['capacity']; as m) { <span class="field-error">{{ m }}</span> }
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm" [disabled]="busy()">Add section</button>
+    </div>
+  </form>
+</div>

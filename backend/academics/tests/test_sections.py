@@ -108,3 +108,13 @@ def test_other_institution_ids(world, admin, school, client_for):
     birch = client_for(world.b.slug, world.b_admin)
     assert birch.get(f"{API}/sections/{section['id']}").status_code == 404
     assert birch.get(f"{API}/sections").json()["count"] == 0
+
+
+def test_staff_to_choose_from(world, admin, school, client_for):
+    factories.member(world.a, role="teacher", full_name="Tara Teacher")
+    applicant(world.a, "asha.parent")
+    names = [row["full_name"] for row in admin.get(f"{API}/staff").json()]
+    assert "Tara Teacher" in names and "Asha Parent" not in names
+    assert set(admin.get(f"{API}/staff").json()[0]) == {"id", "full_name"}
+    teacher = client_for(world.a.slug, factories.member(world.a, role="teacher"))
+    assert teacher.get(f"{API}/staff").status_code == 403

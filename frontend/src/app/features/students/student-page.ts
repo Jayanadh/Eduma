@@ -120,6 +120,19 @@ import { HistorySection } from './history-section';
                   <a [routerLink]="['/app/admissions/applications', application.id]">{{ application.number }}</a></p>
               }
             </section>
+            <section class="card">
+              <h2 class="card-title">Classes</h2>
+              <ul class="plain">
+                @for (p of student.placements; track $index) {
+                  <li>
+                    <strong>{{ p.year }} · {{ p.grade }} · {{ p.section }}</strong>
+                    <span class="muted small">{{ p.campus }}{{ p.is_repeat ? ' · repeating' : '' }}{{ p.state === 'ended' ? ' · ended' : '' }}</span>
+                  </li>
+                } @empty {
+                  <li class="muted small">Not placed in a class yet.</li>
+                }
+              </ul>
+            </section>
             <app-guardians-section [student]="student" />
             <section class="card">
               <h2 class="card-title">Sign-in</h2>

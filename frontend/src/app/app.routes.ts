@@ -258,6 +258,28 @@ export const routes: Routes = [
         loadComponent: () => import('./features/academics/setup-page').then((m) => m.SetupPage),
       },
       {
+        path: 'academics/sections',
+        title: 'Sections',
+        canActivate: [requires('academic_structure.manage')],
+        loadComponent: () => import('./features/academics/sections-page').then((m) => m.SectionsPage),
+      },
+      {
+        path: 'academics/sections/:id',
+        title: 'Section',
+        canActivate: [requires('academic_structure.manage')],
+        loadComponent: () => import('./features/academics/section-page').then((m) => m.SectionPage),
+      },
+      {
+        path: 'teaching',
+        title: 'My classes',
+        loadComponent: () => import('./features/academics/teaching-page').then((m) => m.TeachingPage),
+      },
+      {
+        path: 'teaching/:id',
+        title: 'Class list',
+        loadComponent: () => import('./features/academics/teaching-roster-page').then((m) => m.TeachingRosterPage),
+      },
+      {
         path: 'organization',
         title: 'Organization',
         canActivate: [requires('organization.manage')],

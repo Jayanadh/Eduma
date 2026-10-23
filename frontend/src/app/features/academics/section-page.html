@@ -1,0 +1,119 @@
+<div class="page">
+  <app-load-error [message]="data.error()" (retry)="data.reload()" />
+  @if (data.value(); as s) {
+    <app-page-header eyebrow="Section" [title]="s.code + ' · ' + s.grade.name + ' · ' + s.year.code" [subtitle]="s.campus.name + ' · ' + s.placed + ' of ' + s.capacity + ' placed'" />
+    <div class="grid-2 section">
+      <section class="card stack">
+        <h2 class="card-title">Students</h2>
+        <ul class="rows">
+          @for (row of roster.value() ?? []; track row.period) {
+            <li>
+              <span><strong>{{ row.student.number }}</strong> {{ row.student.full_name }}{{ row.is_repeat ? ' · repeating' : '' }}</span>
+              @if (s.can_manage && s.year.status !== 'closed') {
+                <span class="row-actions">
+                  <label class="sr-only" [for]="'move-' + row.period">Move {{ row.student.full_name }} to</label>
+                  <select [id]="'move-' + row.period" [disabled]="busy()" (change)="moveTo(row, $any($event.target).value)">
+                    <option value="">Move to…</option>
+                    @for (other of sameYear(); track other.id) { <option [value]="other.id">{{ other.code }}</option> }
+                  </select>
+                  <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Take ' + row.student.full_name + ' out'" [disabled]="busy()" (click)="remove(row)">Take out</button>
+                </span>
+              }
+            </li>
+          } @empty {
+            <li class="muted small">Nobody placed yet.</li>
+          }
+        </ul>
+        @if (s.can_manage && s.year.status !== 'closed') {
+          <app-search-box id="place-search" label="Find students to place" (search)="search.set($event)" />
+          <ul class="rows">
+            @for (st of found.value()?.results ?? []; track st.id) {
+              <li>
+                <span>{{ st.number }} {{ st.full_name }}</span>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="choose(st.id, st.number + ' ' + st.full_name)">Choose</button>
+              </li>
+            }
+          </ul>
+          @if (chosen().length) {
+            <ul class="chips">
+              @for (c of chosen(); track c.id) {
+                <li class="chip">{{ c.label }} <button type="button" class="btn-icon" [attr.aria-label]="'Remove ' + c.label" (click)="unchoose(c.id)">×</button></li>
+              }
+            </ul>
+            <div><button type="button" class="btn btn-primary btn-sm" [disabled]="busy()" (click)="place()">Place {{ chosen().length }} student{{ chosen().length === 1 ? '' : 's' }}</button></div>
+          }
+        }
+      </section>
+
+      <div class="stack">
+        <section class="card stack">
+          <h2 class="card-title">Teachers</h2>
+          <p class="small">Class teacher: <strong>{{ s.class_teacher?.full_name ?? 'not set' }}</strong></p>
+          <ul class="rows">
+            @for (t of s.teachers; track t.id) {
+              @if (t.in_effect) {
+                <li>
+                  <span>{{ t.membership.full_name }} · {{ t.subject?.name ?? 'Class' }}</span>
+                  @if (s.can_manage) { <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="endTeacher(t.id)">End</button> }
+                </li>
+              }
+            }
+          </ul>
+          @if (s.can_manage && s.year.status !== 'closed') {
+            <div class="add-teacher">
+              <div class="field">
+                <label for="teacher-who">Teacher</label>
+                <select id="teacher-who" (change)="teacher.set($any($event.target).value)">
+                  <option value="">Choose…</option>
+                  @for (p of staff.value() ?? []; track p.id) { <option [value]="p.id">{{ p.full_name }}</option> }
+                </select>
+              </div>
+              <div class="field">
+                <label for="teacher-subject">Subject</label>
+                <select id="teacher-subject" (change)="subject.set($any($event.target).value)">
+                  <option value="">The whole class</option>
+                  @for (sub of subjects.value() ?? []; track sub.id) { <option [value]="sub.id">{{ sub.name }}</option> }
+                </select>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy() || !teacher()" (click)="addTeacher()">Add teacher</button>
+            </div>
+          }
+        </section>
+
+        @if (s.can_manage) {
+          <section class="card stack">
+            <h2 class="card-title">Move up to next year</h2>
+            <p class="muted small">Places everyone who can move into a section of a later year. This year's placement stays on their record.</p>
+            <div class="add-teacher">
+              <div class="field">
+                <label for="moveup-target">Into</label>
+                <select id="moveup-target" (change)="target.set($any($event.target).value); preview.set(null)">
+                  <option value="">Choose a section…</option>
+                  @for (t of laterYears(); track t.id) { <option [value]="t.id">{{ t.code }} · {{ t.grade.name }} · {{ t.year.code }}</option> }
+                </select>
+              </div>
+              <div class="field">
+                <label for="moveup-mode">As</label>
+                <select id="moveup-mode" (change)="mode.set($any($event.target).value); preview.set(null)">
+                  <option value="promote">Moving up a grade</option>
+                  <option value="repeat">Repeating the grade</option>
+                </select>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy() || !target()" (click)="showPreview()">Preview</button>
+            </div>
+            @if (preview(); as rows) {
+              <ul class="rows">
+                @for (row of rows; track row.student.id) {
+                  <li><span>{{ row.student.number }} {{ row.student.full_name }}</span><span class="muted small">{{ actions[row.action] }}</span></li>
+                }
+              </ul>
+              <div><button type="button" class="btn btn-primary btn-sm" [disabled]="busy() || !moving().length" (click)="moveUp()">Move {{ moving().length }} student{{ moving().length === 1 ? '' : 's' }}</button></div>
+            }
+          </section>
+        }
+      </div>
+    </div>
+  } @else if (data.loading()) {
+    <p class="muted" role="status">Loading…</p>
+  }
+</div>

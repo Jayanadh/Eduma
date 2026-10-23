@@ -44,6 +44,15 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string })[] = 
     module: 'academics',
   },
   {
+    label: 'Sections',
+    icon: 'layers',
+    link: '/app/academics/sections',
+    group: 'Academics',
+    needs: 'academic_structure.manage',
+    module: 'academics',
+  },
+  { label: 'My classes', icon: 'book', link: '/app/teaching', group: 'Academics', module: 'academics' },
+  {
     label: 'Organization',
     icon: 'building',
     link: '/app/organization',

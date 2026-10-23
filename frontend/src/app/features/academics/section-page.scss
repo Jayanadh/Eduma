@@ -1,0 +1,52 @@
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+
+  select {
+    width: auto;
+  }
+}
+
+.add-teacher {
+  display: grid;
+  gap: 10px;
+  align-items: end;
+
+  @media (min-width: 720px) {
+    grid-template-columns: 1fr 1fr auto;
+  }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}

@@ -9,6 +9,9 @@ import { date } from '../../core/format';
     <h2 class="card-title">{{ child().full_name }}</h2>
     @if (child().shared) {
       <p class="small">Student number <strong>{{ child().number }}</strong></p>
+      @if (child().current_section) {
+        <p class="small">Class <strong>{{ child().current_section }}</strong></p>
+      }
       @if (child().enrollment; as e) {
         <p class="small">
           {{ e.place_label }} · {{ e.academic_year }}{{ e.campus_name ? ' · ' + e.campus_name : '' }}

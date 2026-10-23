@@ -31,6 +31,18 @@ withdrawal succeeded (banner, ended enrollment, her login refused), and Reinstat
 listed every step. As `aster.admin` changed a teacher's employee number. The check's guardian (`ravi.krishnan`,
 revoked) and Diya's backdated enrollment remain in the local database.
 
+Final review (fresh reviewer, 23 Oct 2026), fixed with a failing test first: the family portal no longer carries the
+registrar's leaving reason (it could be safeguarding-sensitive); a student enrolled for next year can be withdrawn
+before the year starts (not before the admission day). Ruled: no backfill of guardian links for students enrolled
+before 4b — nothing is deployed, the demo's Arjun is backfilled by the seed. Backend `pytest` 385 passed, lint clean.
+Deferred minors: proposing a link on a withdrawn student is accepted; a login cannot be added to a link verified
+without one; an existing login cannot be attached to a staff-proposed link; field errors the forms don't show are
+silent; the record's history does not refresh after actions; withdraw/reinstate reset unsaved detail edits; the
+withdrawal date defaults to the browser's day; verify does not lock the student; a concurrent duplicate login ID gives
+a 500; no separate audit line for a guardian login being created; the duplicate warning ignores the viewer's student
+scope; eleven old migrations were reformatted (no behaviour change); seed employee numbers can collide with typed
+ones; the adult-review flag uses the UTC day.
+
 
 ## Slice 4a (19 October 2026)
 

@@ -52,7 +52,7 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string })[] = 
   {
     label: 'Data transfer',
     icon: 'upload',
-    link: '/app/settings/data',
+    link: '/app/data',
     group: 'Administration',
     needs: 'data.import',
     module: 'students',

@@ -55,7 +55,7 @@ import { LoadError } from '../../ui/load-error';
             <section class="card stack">
               <h2 class="card-title">Ask a question</h2>
               @if (reference()) {
-                <p class="notice notice-success" role="status">Thank you. The school will reply; your reference is <strong>{{ reference() }}</strong>.</p>
+                <p class="notice notice-info" role="status"><span>Thank you. The school will reply; your reference is <strong>{{ reference() }}</strong>.</span></p>
               } @else {
                 <form class="ask stack" [formGroup]="ask" (ngSubmit)="send()" novalidate>
                   <div class="grid">

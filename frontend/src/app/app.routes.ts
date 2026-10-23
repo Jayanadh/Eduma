@@ -183,13 +183,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/settings/settings-page').then((m) => m.SettingsPage),
       },
       {
-        path: 'settings/data',
+        path: 'data',
         title: 'Data transfer',
         canActivate: [requires('data.import')],
         loadComponent: () => import('./features/settings/data-page').then((m) => m.DataPage),
       },
       {
-        path: 'settings/data/:id',
+        path: 'data/:id',
         title: 'Import',
         canActivate: [requires('data.import')],
         loadComponent: () => import('./features/settings/import-page').then((m) => m.ImportPage),

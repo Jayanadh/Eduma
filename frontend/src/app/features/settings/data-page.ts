@@ -45,7 +45,7 @@ const COLUMNS =
             <ul class="list">
               @for (job of result.results; track job.id) {
                 <li>
-                  <a class="list-row" [routerLink]="['/app/settings/data', job.id]">
+                  <a class="list-row" [routerLink]="['/app/data', job.id]">
                     <span class="list-main">
                       <span class="list-title">{{ job.original_name }} · {{ job.source_system }}</span>
                       <span class="muted small">{{ job.totals['rows'] }} rows · {{ dateTime(job.created_at) }}{{ job.created_by ? ' · ' + job.created_by : '' }}</span>
@@ -88,7 +88,7 @@ export class DataPage {
     this.errors.set({});
     this.error.set('');
     this.api.upload<ImportJob>('institution/imports', 'file', file, { source_system: this.source() }).subscribe({
-      next: (job) => void this.router.navigate(['/app/settings/data', job.id]),
+      next: (job) => void this.router.navigate(['/app/data', job.id]),
       error: (err) => {
         this.busy.set(false);
         this.errors.set(fieldErrors(err));

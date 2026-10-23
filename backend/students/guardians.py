@@ -58,15 +58,15 @@ def propose_from_application(actor, student: Student, application) -> GuardianLi
     return _new(actor, student, adult, relationship, GuardianLink.Source.ENROLLMENT, user=application.owner)
 
 
-def propose(actor, student: Student, adult: dict, relationship: str) -> GuardianLink:
-    """Another adult named by staff; no login until verification makes one."""
+def propose(actor, student: Student, adult: dict, relationship: str, source=GuardianLink.Source.STAFF) -> GuardianLink:
+    """Another adult named by staff (or an import); no login until verification makes one."""
     person = Person.objects.create(
         institution=student.institution,
         full_name=adult["full_name"],
         phone=adult.get("phone", ""),
         email=adult.get("email", ""),
     )
-    return _new(actor, student, person, relationship, GuardianLink.Source.STAFF)
+    return _new(actor, student, person, relationship, source)
 
 
 def is_adult(date_of_birth, today) -> bool:

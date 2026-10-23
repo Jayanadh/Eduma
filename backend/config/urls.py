@@ -31,6 +31,7 @@ urlpatterns = [
     path("api/v1/institution/", include("configuration.urls")),
     path("api/v1/institution/admissions/", include("admissions.urls")),
     path("api/v1/institution/", include("students.urls")),
+    path("api/v1/institution/imports", include("imports.urls")),
     path("api/v1/student/me", OwnRecord.as_view(), name="student-me"),
     path("api/v1/family/", include("students.family_urls")),
     path("api/v1/institution", OwnInstitutionView.as_view(), name="own-institution"),

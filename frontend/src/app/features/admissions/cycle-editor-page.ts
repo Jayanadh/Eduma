@@ -3,7 +3,8 @@ import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage, fieldErrors } from '../../core/api-error';
-import { AdmissionCycle, Campus, CycleDocument, CycleQuestion, Page, QuestionKind } from '../../core/api/types';
+import { AdmissionCycle, Campus, CycleDocument, CycleQuestion, Page, Program, QuestionKind } from '../../core/api/types';
+import { AuthStore } from '../../core/auth-store';
 import { load } from '../../core/load';
 import { UnsavedChanges } from '../../core/unsaved-changes';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
@@ -12,7 +13,7 @@ import { LoadError } from '../../ui/load-error';
 import { PageHeader } from '../../ui/page-header';
 import { ToastService } from '../../ui/toast';
 
-type PlaceRow = { code: string; label: string; campus: string; seats: number; in_use?: number };
+type PlaceRow = { code: string; label: string; campus: string; seats: number; program: string; in_use?: number };
 const KINDS: [QuestionKind, string][] = [
   ['text', 'Short answer'],
   ['long_text', 'Long answer'],
@@ -43,6 +44,11 @@ export class CycleEditorPage {
 
   protected readonly campuses = load(() =>
     this.api.get<Page<Campus>>('institution/campuses', { page_size: 200, active: 1 }),
+  );
+  /** A college's places admit into a program; a school's don't name one. */
+  protected readonly higher = inject(AuthStore).higher;
+  protected readonly programs = load(() =>
+    this.higher() ? this.api.get<Program[]>('institution/academics/programs') : of([] as Program[]),
   );
   protected readonly data = load(
     (): Observable<AdmissionCycle | null> =>
@@ -82,7 +88,14 @@ export class CycleEditorPage {
         this.closesOn.set(cycle.closes_on);
         this.instructions.set(cycle.instructions);
         this.places.set(
-          cycle.places.map((p) => ({ code: p.code, label: p.label, campus: p.campus?.id ?? '', seats: p.seats, in_use: p.in_use })),
+          cycle.places.map((p) => ({
+            code: p.code,
+            label: p.label,
+            campus: p.campus?.id ?? '',
+            seats: p.seats,
+            program: p.program?.id ?? '',
+            in_use: p.in_use,
+          })),
         );
         this.questions.set(cycle.questions.map((q) => ({ ...q, options: [...q.options] })));
         this.documents.set(cycle.documents.map((d) => ({ ...d })));
@@ -96,7 +109,7 @@ export class CycleEditorPage {
   }
 
   protected addPlace(): void {
-    this.places.update((rows) => [...rows, { code: '', label: '', campus: '', seats: 30 }]);
+    this.places.update((rows) => [...rows, { code: '', label: '', campus: '', seats: 30, program: '' }]);
   }
 
   protected addQuestion(): void {
@@ -126,7 +139,13 @@ export class CycleEditorPage {
       opens_on: this.opensOn(),
       closes_on: this.closesOn(),
       instructions: this.instructions(),
-      places: this.places().map(({ code, label, campus, seats }) => ({ code, label, campus: campus || null, seats })),
+      places: this.places().map(({ code, label, campus, seats, program }) => ({
+        code,
+        label,
+        campus: campus || null,
+        seats,
+        program: program || null,
+      })),
       questions: this.questions(),
       documents: this.documents(),
     };

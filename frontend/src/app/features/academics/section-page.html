@@ -1,7 +1,7 @@
 <div class="page">
   <app-load-error [message]="data.error()" (retry)="data.reload()" />
   @if (data.value(); as s) {
-    <app-page-header eyebrow="Section" [title]="s.code + ' · ' + s.grade.name + ' · ' + s.year.code" [subtitle]="s.campus.name + ' · ' + s.placed + ' of ' + s.capacity + ' placed'" />
+    <app-page-header eyebrow="Section" [title]="s.code + ' · ' + s.level + ' · ' + s.year.code" [subtitle]="s.campus.name + ' · ' + s.placed + ' of ' + s.capacity + ' placed'" />
     <div class="grid-2 section">
       <section class="card stack">
         <h2 class="card-title">Students</h2>
@@ -89,7 +89,7 @@
                 <label for="moveup-target">Into</label>
                 <select id="moveup-target" (change)="target.set($any($event.target).value); preview.set(null)">
                   <option value="">Choose a section…</option>
-                  @for (t of laterYears(); track t.id) { <option [value]="t.id">{{ t.code }} · {{ t.grade.name }} · {{ t.year.code }}</option> }
+                  @for (t of laterYears(); track t.id) { <option [value]="t.id">{{ t.code }} · {{ t.level }} · {{ t.year.code }}</option> }
                 </select>
               </div>
               <div class="field">

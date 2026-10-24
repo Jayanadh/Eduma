@@ -30,6 +30,8 @@ export class AuthStore {
   readonly user = this.current.asReadonly();
   readonly isPlatformAdmin = computed(() => this.current()?.is_platform_admin ?? false);
   readonly isMember = computed(() => this.current()?.membership != null);
+  /** A college or university: programs, courses and batches rather than grades. */
+  readonly higher = computed(() => (this.current()?.membership?.category ?? 'school') !== 'school');
   private readonly permissions = computed(() => new Set(this.current()?.membership?.permissions ?? []));
   /** The first role's name for the sidebar: "Teacher / Faculty", or "Staff" with none. */
   readonly roleLabel = computed(() =>

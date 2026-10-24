@@ -7,6 +7,7 @@ import { UnsavedChanges } from '../../core/unsaved-changes';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { ApplicationReviewPage } from './application-review-page';
 import { CycleEditorPage } from './cycle-editor-page';
+import { makeMe, signInAs } from '../../core/test-data';
 
 const EMPTY = { count: 0, next: null, previous: null, results: [] };
 
@@ -189,5 +190,26 @@ describe('Staff admissions pages', () => {
     await fixture.whenStable();
     const request = http.expectOne('/api/v1/institution/admissions/applications/a1/enroll');
     expect(request.request.body).toEqual({ version: 5, password: 'Welcome-2027-pass' });
+  });
+
+  it('lets a college place admit into a program', async () => {
+    const admin = makeMe();
+    admin.membership = { ...admin.membership!, category: 'college' };
+    await signInAs(admin);
+    const fixture = TestBed.createComponent(CycleEditorPage);
+    await fixture.whenStable();
+    for (const request of http.match(() => true)) {
+      request.flush(request.request.url.endsWith('/academics/programs') ? [{ id: 'p1', code: 'BSC-PHY', name: 'B.Sc Physics', is_active: true }] : EMPTY);
+    }
+    await fixture.whenStable();
+    const root = fixture.nativeElement as HTMLElement;
+    [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Add a place')!.click();
+    await fixture.whenStable();
+    const program = root.querySelector<HTMLSelectElement>('#place-program-0')!;
+    program.value = 'p1';
+    program.dispatchEvent(new Event('change'));
+    [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Save cycle')!.click();
+    const request = http.expectOne('/api/v1/institution/admissions/cycles');
+    expect(request.request.body.places[0].program).toBe('p1');
   });
 });

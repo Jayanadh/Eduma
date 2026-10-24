@@ -25,6 +25,8 @@ function section(overrides: Partial<ClassSection> = {}): ClassSection {
     placed: 1,
     year: { id: 'y1', code: '2026–27', status: 'current' },
     grade: { id: 'g6', name: 'Class 6' },
+    program: null,
+    level: 'Class 6',
     campus: { id: 'c1', name: 'Main campus' },
     class_teacher: null,
     teachers: [],

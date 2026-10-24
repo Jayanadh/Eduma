@@ -42,7 +42,7 @@ export class Shell {
           this.isInstitution() ? 'institution' : 'platform',
           (perm) => this.auth.can(perm),
           (module) => this.user()?.membership?.modules_enabled?.includes(module) ?? false,
-          (this.user()?.membership?.category ?? 'school') !== 'school',
+          this.auth.higher(),
         ),
   );
   protected readonly roleLabel = this.auth.roleLabel;

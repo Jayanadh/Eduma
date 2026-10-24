@@ -73,6 +73,18 @@
             </select>
             @if (problem('places.' + i + '.campus'); as m) { <span class="field-error">{{ m }}</span> }
           </div>
+          @if (higher()) {
+            <div class="field">
+              <label [for]="'place-program-' + i">Program</label>
+              <select [id]="'place-program-' + i" (change)="set(places, i, { program: value($event) })">
+                <option value="">None</option>
+                @for (program of programs.value() ?? []; track program.id) {
+                  <option [value]="program.id" [selected]="program.id === row.program">{{ program.name }}</option>
+                }
+              </select>
+              @if (problem('places.' + i + '.program'); as m) { <span class="field-error">{{ m }}</span> }
+            </div>
+          }
           <div class="field narrow">
             <label [for]="'place-seats-' + i">Seats</label>
             <input [id]="'place-seats-' + i" type="number" min="1" [value]="row.seats" (input)="set(places, i, { seats: +value($event) })" />

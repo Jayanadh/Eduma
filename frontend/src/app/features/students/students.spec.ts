@@ -8,6 +8,7 @@ import { makeMe, signInAs } from '../../core/test-data';
 import { StudentHome } from '../student/student-home';
 import { GuardiansSection } from './guardians-section';
 import { HistorySection } from './history-section';
+import { ProgramSection } from './program-section';
 import { StudentPage } from './student-page';
 import { StudentsPage } from './students-page';
 
@@ -271,5 +272,33 @@ describe('Student pages', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Classes');
     expect(text).toContain('2026–27 · Class 6 · 6A');
+  });
+
+  it("changes a student's program and regulation with the record's version", async () => {
+    const registrar = makeMe();
+    registrar.membership = { ...registrar.membership!, category: 'college', permissions: ['student.read', 'student.update'] };
+    await signInAs(registrar);
+    const fixture = TestBed.createComponent(ProgramSection);
+    const pinned = { ...ENROLLMENT, program: { id: 'p1', code: 'BSC-PHY', name: 'B.Sc Physics' }, curriculum: null };
+    fixture.componentRef.setInput('student', record({ enrollment: pinned, can_change_program: true }));
+    await fixture.whenStable();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.textContent).toContain('B.Sc Physics');
+    [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Change')!.click();
+    await fixture.whenStable();
+    http.expectOne('/api/v1/institution/academics/programs').flush([{ id: 'p1', code: 'BSC-PHY', name: 'B.Sc Physics', is_active: true }]);
+    await fixture.whenStable();
+    http.expectOne('/api/v1/institution/academics/programs/p1/curricula').flush([
+      { id: 'cv1', regulation: 'R2026', revision: 1, status: 'published' },
+      { id: 'cv0', regulation: 'R2024', revision: 1, status: 'retired' },
+    ]);
+    await fixture.whenStable();
+    expect([...root.querySelectorAll('#pin-curriculum option')].map((o) => o.textContent?.trim())).toEqual(['Program only', 'R2026 rev 1']);
+    const regulation = root.querySelector<HTMLSelectElement>('#pin-curriculum')!;
+    regulation.value = 'cv1';
+    regulation.dispatchEvent(new Event('change'));
+    root.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    const request = http.expectOne('/api/v1/institution/students/s1/program');
+    expect(request.request.body).toEqual({ version: 3, program: 'p1', curriculum: 'cv1' });
   });
 });

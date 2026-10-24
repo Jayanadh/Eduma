@@ -19,15 +19,24 @@ import { PageHeader } from '../../ui/page-header';
         @if (classes.length) {
           <div class="card list-card section">
             <ul class="list">
-              @for (c of classes; track c.section.id) {
+              @for (c of classes; track c.section?.id ?? c.offering?.id) {
                 <li>
-                  <a class="list-row" [routerLink]="['/app/teaching', c.section.id]">
-                    <span class="list-main">
-                      <span class="list-title">{{ c.section.code }} · {{ c.section.grade }} · {{ c.section.year }}</span>
-                      <span class="muted small">{{ c.subjects.length ? c.subjects.join(', ') : 'The whole class' }}</span>
-                    </span>
-                    @if (c.class_teacher) { <span class="badge badge-info">Class teacher</span> }
-                  </a>
+                  @if (c.section; as s) {
+                    <a class="list-row" [routerLink]="['/app/teaching', s.id]">
+                      <span class="list-main">
+                        <span class="list-title">{{ s.code }} · {{ s.grade }} · {{ s.year }}</span>
+                        <span class="muted small">{{ c.subjects.length ? c.subjects.join(', ') : 'The whole class' }}</span>
+                      </span>
+                      @if (c.class_teacher) { <span class="badge badge-info">Class teacher</span> }
+                    </a>
+                  } @else if (c.offering; as o) {
+                    <div class="list-row">
+                      <span class="list-main">
+                        <span class="list-title">{{ o.course }}-{{ o.code }} · {{ o.title }} · {{ o.term }}</span>
+                        <span class="muted small">{{ o.year }} · Course offering; its class list comes with course registration</span>
+                      </span>
+                    </div>
+                  }
                 </li>
               }
             </ul>

@@ -427,6 +427,8 @@ export type CyclePlace = {
   campus: { id: string; name: string } | null;
   seats: number;
   in_use?: number;
+  /** A college place admits into a program. */
+  program?: { id: string; code: string; name: string } | null;
 };
 export type CycleQuestion = { code: string; label: string; help: string; kind: QuestionKind; options: string[]; required: boolean };
 export type CycleDocument = { code: string; label: string; help: string; required: boolean };
@@ -483,6 +485,8 @@ export type StudentEnrollment = {
   status: string;
   exit_date?: string | null;
   exit_reason?: string;
+  program?: { id: string; code: string; name: string } | null;
+  curriculum?: { id: string; label: string } | null;
 };
 
 export type StudentListItem = {
@@ -509,6 +513,7 @@ export type StudentRecord = StudentListItem & {
   can_withdraw: boolean;
   can_reinstate: boolean;
   can_manage_guardians: boolean;
+  can_change_program?: boolean;
   placements: Placement[];
   current_section: string | null;
 };
@@ -659,7 +664,11 @@ export type ClassSection = {
   capacity: number;
   placed: number;
   year: { id: string; code: string; status: string };
-  grade: { id: string; name: string };
+  /** A school class names a grade; a college batch names a program instead. */
+  grade: { id: string; name: string } | null;
+  program: { id: string; code: string; name: string } | null;
+  /** The grade's or the program's name. */
+  level: string;
   campus: { id: string; name: string };
   class_teacher: { id: string; full_name: string } | null;
   teachers: SectionTeacher[];
@@ -679,7 +688,9 @@ export type MoveUpRow = {
 };
 
 export type TeachingClass = {
-  section: { id: string; code: string; grade: string; year: string };
+  /** One of the two: a class or batch, or a course offering (whose class list arrives with registration). */
+  section?: { id: string; code: string; grade: string; year: string };
+  offering?: { id: string; course: string; title: string; code: string; term: string; year: string };
   subjects: string[];
   class_teacher: boolean;
 };
@@ -738,5 +749,31 @@ export type Curriculum = CurriculumSummary & {
   program: { id: string; code: string; name: string; length_terms: number };
   total_credits: string;
   terms: { term: number; courses: CurriculumEntry[] }[];
+  can_manage: boolean;
+};
+
+export type OfferingTeacher = {
+  id: string;
+  membership: { id: string; full_name: string };
+  starts_on: string;
+  ends_on: string | null;
+  in_effect: boolean;
+};
+
+export type Offering = {
+  id: string;
+  version: number;
+  /** PHY101-A */
+  label: string;
+  code: string;
+  capacity: number;
+  status: 'planned' | 'open' | 'closed' | 'cancelled';
+  status_label: string;
+  course: { id: string; code: string; title: string; credits: string };
+  term: { id: string; name: string; year: string; year_status: string };
+  campus: Named;
+  linked_to: { id: string; label: string } | null;
+  linked: string[];
+  teachers: OfferingTeacher[];
   can_manage: boolean;
 };

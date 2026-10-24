@@ -14,11 +14,12 @@ import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { ToastService } from '../../ui/toast';
 import { GuardiansSection } from './guardians-section';
 import { HistorySection } from './history-section';
+import { ProgramSection } from './program-section';
 
 /** One student's record: details (correctable with student.update), enrollments, where they came from, their login. */
 @Component({
   selector: 'app-student-page',
-  imports: [GuardiansSection, HistorySection, LoadError, PageHeader, ReactiveFormsModule, RouterLink],
+  imports: [GuardiansSection, HistorySection, LoadError, PageHeader, ProgramSection, ReactiveFormsModule, RouterLink],
   template: `
     <div class="page">
       <app-load-error [message]="data.error()" (retry)="data.reload()" />
@@ -112,6 +113,7 @@ import { HistorySection } from './history-section';
                 }
               </ul>
             </section>
+            <app-program-section [student]="student" (changed)="data.value.set($event)" />
             <section class="card">
               <h2 class="card-title">Admission</h2>
               <p class="small">Admitted {{ date(student.admitted_on) }}</p>

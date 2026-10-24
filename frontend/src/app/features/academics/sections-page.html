@@ -8,13 +8,23 @@
         @for (y of years.value() ?? []; track y.id) { <option [value]="y.id">{{ y.code }} · {{ y.status_label }}</option> }
       </select>
     </div>
-    <div class="field">
-      <label for="filter-grade">Grade</label>
-      <select id="filter-grade" (change)="set(grade, $any($event.target).value)">
-        <option value="">All grades</option>
-        @for (g of grades.value() ?? []; track g.id) { <option [value]="g.id">{{ g.name }}</option> }
-      </select>
-    </div>
+    @if (higher()) {
+      <div class="field">
+        <label for="filter-program">Program</label>
+        <select id="filter-program" (change)="set(program, $any($event.target).value)">
+          <option value="">All programs</option>
+          @for (p of programs.value() ?? []; track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+        </select>
+      </div>
+    } @else {
+      <div class="field">
+        <label for="filter-grade">Grade</label>
+        <select id="filter-grade" (change)="set(grade, $any($event.target).value)">
+          <option value="">All grades</option>
+          @for (g of grades.value() ?? []; track g.id) { <option [value]="g.id">{{ g.name }}</option> }
+        </select>
+      </div>
+    }
   </div>
   <app-load-error [message]="data.error()" (retry)="data.reload()" />
   @if (data.value(); as result) {
@@ -25,7 +35,7 @@
             <li>
               <a class="list-row" [routerLink]="['/app/academics/sections', s.id]">
                 <span class="list-main">
-                  <span class="list-title">{{ s.code }} · {{ s.grade.name }} · {{ s.year.code }}</span>
+                  <span class="list-title">{{ s.code }} · {{ s.level }} · {{ s.year.code }}</span>
                   <span class="muted small">{{ s.campus.name }} · {{ s.placed }} of {{ s.capacity }} placed{{ s.class_teacher ? ' · class teacher ' + s.class_teacher.full_name : '' }}</span>
                 </span>
               </a>
@@ -35,11 +45,11 @@
       </div>
       <app-pager [page]="page()" [count]="result.count" (go)="page.set($event)" />
     } @else {
-      <app-empty-state icon="layers" title="No sections" text="Add the sections of each grade for a year below." />
+      <app-empty-state icon="layers" title="No sections" [text]="higher() ? 'Add each program’s batches for a year below.' : 'Add the sections of each grade for a year below.'" />
     }
   }
-  <form class="card stack section" (submit)="$event.preventDefault(); add($any($event.target))">
-    <h2 class="card-title">Add a section</h2>
+  <form id="add-section" class="card stack section" (submit)="$event.preventDefault(); add($any($event.target))">
+    <h2 class="card-title">{{ higher() ? 'Add a batch' : 'Add a section' }}</h2>
     <div class="add">
       <div class="field">
         <label for="new-year">Year</label>
@@ -48,13 +58,23 @@
         </select>
         @if (errors()['year']; as m) { <span class="field-error">{{ m }}</span> }
       </div>
-      <div class="field">
-        <label for="new-grade">Grade</label>
-        <select id="new-grade">
-          @for (g of grades.value() ?? []; track g.id) { <option [value]="g.id">{{ g.name }}</option> }
-        </select>
-        @if (errors()['grade']; as m) { <span class="field-error">{{ m }}</span> }
-      </div>
+      @if (higher()) {
+        <div class="field">
+          <label for="new-program">Program</label>
+          <select id="new-program">
+            @for (p of programs.value() ?? []; track p.id) { @if (p.is_active) { <option [value]="p.id">{{ p.name }}</option> } }
+          </select>
+          @if (errors()['program'] || errors()['grade']; as m) { <span class="field-error">{{ m }}</span> }
+        </div>
+      } @else {
+        <div class="field">
+          <label for="new-grade">Grade</label>
+          <select id="new-grade">
+            @for (g of grades.value() ?? []; track g.id) { <option [value]="g.id">{{ g.name }}</option> }
+          </select>
+          @if (errors()['grade']; as m) { <span class="field-error">{{ m }}</span> }
+        </div>
+      }
       <div class="field">
         <label for="new-campus">Campus</label>
         <select id="new-campus">
@@ -64,7 +84,7 @@
       </div>
       <div class="field">
         <label for="new-code">Name</label>
-        <input id="new-code" placeholder="6A" />
+        <input id="new-code" [placeholder]="higher() ? 'BSC-PHY 2026 A' : '6A'" />
         @if (errors()['code']; as m) { <span class="field-error">{{ m }}</span> }
       </div>
       <div class="field">
@@ -72,7 +92,7 @@
         <input id="new-capacity" type="number" min="1" value="40" />
         @if (errors()['capacity']; as m) { <span class="field-error">{{ m }}</span> }
       </div>
-      <button type="submit" class="btn btn-primary btn-sm" [disabled]="busy()">Add section</button>
+      <button type="submit" class="btn btn-primary btn-sm" [disabled]="busy()">{{ higher() ? 'Add batch' : 'Add section' }}</button>
     </div>
   </form>
 </div>

@@ -65,6 +65,11 @@ export const routes: Routes = [
         title: 'Audit log',
         loadComponent: () => import('./features/console/audit-page').then((m) => m.AuditPage),
       },
+      {
+        path: 'affiliations',
+        title: 'Affiliations',
+        loadComponent: () => import('./features/console/affiliations-page').then((m) => m.AffiliationsPage),
+      },
     ],
   },
   {
@@ -316,6 +321,25 @@ export const routes: Routes = [
         title: 'Offering',
         canActivate: [requires('academic_structure.manage')],
         loadComponent: () => import('./features/academics/offering-page').then((m) => m.OfferingPage),
+      },
+      {
+        path: 'affiliations',
+        title: 'Affiliations',
+        canActivate: [requires(['affiliation.submit', 'affiliation.review'])],
+        loadComponent: () => import('./features/academics/affiliations-page').then((m) => m.InstitutionAffiliationsPage),
+      },
+      {
+        path: 'affiliations/batches/:id',
+        title: 'Result batch',
+        canActivate: [requires('affiliation.submit')],
+        loadComponent: () => import('./features/academics/batch-page').then((m) => m.BatchPage),
+      },
+      {
+        path: 'affiliations/received/:id',
+        title: 'Result batch',
+        data: { review: true },
+        canActivate: [requires('affiliation.review')],
+        loadComponent: () => import('./features/academics/batch-page').then((m) => m.BatchPage),
       },
       {
         path: 'teaching',

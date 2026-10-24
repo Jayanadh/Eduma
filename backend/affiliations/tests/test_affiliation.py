@@ -80,7 +80,8 @@ def test_a_grant_is_proposed_then_approved_by_the_college(world, pair, client_fo
         f"{GRANTS}/{made.json()['id']}/approve", {"version": made.json()["version"]}, format="json"
     )
     assert approved.json()["status"] == "active" and approved.json()["in_effect"] is True
-    assert [g["status"] for g in c.registrar.get(GRANTS).json()] == ["active"]
+    assert [(g["status"], g["side"]) for g in c.registrar.get(GRANTS).json()] == [("active", "university")]
+    assert [g["side"] for g in c.college.get(GRANTS).json()] == ["college"]
     switch_on(world.b, modules=("academics",))
     assert client_for(world.b.slug, world.b_admin).get(GRANTS).json() == []
 
@@ -108,6 +109,7 @@ def test_a_batch_crosses_only_under_a_grant_in_effect(pair):
         }
     ]
     assert c.registrar.get(f"{GRANTS}/received").json() == []  # drafts stay with the college
+    assert [b["id"] for b in c.college.get(f"{GRANTS}/sent").json()] == [batch["id"]]
     sent = submit(c, batch)
     assert sent.status_code == 200 and sent.json()["status"] == "submitted"
     again = submit(c, batch)

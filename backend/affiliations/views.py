@@ -62,7 +62,15 @@ class InstitutionView(GenericAPIView):
 
 class Grants(InstitutionView):
     def get(self, request):
-        return Response([services.grant_item(g) for g in self.mine()])
+        mine = request.institution.id
+        return Response(
+            [{**services.grant_item(g), "side": "college" if g.college_id == mine else "university"} for g in self.mine()]
+        )
+
+
+class Sent(InstitutionView):
+    def get(self, request):
+        return Response([services.batch_item(b) for b in self.own_batches().order_by("-created_at")])
 
 
 class VersionInput(serializers.Serializer):

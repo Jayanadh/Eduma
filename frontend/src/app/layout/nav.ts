@@ -81,6 +81,15 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string; higher
     module: 'academics',
     higher: true,
   },
+  {
+    label: 'Affiliations',
+    icon: 'external',
+    link: '/app/affiliations',
+    group: 'Academics',
+    needs: ['affiliation.submit', 'affiliation.review'],
+    module: 'academics',
+    higher: true,
+  },
   { label: 'My classes', icon: 'book', link: '/app/teaching', group: 'Academics', module: 'academics' },
   {
     label: 'Organization',
@@ -122,6 +131,7 @@ export function navFor(
     ? [
         { label: 'Overview', icon: 'grid', link: '/console' },
         { label: 'Institutions', icon: 'institution', link: '/console/institutions' },
+        { label: 'Affiliations', icon: 'external', link: '/console/affiliations' },
         { label: 'Audit log', icon: 'list', link: '/console/audit' },
       ]
     : WORKSPACE.filter(

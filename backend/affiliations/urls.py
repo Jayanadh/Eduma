@@ -13,6 +13,7 @@ urlpatterns = [
     path("/batches/<uuid:pk>/rows/<uuid:row>", views.BatchRow.as_view()),
     path("/batches/<uuid:pk>/submit", views.Submit.as_view()),
     path("/batches/<uuid:pk>/revise", views.Revise.as_view()),
+    path("/sent", views.Sent.as_view()),
     path("/received", views.Received.as_view()),
     path("/received/<uuid:pk>", views.ReceivedDetail.as_view()),
     path("/received/<uuid:pk>/rows/<uuid:row>", views.DecideRow.as_view()),

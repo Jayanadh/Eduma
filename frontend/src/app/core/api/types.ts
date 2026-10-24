@@ -31,7 +31,7 @@ export type Membership = {
 
 export type RoleLine = { label: string; scope_label: string };
 export type ScopeType = 'institution' | 'campus' | 'department';
-type Named = { id: string; name: string };
+export type Named = { id: string; name: string };
 
 export type Campus = { id: string; code: string; name: string; address: string; is_active: boolean; version: number };
 export type Department = {
@@ -875,4 +875,53 @@ export type DegreeProgress = {
   }[];
   attempts: Attempt[];
   transfers: CreditTransfer[];
+};
+
+export type AffiliationGrant = {
+  id: string;
+  version: number;
+  college: Named;
+  university: Named;
+  purpose: string;
+  categories: string[];
+  actions: string[];
+  starts_on: string;
+  ends_on: string;
+  evidence: string;
+  status: 'proposed' | 'active' | 'revoked';
+  status_label: string;
+  in_effect: boolean;
+  revoked_reason: string;
+  /** Which side the viewing institution is on (institution pages only). */
+  side?: 'college' | 'university';
+};
+
+export type BatchRow = {
+  id: string;
+  number: string;
+  full_name: string;
+  program: string;
+  regulation: string;
+  attempts: { course: string; title: string; credits: string; attempt_no: number; outcome: string; grade_point: string | null }[];
+  problems: string[];
+  is_correction: boolean;
+  status: 'pending' | 'accepted' | 'rejected';
+  status_label: string;
+  reason: string;
+  current: boolean;
+};
+
+export type SubmissionBatch = {
+  id: string;
+  reference: string;
+  revision: number;
+  program: string;
+  term: string;
+  status: 'draft' | 'submitted' | 'reviewed';
+  status_label: string;
+  college: string;
+  university: string;
+  grant: string;
+  submitted_at: string | null;
+  rows: BatchRow[];
 };

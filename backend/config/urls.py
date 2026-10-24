@@ -8,6 +8,7 @@ from admissions.enquiry_views import PublicEnquiry
 from admissions.public import public_admissions
 from affiliations.views import ConsoleGrants
 from common.views import AuditEventList, health
+from fees.views import Webhook as FeeWebhook
 from institutions.urls import platform_patterns
 from institutions.views import OwnInstitutionView, module_catalogue, platform_overview
 from results.views import Verify
@@ -38,6 +39,8 @@ urlpatterns = [
     path("api/v1/institution/affiliations", include("affiliations.urls")),
     path("api/v1/institution/attendance/", include("attendance.urls")),
     path("api/v1/institution/results/", include("results.urls")),
+    path("api/v1/institution/fees/", include("fees.urls")),
+    path("api/v1/webhooks/payments/<str:provider>/<uuid:institution>", FeeWebhook.as_view(), name="payment-webhook"),
     path("api/v1/public/verify/<str:token>", Verify.as_view(), name="public-verify"),
     path("api/v1/teaching/", include("academics.teaching_urls")),
     path("api/v1/student/me", OwnRecord.as_view(), name="student-me"),

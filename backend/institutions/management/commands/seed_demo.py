@@ -630,8 +630,8 @@ class Command(BaseCommand):
         )  # fmt: skip
 
     def _results(self, actor) -> None:
-        """Assessment and results on at Aster (with report cards) and Meridian (outcomes are for engineering colleges); a published "Theory 40/60" scheme at
-        each (synthetic bands); `meridian.exams` (Examination Officer); Ananya's transcript issued."""
+        """Assessment and results on at Aster (with report cards) and Meridian (outcomes are for engineering colleges);
+        a published "Theory 40/60" scheme at each (synthetic bands); `meridian.exams`; Ananya's transcript issued."""
         from results import services as results
         from results.models import Scheme
 

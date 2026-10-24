@@ -90,6 +90,16 @@ PERMISSIONS: dict[str, Permission] = {
             "Publish results, approve revaluations, decide promotion and issue report cards, transcripts and awards",
             False,
         ),
+        Permission("fees.read", "Fees", "See fee accounts, invoices, payments and receipts", False),
+        Permission("fees.manage", "Fees", "Set up fee heads and plans, issue invoices and request credit notes", False),
+        Permission("fees.collect", "Fees", "Record payments at the office, allocate them and request refunds", False),
+        Permission("fees.approve", "Fees", "Approve credit notes and refunds someone else requested", False),
+        Permission(
+            "fees.reconcile",
+            "Fees",
+            "Set up the payment provider, record settlements, resolve reconciliation cases and export journals",
+            True,
+        ),
         Permission("student.read", "Students", "See student records", False),
         Permission("student.update", "Students", "Correct student details", False),
         Permission(
@@ -137,9 +147,11 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
         _role(
             "principal",
             "Principal / Director",
-            f"{TODAY} Sees staff and their roles, and student records.",
+            f"{TODAY} Sees staff and their roles and student records, and approves fee credit notes and refunds.",
             "membership.read",
             "student.read",
+            "fees.read",
+            "fees.approve",
         ),
         _role(
             "head_of_department",
@@ -182,7 +194,16 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "application.review",
             "enquiry.manage",
         ),
-        _role("accountant", "Accountant / Cashier", f"{TODAY} Fee permissions arrive with the Fees module."),
+        _role(
+            "accountant",
+            "Accountant / Cashier",
+            "Runs fees: plans, invoices, collections, receipts, refunds requested, settlements and reconciliation.",
+            "student.read",
+            "fees.read",
+            "fees.manage",
+            "fees.collect",
+            "fees.reconcile",
+        ),
         _role(
             "exam_officer",
             "Examination Officer",

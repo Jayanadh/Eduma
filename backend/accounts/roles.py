@@ -51,6 +51,31 @@ PERMISSIONS: dict[str, Permission] = {
             "Set up years, grades, subjects and sections, place students and assign teachers",
             False,
         ),
+        Permission(
+            "registration.manage",
+            "Academics",
+            "Open registration windows, register students, approve, drop and withdraw registrations, and place holds",
+            False,
+        ),
+        Permission("registration.override", "Academics", "Let a student past a failed registration check", False),
+        Permission(
+            "academic_record.manage",
+            "Academics",
+            "Record course outcomes and decide transfer credit",
+            False,
+        ),
+        Permission(
+            "affiliation.submit",
+            "Academics",
+            "Build and submit result batches to an affiliating university",
+            True,
+        ),
+        Permission(
+            "affiliation.review",
+            "Academics",
+            "Review result batches from affiliated colleges",
+            True,
+        ),
         Permission("student.read", "Students", "See student records", False),
         Permission("student.update", "Students", "Correct student details", False),
         Permission(
@@ -119,6 +144,17 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "guardian_link.manage",
             "enquiry.manage",
             "academic_structure.manage",
+            "registration.manage",
+            "registration.override",
+            "academic_record.manage",
+        ),
+        _role(
+            "academic_adviser",
+            "Academic Adviser",
+            "Advises students on registration: registers them, approves requests and lets them past checks.",
+            "student.read",
+            "registration.manage",
+            "registration.override",
         ),
         _role("teacher", "Teacher / Faculty", f"{TODAY} Teaching permissions arrive with Academics and Attendance."),
         _role(
@@ -133,7 +169,9 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
         _role(
             "exam_officer",
             "Examination Officer",
-            f"{TODAY} Examination permissions arrive with Assessment and results.",
+            "Records course outcomes and decides transfer credit; assessment arrives with Assessment and results.",
+            "student.read",
+            "academic_record.manage",
         ),
     )
 }

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from academics.models import AcademicYear, Course, CourseOffering, CurriculumCourse
+from academics.models import AcademicYear, Course, CourseOffering, CurriculumCourse, CurriculumVersion
 
 
 class YearInput(serializers.Serializer):
@@ -170,12 +170,14 @@ class CurriculumInput(serializers.Serializer):
     regulation = serializers.CharField(max_length=20)
     cohort = serializers.IntegerField(min_value=2000, max_value=2100)
     credits_required = serializers.DecimalField(max_digits=6, decimal_places=1, min_value=0)
+    repeat_rule = serializers.ChoiceField(CurriculumVersion.RepeatRule.choices, required=False)
 
 
 class CurriculumPatch(serializers.Serializer):
     version = serializers.IntegerField()
     cohort = serializers.IntegerField(min_value=2000, max_value=2100, required=False)
     credits_required = serializers.DecimalField(max_digits=6, decimal_places=1, min_value=0, required=False)
+    repeat_rule = serializers.ChoiceField(CurriculumVersion.RepeatRule.choices, required=False)
 
 
 class CurriculumCourseInput(serializers.Serializer):

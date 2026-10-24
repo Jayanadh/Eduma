@@ -61,7 +61,7 @@ def save(actor, curriculum: CurriculumVersion, data: dict, version: int) -> Curr
     with transaction.atomic():
         curriculum = _draft(actor, curriculum)
         curriculum.check_version(version)
-        for name in ("cohort", "credits_required"):
+        for name in ("cohort", "credits_required", "repeat_rule"):
             if name in data:
                 setattr(curriculum, name, data[name])
         curriculum.save()
@@ -194,6 +194,7 @@ def revise(actor, curriculum: CurriculumVersion, version: int) -> CurriculumVers
             revision=latest + 1,
             cohort=source.cohort,
             credits_required=source.credits_required,
+            repeat_rule=source.repeat_rule,
         )
         for entry in source.courses.prefetch_related("prerequisites"):
             prerequisites = list(entry.prerequisites.all())
@@ -219,6 +220,7 @@ def summary_item(curriculum: CurriculumVersion) -> dict:
         "revision": curriculum.revision,
         "cohort": curriculum.cohort,
         "credits_required": str(curriculum.credits_required),
+        "repeat_rule": curriculum.repeat_rule,
         "status": curriculum.status,
         "status_label": curriculum.get_status_display(),
         "published_at": curriculum.published_at,

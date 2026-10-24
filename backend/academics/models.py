@@ -207,7 +207,15 @@ class CurriculumVersion(VersionedModel):
     revision = models.PositiveSmallIntegerField()
     cohort = models.PositiveSmallIntegerField()
     credits_required = models.DecimalField(max_digits=6, decimal_places=1)
+
+    class RepeatRule(models.TextChoices):
+        REPLACE = "replace", "The latest graded attempt counts"
+        BEST = "best", "The best graded attempt counts"
+        ALL = "all", "Every graded attempt counts in the average"
+
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.DRAFT)
+    # How a repeated course counts (slice 5d S5D-02); credits count once whatever the rule.
+    repeat_rule = models.CharField(max_length=8, choices=RepeatRule.choices, default=RepeatRule.REPLACE)
     published_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
     )
@@ -295,3 +303,167 @@ class CourseOffering(VersionedModel):
 
     def __str__(self) -> str:
         return f"{self.course.code}-{self.code}"
+
+
+class RegistrationWindow(VersionedModel):
+    """When students may register for a term's offerings, and the term's rules (slice 5c S5C-01)."""
+
+    institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="+")
+    term = models.OneToOneField(Term, on_delete=models.PROTECT, related_name="registration_window")
+    opens_on = models.DateField()
+    closes_on = models.DateField()
+    drop_until = models.DateField()
+    max_credits = models.DecimalField(max_digits=4, decimal_places=1, default=30)
+    needs_approval = models.BooleanField(default=False)
+
+
+class Hold(models.Model):
+    """A block on registering (S5C-07): academic or administrative, with its reason, until lifted."""
+
+    class Kind(models.TextChoices):
+        ACADEMIC = "academic", "Academic"
+        ADMINISTRATIVE = "administrative", "Administrative"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="+")
+    student = models.ForeignKey("students.Student", on_delete=models.PROTECT, related_name="holds")
+    kind = models.CharField(max_length=16, choices=Kind.choices)
+    reason = models.CharField(max_length=300)
+    placed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    placed_on = models.DateField()
+    lifted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    lifted_on = models.DateField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-placed_on"]
+
+
+class CourseRegistration(VersionedModel):
+    """A student's claim on an offering (S5C-04). Pending and registered ones hold a seat."""
+
+    class State(models.TextChoices):
+        PENDING = "pending_approval", "Waiting for approval"
+        WAITLISTED = "waitlisted", "Waitlisted"
+        REGISTERED = "registered", "Registered"
+        REJECTED = "rejected", "Rejected"
+        DROPPED = "dropped", "Dropped"
+        WITHDRAWN = "withdrawn", "Withdrawn"
+
+    ACTIVE = ("pending_approval", "waitlisted", "registered")
+    SEATED = ("pending_approval", "registered")
+
+    institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="+")
+    enrollment = models.ForeignKey("students.Enrollment", on_delete=models.PROTECT, related_name="registrations")
+    offering = models.ForeignKey(CourseOffering, on_delete=models.PROTECT, related_name="registrations")
+    state = models.CharField(max_length=16, choices=State.choices)
+    # The rules it was checked under: the pinned regulation and the window's version at the time.
+    curriculum = models.ForeignKey(CurriculumVersion, null=True, on_delete=models.PROTECT, related_name="+")
+    window = models.ForeignKey(RegistrationWindow, on_delete=models.PROTECT, related_name="registrations")
+    window_version = models.PositiveIntegerField()
+    reason_code = models.CharField(max_length=24, blank=True)
+    requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    decided_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["enrollment", "offering"],
+                condition=models.Q(state__in=("pending_approval", "waitlisted", "registered")),
+                name="one_active_registration",
+            )
+        ]
+
+
+class RegistrationOverride(models.Model):
+    """Permission to pass one failed check for one offering (S5C-06). Never for capacity."""
+
+    CHECKS = ("window_closed", "hold", "not_in_regulation", "prerequisite", "already_passed", "credit_limit")
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="+")
+    student = models.ForeignKey("students.Student", on_delete=models.PROTECT, related_name="overrides")
+    offering = models.ForeignKey(CourseOffering, on_delete=models.PROTECT, related_name="+")
+    rule = models.CharField(max_length=24, choices=[(c, c) for c in CHECKS])  # the check it lets them past
+    reason = models.CharField(max_length=300)
+    expires_on = models.DateField()
+    granted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    granted_at = models.DateTimeField(auto_now_add=True)
+    curriculum = models.ForeignKey(CurriculumVersion, null=True, on_delete=models.PROTECT, related_name="+")
+    window_version = models.PositiveIntegerField(null=True)
+    used_by = models.ForeignKey(
+        CourseRegistration, null=True, blank=True, on_delete=models.PROTECT, related_name="overrides"
+    )
+
+    class Meta:
+        ordering = ["-granted_at"]
+
+
+class CourseAttempt(models.Model):
+    """One attempt at a course (S5D-01). Kept for good: a repeat adds an attempt, never replaces one."""
+
+    class Outcome(models.TextChoices):
+        IN_PROGRESS = "in_progress", "In progress"
+        PASSED = "passed", "Passed"
+        FAILED = "failed", "Failed"
+        ABSENT = "absent", "Absent"
+        WITHHELD = "withheld", "Withheld"
+        EXEMPT = "exempt", "Exempt"
+        WITHDRAWN = "withdrawn", "Withdrawn"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="+")
+    enrollment = models.ForeignKey("students.Enrollment", on_delete=models.PROTECT, related_name="attempts")
+    course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="attempts")
+    attempt_no = models.PositiveSmallIntegerField()
+    registration = models.OneToOneField(
+        CourseRegistration, null=True, blank=True, on_delete=models.PROTECT, related_name="attempt"
+    )
+    term = models.ForeignKey(Term, on_delete=models.PROTECT, related_name="+")
+    credits = models.DecimalField(max_digits=4, decimal_places=1)
+    outcome = models.CharField(max_length=12, choices=Outcome.choices, default=Outcome.IN_PROGRESS)
+    grade_point = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    recorded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    recorded_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["term__starts_on", "course__code", "attempt_no"]
+        constraints = [
+            models.UniqueConstraint(fields=["enrollment", "course", "attempt_no"], name="unique_attempt_number")
+        ]
+
+
+class CreditTransfer(VersionedModel):
+    """Credit from elsewhere (S5D-04): what was studied, the evidence, and what was accepted, by whose authority."""
+
+    class Decision(models.TextChoices):
+        PENDING = "pending", "Waiting for a decision"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="+")
+    enrollment = models.ForeignKey("students.Enrollment", on_delete=models.PROTECT, related_name="transfers")
+    source_institution = models.CharField(max_length=150)
+    source_course = models.CharField(max_length=150)
+    source_credits = models.DecimalField(max_digits=4, decimal_places=1)
+    evidence = models.CharField(max_length=500)
+    decision = models.CharField(max_length=8, choices=Decision.choices, default=Decision.PENDING)
+    approved_credits = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    course = models.ForeignKey(Course, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    category = models.CharField(max_length=14, blank=True)
+    awarding_authority = models.CharField(max_length=150, blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    decided_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["created_at"]

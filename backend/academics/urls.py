@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from academics import he_views, views
+from academics import curricula, he_views, views
 
 urlpatterns = [
     path("years", views.YearList.as_view()),
@@ -25,6 +25,13 @@ urlpatterns = [
     path("sections/<uuid:pk>/teachers/<uuid:assignment>/end", views.EndTeaching.as_view()),
     path("programs", he_views.ProgramList.as_view()),
     path("programs/<uuid:pk>", he_views.ProgramDetail.as_view()),
+    path("programs/<uuid:pk>/curricula", he_views.CurriculumList.as_view()),
+    path("curricula/<uuid:pk>", he_views.CurriculumDetail.as_view()),
+    path("curricula/<uuid:pk>/courses", he_views.CurriculumCourses.as_view()),
+    path("curricula/<uuid:pk>/courses/<uuid:entry>", he_views.CurriculumCourseDetail.as_view()),
+    path("curricula/<uuid:pk>/publish", he_views.CurriculumAction.as_view(action=curricula.publish)),
+    path("curricula/<uuid:pk>/retire", he_views.CurriculumAction.as_view(action=curricula.retire)),
+    path("curricula/<uuid:pk>/revise", he_views.CurriculumAction.as_view(action=curricula.revise)),
     path("courses", he_views.CourseList.as_view()),
     path("courses/<uuid:pk>", he_views.CourseDetail.as_view()),
 ]

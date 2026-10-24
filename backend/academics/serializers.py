@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from academics.models import AcademicYear, Course
+from academics.models import AcademicYear, Course, CurriculumCourse
 
 
 class YearInput(serializers.Serializer):
@@ -163,3 +163,33 @@ class CoursePatch(CourseInput):
     title = serializers.CharField(max_length=150, required=False)
     credits = serializers.DecimalField(max_digits=3, decimal_places=1, min_value=0, max_value=30, required=False)
     kind = serializers.ChoiceField(Course.Kind.choices, required=False)
+
+
+class CurriculumInput(serializers.Serializer):
+    regulation = serializers.CharField(max_length=20)
+    cohort = serializers.IntegerField(min_value=2000, max_value=2100)
+    credits_required = serializers.DecimalField(max_digits=6, decimal_places=1, min_value=0)
+
+
+class CurriculumPatch(serializers.Serializer):
+    version = serializers.IntegerField()
+    cohort = serializers.IntegerField(min_value=2000, max_value=2100, required=False)
+    credits_required = serializers.DecimalField(max_digits=6, decimal_places=1, min_value=0, required=False)
+
+
+class CurriculumCourseInput(serializers.Serializer):
+    course = serializers.UUIDField()
+    category = serializers.ChoiceField(CurriculumCourse.Category.choices)
+    term = serializers.IntegerField(min_value=1, max_value=16)
+    elective_group = serializers.CharField(max_length=40, required=False, allow_blank=True)
+    prerequisites = serializers.ListField(child=serializers.UUIDField(), required=False, max_length=20)
+
+
+class CurriculumCoursePatch(CurriculumCourseInput):
+    course = None
+    category = serializers.ChoiceField(CurriculumCourse.Category.choices, required=False)
+    term = serializers.IntegerField(min_value=1, max_value=16, required=False)
+
+
+class VersionInput(serializers.Serializer):
+    version = serializers.IntegerField()

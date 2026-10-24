@@ -4,8 +4,19 @@ from django.db.models import Q
 from rest_framework import status
 from rest_framework.response import Response
 
-from academics import programs
-from academics.serializers import CourseInput, CoursePatch, ProgramInput, ProgramPatch
+from academics import curricula, programs
+from academics.models import CurriculumVersion
+from academics.serializers import (
+    CourseInput,
+    CoursePatch,
+    CurriculumCourseInput,
+    CurriculumCoursePatch,
+    CurriculumInput,
+    CurriculumPatch,
+    ProgramInput,
+    ProgramPatch,
+    VersionInput,
+)
 from academics.views import AcademicsView, valid
 from common.pagination import Pages
 
@@ -52,3 +63,62 @@ class CourseDetail(AcademicsView):
         data = valid(CoursePatch, request.data)
         course = programs.save_course(request.user, request.institution, found, data, data.pop("version"))
         return Response(programs.course_item(course, request.user))
+
+
+class CurriculumList(AcademicsView):
+    def get(self, request, pk):
+        program = self.found(request.institution.programs, pk)
+        return Response([curricula.summary_item(row) for row in program.curricula.all()])
+
+    def post(self, request, pk):
+        program = self.found(request.institution.programs.select_related("institution"), pk)
+        made = curricula.create(request.user, program, valid(CurriculumInput, request.data))
+        return Response(curricula.curriculum_item(made, request.user), status=status.HTTP_201_CREATED)
+
+
+class CurriculumView(AcademicsView):
+    def curriculum(self) -> CurriculumVersion:
+        rows = CurriculumVersion.objects.filter(program__institution=self.request.institution)
+        return self.found(rows.select_related("program__institution"), self.kwargs["pk"])
+
+    def shown(self, curriculum, created=False) -> Response:
+        code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return Response(curricula.curriculum_item(curriculum, self.request.user), status=code)
+
+
+class CurriculumDetail(CurriculumView):
+    def get(self, request, pk):
+        return self.shown(self.curriculum())
+
+    def patch(self, request, pk):
+        data = valid(CurriculumPatch, request.data)
+        return self.shown(curricula.save(request.user, self.curriculum(), data, data.pop("version")))
+
+
+class CurriculumCourses(CurriculumView):
+    def post(self, request, pk):
+        data = valid(CurriculumCourseInput, request.data)
+        return self.shown(curricula.add_course(request.user, self.curriculum(), data), created=True)
+
+
+class CurriculumCourseDetail(CurriculumView):
+    def entry(self, curriculum):
+        return self.found(curriculum.courses.select_related("course"), self.kwargs["entry"])
+
+    def patch(self, request, pk, entry):
+        curriculum = self.curriculum()
+        data = valid(CurriculumCoursePatch, request.data)
+        return self.shown(curricula.change_course(request.user, curriculum, self.entry(curriculum), data))
+
+    def delete(self, request, pk, entry):
+        curriculum = self.curriculum()
+        return self.shown(curricula.remove_course(request.user, curriculum, self.entry(curriculum)))
+
+
+class CurriculumAction(CurriculumView):
+    action = staticmethod(curricula.publish)
+
+    def post(self, request, pk):
+        version = valid(VersionInput, request.data)["version"]
+        result = self.action(request.user, self.curriculum(), version)
+        return self.shown(result, created=self.action is curricula.revise)

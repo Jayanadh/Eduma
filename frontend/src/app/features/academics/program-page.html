@@ -1,0 +1,52 @@
+<div class="page">
+  <app-load-error [message]="program.error()" (retry)="program.reload()" />
+  @if (program.value(); as p) {
+    <app-page-header
+      eyebrow="Program"
+      [title]="p.code + ' · ' + p.name"
+      [subtitle]="p.qualification + ' · ' + p.length_terms + ' terms' + (p.department ? ' · ' + p.department.name : '')"
+      backLink="/app/academics/programs"
+    />
+    <section class="card list-card section">
+      <h2 class="card-title">Regulations</h2>
+      <ul class="list">
+        @for (c of curricula.value() ?? []; track c.id) {
+          <li>
+            <a class="list-row" [routerLink]="['/app/academics/curricula', c.id]">
+              <span class="list-main">
+                <span class="list-title">{{ c.regulation }} rev {{ c.revision }}</span>
+                <span class="muted small">Cohort {{ c.cohort }} · {{ c.credits_required }} credits · {{ c.status_label }}</span>
+              </span>
+            </a>
+          </li>
+        } @empty {
+          <li class="muted small">No regulations yet.</li>
+        }
+      </ul>
+    </section>
+    @if (p.can_manage) {
+      <form class="card stack section" (submit)="$event.preventDefault(); draft($any($event.target))">
+        <h2 class="card-title">Draft a regulation</h2>
+        <p class="muted small">A draft can change freely. Once published it never changes; a change is a new revision.</p>
+        <div class="add">
+          <div class="field">
+            <label for="new-regulation">Code</label>
+            <input id="new-regulation" placeholder="R2026" />
+            @if (errors()['regulation']; as m) { <span class="field-error">{{ m }}</span> }
+          </div>
+          <div class="field">
+            <label for="new-cohort">For students entering in</label>
+            <input id="new-cohort" type="number" min="2000" max="2100" />
+            @if (errors()['cohort']; as m) { <span class="field-error">{{ m }}</span> }
+          </div>
+          <div class="field">
+            <label for="new-credits">Credits to graduate</label>
+            <input id="new-credits" type="number" min="0" step="0.5" />
+            @if (errors()['credits_required']; as m) { <span class="field-error">{{ m }}</span> }
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="busy()">Draft</button>
+        </div>
+      </form>
+    }
+  }
+</div>

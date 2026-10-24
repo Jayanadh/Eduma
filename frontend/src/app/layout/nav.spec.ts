@@ -49,4 +49,14 @@ describe('navFor', () => {
     expect(on.filter((item) => item.group === 'Admissions').map((item) => item.label)).toEqual(['Cycles', 'Applications']);
     expect(on.map((item) => item.label)).toContain('Students');
   });
+
+  it('shows Programs to colleges and universities, not schools', () => {
+    const can = holding('academic_structure.manage');
+    const academics = (higher: boolean) =>
+      navFor('institution', can, (module) => module === 'academics', higher)
+        .filter((item) => item.group === 'Academics')
+        .map((item) => item.label);
+    expect(academics(false)).toEqual(['Academic setup', 'Sections', 'My classes']);
+    expect(academics(true)).toEqual(['Academic setup', 'Sections', 'Programs', 'My classes']);
+  });
 });

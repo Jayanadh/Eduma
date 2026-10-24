@@ -18,6 +18,8 @@ export type Me = {
 export type Membership = {
   /** Staff work in /app; applicants, students and guardians have their own portals. */
   kind: 'staff' | 'applicant' | 'student' | 'guardian';
+  /** Colleges and universities get programs and courses in their menu; schools get grades. */
+  category?: Category;
   /** Modules switched on here, for menus; the server gates every module route too. */
   modules_enabled?: string[];
   roles: RoleLine[];
@@ -683,3 +685,58 @@ export type TeachingClass = {
 };
 
 export type Placement = { year: string; grade: string; section: string; campus: string; state: string; is_repeat: boolean };
+
+export type Program = {
+  id: string;
+  version: number;
+  code: string;
+  name: string;
+  qualification: string;
+  length_terms: number;
+  department: Named | null;
+  is_active: boolean;
+  can_manage: boolean;
+};
+
+export type Course = {
+  id: string;
+  version: number;
+  code: string;
+  title: string;
+  credits: string;
+  kind: 'theory' | 'lab' | 'project' | 'tutorial' | 'other';
+  kind_label: string;
+  department: Named | null;
+  is_active: boolean;
+  can_manage: boolean;
+};
+
+export type CurriculumSummary = {
+  id: string;
+  version: number;
+  regulation: string;
+  revision: number;
+  cohort: number;
+  credits_required: string;
+  status: 'draft' | 'published' | 'retired';
+  status_label: string;
+  published_at: string | null;
+};
+
+export type CurriculumEntry = {
+  id: string;
+  course: { id: string; code: string; title: string; credits: string; kind: string };
+  category: string;
+  category_label: string;
+  term: number;
+  elective_group: string;
+  /** Course codes. */
+  prerequisites: string[];
+};
+
+export type Curriculum = CurriculumSummary & {
+  program: { id: string; code: string; name: string; length_terms: number };
+  total_credits: string;
+  terms: { term: number; courses: CurriculumEntry[] }[];
+  can_manage: boolean;
+};

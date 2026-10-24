@@ -15,6 +15,7 @@ def test_applicant_and_student_memberships_get_no_workspace(world):
     client = host(world.a.slug)
     me = login(client, "a.parent").json()["user"]["membership"]
     assert me == {
+        "category": world.a.category,
         "kind": "applicant",
         "modules_enabled": [],
         "roles": [],

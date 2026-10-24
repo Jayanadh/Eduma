@@ -36,8 +36,8 @@ export class Api {
     return this.http.put<T>(`/api/v1/${path}`, body);
   }
 
-  delete(path: string): Observable<void> {
-    return this.http.delete<void>(`/api/v1/${path}`);
+  delete<T = void>(path: string): Observable<T> {
+    return this.http.delete<T>(`/api/v1/${path}`);
   }
 
   /** A multipart upload of one file under `field`, with any other form fields alongside it. */

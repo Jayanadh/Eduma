@@ -1,0 +1,94 @@
+<div class="page">
+  <app-load-error [message]="data.error()" (retry)="data.reload()" />
+  @if (data.value(); as c) {
+    <app-page-header
+      [eyebrow]="c.program.code + ' · ' + c.program.name"
+      [title]="c.regulation + ' rev ' + c.revision"
+      [subtitle]="'Cohort ' + c.cohort + ' · ' + c.status_label + ' · ' + c.total_credits + ' of ' + c.credits_required + ' credits'"
+      [backLink]="'/app/academics/programs/' + c.program.id"
+    >
+      @if (c.can_manage && c.status === 'draft') {
+        <button type="button" class="btn btn-primary btn-sm" [disabled]="busy()" (click)="publish(c)">Publish</button>
+      }
+      @if (c.can_manage && c.status === 'published') {
+        <button type="button" class="btn btn-primary btn-sm" [disabled]="busy()" (click)="revise(c)">New revision</button>
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="retire(c)">Retire</button>
+      }
+    </app-page-header>
+    @if (c.status !== 'draft') {
+      <p class="muted small section">This regulation is {{ c.status_label | lowercase }} and can't change. Draft a new revision to change it.</p>
+    }
+    @for (t of c.terms; track t.term) {
+      <section class="card stack section">
+        <h3 class="card-title">Term {{ t.term }}</h3>
+        <ul class="rows">
+          @for (e of t.courses; track e.id) {
+            <li>
+              <span>
+                <strong>{{ e.course.code }}</strong> {{ e.course.title }}
+                <span class="muted small">· {{ e.course.credits }} credits · {{ e.category_label }}{{ e.elective_group ? ' (' + e.elective_group + ')' : '' }}{{ e.prerequisites.length ? ' · needs ' + e.prerequisites.join(', ') : '' }}</span>
+              </span>
+              @if (editable()) {
+                <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Remove ' + e.course.code" [disabled]="busy()" (click)="remove(e)">Remove</button>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    } @empty {
+      <p class="muted section">No courses yet.</p>
+    }
+    @if (editable()) {
+      <form id="add-course" class="card stack section" (submit)="$event.preventDefault(); add($any($event.target))">
+        <h2 class="card-title">Add a course</h2>
+        @if (chosen(); as picked) {
+          <ul class="chips">
+            <li class="chip">{{ picked.label }} <button type="button" class="btn-icon" [attr.aria-label]="'Remove ' + picked.label" (click)="chosen.set(null)">×</button></li>
+          </ul>
+        } @else {
+          <app-search-box id="course-search" label="Find a course" (search)="search.set($event)" />
+          <ul class="rows">
+            @for (course of found.value()?.results ?? []; track course.id) {
+              <li>
+                <span>{{ course.code }} {{ course.title }} <span class="muted small">· {{ course.credits }} credits</span></span>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="choose(course.id, course.code + ' ' + course.title)">Choose</button>
+              </li>
+            }
+          </ul>
+        }
+        <div class="add-teacher">
+          <div class="field">
+            <label for="add-category">Category</label>
+            <select id="add-category" (change)="category.set($any($event.target).value)">
+              @for (option of categories; track option[0]) { <option [value]="option[0]">{{ option[1] }}</option> }
+            </select>
+          </div>
+          <div class="field">
+            <label for="add-term">Term</label>
+            <select id="add-term" (change)="term.set(+$any($event.target).value)">
+              @for (n of termNumbers(); track n) { <option [value]="n">Term {{ n }}</option> }
+            </select>
+          </div>
+          <div class="field">
+            <label for="add-group">Elective group</label>
+            <input id="add-group" placeholder="Optional" />
+          </div>
+        </div>
+        @if (entries().length) {
+          <fieldset class="stack">
+            <legend class="small">Needs first</legend>
+            @for (e of entries(); track e.id) {
+              @if (e.course.id !== chosen()?.id) {
+                <label class="small">
+                  <input type="checkbox" [id]="'needs-' + e.course.id" [checked]="needs().has(e.course.id)" (change)="toggle(e.course.id, $any($event.target).checked)" />
+                  {{ e.course.code }} {{ e.course.title }}
+                </label>
+              }
+            }
+          </fieldset>
+        }
+        <button type="submit" class="btn btn-primary btn-sm" [disabled]="busy() || !chosen()">Add to regulation</button>
+      </form>
+    }
+  }
+</div>

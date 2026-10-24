@@ -27,6 +27,7 @@ class MeSerializer(serializers.ModelSerializer):
         restricted = institution.lifecycle_status == "restricted"
         return {
             "kind": membership.kind,
+            "category": institution.category,  # a college's menu differs from a school's
             # For menus: which modules this institution has switched on (the server gates every module route too).
             "modules_enabled": setting(institution, "modules.enabled"),
             "roles": [{"label": row.role_label, "scope_label": row.scope_label} for row in roles],

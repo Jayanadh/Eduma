@@ -1,0 +1,58 @@
+<div class="page">
+  <app-page-header eyebrow="Academics" title="Programs" subtitle="What the college teaches, and the regulation each cohort follows." />
+  <app-load-error [message]="programs.error()" (retry)="programs.reload()" />
+  @if (programs.value(); as list) {
+    @if (list.length) {
+      <div class="card list-card section">
+        <ul class="list">
+          @for (p of list; track p.id) {
+            <li>
+              <a class="list-row" [routerLink]="['/app/academics/programs', p.id]">
+                <span class="list-main">
+                  <span class="list-title">{{ p.code }} · {{ p.name }}</span>
+                  <span class="muted small">{{ p.qualification }} · {{ p.length_terms }} terms{{ p.department ? ' · ' + p.department.name : '' }}{{ p.is_active ? '' : ' · inactive' }}</span>
+                </span>
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    } @else {
+      <app-empty-state icon="layers" title="No programs" text="Add the college's first program below." />
+    }
+  }
+  <form class="card stack section" (submit)="$event.preventDefault(); add($any($event.target))">
+    <h2 class="card-title">Add a program</h2>
+    <div class="add">
+      <div class="field">
+        <label for="new-code">Code</label>
+        <input id="new-code" placeholder="BSC-PHY" />
+        @if (errors()['code']; as m) { <span class="field-error">{{ m }}</span> }
+      </div>
+      <div class="field">
+        <label for="new-name">Name</label>
+        <input id="new-name" placeholder="B.Sc Physics" />
+        @if (errors()['name']; as m) { <span class="field-error">{{ m }}</span> }
+      </div>
+      <div class="field">
+        <label for="new-qualification">Qualification</label>
+        <input id="new-qualification" placeholder="B.Sc" />
+        @if (errors()['qualification']; as m) { <span class="field-error">{{ m }}</span> }
+      </div>
+      <div class="field">
+        <label for="new-length">Terms</label>
+        <input id="new-length" type="number" min="1" max="16" value="6" />
+        @if (errors()['length_terms']; as m) { <span class="field-error">{{ m }}</span> }
+      </div>
+      <div class="field">
+        <label for="new-department">Department</label>
+        <select id="new-department">
+          <option value="">Whole institution</option>
+          @for (d of departments.value()?.results ?? []; track d.id) { @if (d.is_active) { <option [value]="d.id">{{ d.name }}</option> } }
+        </select>
+        @if (errors()['department']; as m) { <span class="field-error">{{ m }}</span> }
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm" [disabled]="busy()">Add program</button>
+    </div>
+  </form>
+</div>

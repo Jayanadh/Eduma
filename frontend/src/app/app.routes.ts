@@ -270,6 +270,24 @@ export const routes: Routes = [
         loadComponent: () => import('./features/academics/section-page').then((m) => m.SectionPage),
       },
       {
+        path: 'academics/programs',
+        title: 'Programs',
+        canActivate: [requires('academic_structure.manage')],
+        loadComponent: () => import('./features/academics/programs-page').then((m) => m.ProgramsPage),
+      },
+      {
+        path: 'academics/programs/:id',
+        title: 'Program',
+        canActivate: [requires('academic_structure.manage')],
+        loadComponent: () => import('./features/academics/program-page').then((m) => m.ProgramPage),
+      },
+      {
+        path: 'academics/curricula/:id',
+        title: 'Regulation',
+        canActivate: [requires('academic_structure.manage')],
+        loadComponent: () => import('./features/academics/curriculum-page').then((m) => m.CurriculumPage),
+      },
+      {
         path: 'teaching',
         title: 'My classes',
         loadComponent: () => import('./features/academics/teaching-page').then((m) => m.TeachingPage),

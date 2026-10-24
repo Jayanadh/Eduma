@@ -5,8 +5,11 @@ export type NavItem = {
   group?: 'People' | 'Admissions' | 'Academics' | 'Administration';
 };
 
-/** `needs`: the permission, or any one of several, that opens the page; `module`: shown only while it is on. */
-const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string })[] = [
+/**
+ * `needs`: the permission, or any one of several, that opens the page; `module`: shown only while it is on;
+ * `higher`: only for colleges and universities (programs and courses), not schools.
+ */
+const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string; higher?: boolean })[] = [
   { label: 'Home', icon: 'home', link: '/app' },
   { label: 'Students', icon: 'graduation', link: '/app/students', group: 'People', needs: 'student.read', module: 'students' },
   { label: 'Staff', icon: 'users', link: '/app/staff', group: 'People', needs: 'membership.read' },
@@ -51,6 +54,15 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string })[] = 
     needs: 'academic_structure.manage',
     module: 'academics',
   },
+  {
+    label: 'Programs',
+    icon: 'book',
+    link: '/app/academics/programs',
+    group: 'Academics',
+    needs: 'academic_structure.manage',
+    module: 'academics',
+    higher: true,
+  },
   { label: 'My classes', icon: 'book', link: '/app/teaching', group: 'Academics', module: 'academics' },
   {
     label: 'Organization',
@@ -86,6 +98,7 @@ export function navFor(
   kind: 'platform' | 'institution',
   can: (perm: string) => boolean,
   on: (module: string) => boolean = () => false,
+  higher = false,
 ): NavItem[] {
   return kind === 'platform'
     ? [
@@ -93,7 +106,8 @@ export function navFor(
         { label: 'Institutions', icon: 'institution', link: '/console/institutions' },
         { label: 'Audit log', icon: 'list', link: '/console/audit' },
       ]
-    : WORKSPACE.filter((item) => (!item.needs || [item.needs].flat().some(can)) && (!item.module || on(item.module))).map(
-        ({ needs, module, ...item }) => item,
-      );
+    : WORKSPACE.filter(
+        (item) =>
+          (!item.needs || [item.needs].flat().some(can)) && (!item.module || on(item.module)) && (!item.higher || higher),
+      ).map(({ needs, module, higher, ...item }) => item);
 }

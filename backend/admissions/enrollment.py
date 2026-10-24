@@ -7,6 +7,7 @@ import datetime as dt
 from django.db import transaction
 from rest_framework.exceptions import PermissionDenied
 
+from academics.curricula import for_cohort
 from accounts.permissions import today_for
 from admissions.applications import Stage, wrong_stage
 from admissions.models import Application
@@ -62,6 +63,8 @@ def enroll(actor, application: Application, version: int, password: str) -> Stud
             place_label=place.label,
             campus=place.campus,
             entry_date=max(year_starts, today),
+            program=place.program,
+            curriculum=for_cohort(place.program, cycle.entry_year) if place.program_id else None,
         )
         audit.log(
             actor,

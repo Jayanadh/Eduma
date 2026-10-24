@@ -205,6 +205,12 @@ def revise(actor, curriculum: CurriculumVersion, version: int) -> CurriculumVers
         return draft
 
 
+def for_cohort(program: Program, entry_year: int) -> CurriculumVersion | None:
+    """The regulation a cohort entering in `entry_year` follows: published, from that year or before, the latest."""
+    published = program.curricula.filter(status=CurriculumVersion.Status.PUBLISHED, cohort__lte=entry_year)
+    return published.order_by("-cohort", "-revision", "-published_at").first()
+
+
 def summary_item(curriculum: CurriculumVersion) -> dict:
     return {
         "id": str(curriculum.id),

@@ -13,7 +13,7 @@ class StudentInput(serializers.Serializer):
 
 
 def _current(student: Student):
-    return student.enrollments.filter(status="active").select_related("campus").first()
+    return student.enrollments.filter(status="active").select_related("campus", "program", "curriculum").first()
 
 
 def enrollment_item(enrollment) -> dict | None:
@@ -28,6 +28,12 @@ def enrollment_item(enrollment) -> dict | None:
         "status": enrollment.status,
         "exit_date": enrollment.exit_date,
         "exit_reason": enrollment.exit_reason,
+        "program": {"id": str(enrollment.program_id), "code": enrollment.program.code, "name": enrollment.program.name}
+        if enrollment.program_id
+        else None,
+        "curriculum": {"id": str(enrollment.curriculum_id), "label": str(enrollment.curriculum)}
+        if enrollment.curriculum_id
+        else None,
     }
 
 
@@ -80,7 +86,9 @@ def student_item(student: Student) -> dict:
         "email": person.email,
         "address": person.address,
         "admitted_on": student.admitted_on,
-        "enrollments": [enrollment_item(e) for e in student.enrollments.select_related("campus")],
+        "enrollments": [
+            enrollment_item(e) for e in student.enrollments.select_related("campus", "program", "curriculum")
+        ],
         "application": {"id": str(student.application_id), "number": student.application.number}
         if student.application_id
         else None,
@@ -164,3 +172,9 @@ def link_item(link: GuardianLink, full: bool, today) -> dict:
             revoke_reason=link.revoke_reason,
         )
     return item
+
+
+class PinInput(serializers.Serializer):
+    version = serializers.IntegerField()
+    program = serializers.UUIDField(allow_null=True)
+    curriculum = serializers.UUIDField(allow_null=True, required=False, default=None)

@@ -10,6 +10,7 @@ urlpatterns = [
     path("students/<uuid:pk>/history", views.StudentHistory.as_view()),
     path("students/<uuid:pk>/login", views.GiveLogin.as_view()),
     path("students/<uuid:pk>/withdraw", views.Withdraw.as_view()),
+    path("students/<uuid:pk>/program", views.StudentProgram.as_view()),
     path("students/<uuid:pk>/reinstate", views.Reinstate.as_view()),
     path("students/<uuid:pk>/guardians", views.GuardianList.as_view()),
     path("students/<uuid:pk>/guardians/<uuid:link>/verify", views.GuardianVerify.as_view()),

@@ -41,9 +41,12 @@ def cycle_item(cycle: AdmissionCycle) -> dict:
                 "label": place.label,
                 "campus": {"id": str(place.campus_id), "name": place.campus.name} if place.campus_id else None,
                 "seats": place.seats,
+                "program": {"id": str(place.program_id), "code": place.program.code, "name": place.program.name}
+                if place.program_id
+                else None,
                 "in_use": place_in_use(place),
             }
-            for place in cycle.places.select_related("campus")
+            for place in cycle.places.select_related("campus", "program")
         ],
         "questions": list(cycle.questions.values("code", "label", "help", "kind", "options", "required")),
         "documents": list(cycle.documents.values("code", "label", "help", "required")),

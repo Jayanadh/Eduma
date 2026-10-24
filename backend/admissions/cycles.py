@@ -25,9 +25,18 @@ class PlaceInput(serializers.Serializer):
     label = serializers.CharField(max_length=80)
     campus = serializers.UUIDField(allow_null=True, required=False, default=None)
     seats = serializers.IntegerField(min_value=1, max_value=10000)
+    program = serializers.UUIDField(allow_null=True, required=False, default=None)
 
     def validate_code(self, value):
         return _code(value)
+
+    def validate_program(self, value):
+        if value is None:
+            return None
+        program = self.context["institution"].programs.filter(pk=value, is_active=True).first()
+        if program is None:
+            raise serializers.ValidationError("Choose one of the institution's active programs.")
+        return program
 
     def validate_campus(self, value):
         if value is None:

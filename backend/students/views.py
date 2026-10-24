@@ -16,9 +16,10 @@ from common.models import AuditEvent
 from common.pagination import Pages
 from configuration.gates import require_module
 from configuration.serializers import VersionInput
-from students import guardians, logins, withdrawal
+from students import guardians, logins, pinning, withdrawal
 from students.models import GuardianLink, Student
 from students.serializers import (
+    PinInput,
     ProposeInput,
     RevokeInput,
     StudentInput,
@@ -54,6 +55,7 @@ class StudentView(GenericAPIView):
             **student_item(student),
             "can_withdraw": allowed and student.status == Student.Status.ACTIVE,
             "can_reinstate": allowed and withdrawal.can_reinstate(student),
+            "can_change_program": allowed and student.status == Student.Status.ACTIVE,
             "can_manage_guardians": guardians.can_manage_links(self.request.user, student),
         }
 
@@ -105,6 +107,15 @@ class StudentDetail(StudentView):
                 audit.log(
                     request.user, "student.updated", student, f"Corrected {student.number}'s details", changes=diff
                 )
+        return Response(self.detail(student))
+
+
+class StudentProgram(StudentView):
+    def post(self, request, pk):
+        require_module(request.institution, "academics")
+        data = PinInput(data=request.data)
+        data.is_valid(raise_exception=True)
+        student = pinning.pin(request.user, self.student(), **data.validated_data)
         return Response(self.detail(student))
 
 

@@ -6,7 +6,7 @@ import { LoadError } from '../../ui/load-error';
 import { PortalFrame } from '../apply/portal-frame';
 import { ChildSummary } from './child-summary';
 import { catchError, of } from 'rxjs';
-import { AttendanceSummary, FeeStatement } from '../../core/api/types';
+import { AttendanceSummary, ChildTransport, FeeStatement } from '../../core/api/types';
 import { AttendanceSummaryView } from '../attendance/attendance-summary';
 import { PayOnline } from '../fees/pay-online';
 
@@ -20,6 +20,10 @@ import { PayOnline } from '../fees/pay-online';
       @if (data.value(); as child) {
         <section class="card"><app-child-summary [child]="child" /></section>
         @if (child.shared) {
+          @if (transport.value(); as t) {
+            <section class="card"><h2 class="card-title">Bus</h2>
+              <p class="small">{{ t.route }} · {{ t.stop }}{{ t.time ? ' at ' + t.time : '' }}@for (x of t.today; track $index) { · {{ x.direction === 'home' ? 'home' : 'to school' }}: {{ x.state }} }</p></section>
+          }
           @if (fees.value(); as statement) {
             <section class="card"><h2 class="card-title">Fees</h2><app-pay-online [statement]="statement" [orders]="'family/children/' + id() + '/fees/orders'" (ordered)="fees.reload()" /></section>
           }
@@ -39,6 +43,10 @@ export class FamilyChildPage {
   private readonly api = inject(Api);
   protected readonly data = load(
     () => this.api.get<FamilyChild>(`family/children/${this.id()}`),
+    () => this.id(),
+  );
+  protected readonly transport = load(
+    () => this.api.get<ChildTransport>(`family/children/${this.id()}/transport`).pipe(catchError(() => of(null))),
     () => this.id(),
   );
   protected readonly fees = load(

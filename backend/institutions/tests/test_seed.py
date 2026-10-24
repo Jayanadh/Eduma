@@ -13,7 +13,9 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     User.objects.filter(username="aster.admin").update(full_name="Changed")
     call_command("seed_demo")
     assert Institution.objects.count() == 4
-    assert User.objects.count() == 20  # aster.grandparent, .accountant; meridian.faculty, .adviser, .exams; Ananya
+    assert (
+        User.objects.count() == 23
+    )  # + aster.grandparent/accountant/librarian/transport; meridian.faculty/adviser/exams/warden; Ananya
     assert SiteRevision.objects.filter(status="published").count() == 3
     states = dict(Institution.objects.values_list("slug", "lifecycle_status"))
     assert states == {"aster": "active", "meridian": "active", "vector": "setup", "summit": "active"}
@@ -61,15 +63,16 @@ def test_seed_runs_twice_without_duplicates(db, settings):
         ["membership.read"],
         "CITY",
     )
-    for institution in Institution.objects.all():
-        assert institution.modules == default_modules(institution.category)
+    for institution in Institution.objects.all():  # Aster and Meridian also bought campus modules
+        assert set(default_modules(institution.category)) <= set(institution.modules)
     from configuration.models import SettingRevision
     from configuration.registry import setting
 
     assert setting(aster_inst, "modules.enabled") == [
-        "academics", "admissions", "attendance", "communication", "exams", "fees", "report_cards", "students"
+        "academics", "admissions", "attendance", "communication", "exams", "fees", "library", "report_cards",
+        "students", "transport",
     ]  # fmt: skip
-    assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 5
+    assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 6
     assert setting(aster_inst, "access.role_approval") is False
     deputy = User.objects.get(username="aster.deputy")
     assert deputy.full_name == "Aster Deputy Admin" and deputy.check_password("Demo-pass-2026")
@@ -87,7 +90,7 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     from academics.models import CourseOffering, CurriculumVersion
 
     meridian = Institution.objects.get(slug="meridian")
-    assert setting(meridian, "modules.enabled") == ["academics", "admissions", "exams", "students"]
+    assert setting(meridian, "modules.enabled") == ["academics", "admissions", "exams", "hostel", "students"]
     regulation = CurriculumVersion.objects.get(program__institution=meridian)
     assert (str(regulation), regulation.status, regulation.courses.count()) == ("R2026 rev 1", "published", 4)
     lab = CourseOffering.objects.get(institution=meridian, code="A1")
@@ -120,6 +123,11 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     from communication.models import Conversation
 
     assert Conversation.objects.get(institution=aster_inst).messages.count() == 1
+    from campus.models import Allocation, Loan, Rider
+
+    assert Loan.objects.get(student__application__learner_name="Arjun Demo").status == "active"
+    assert Rider.objects.filter(student__application__learner_name="Arjun Demo").count() == 1
+    assert Allocation.objects.get(student__person__full_name="Ananya Demo").state == "allocated"
     batch = SubmissionBatch.objects.get(grant__university__slug="summit")
     assert (batch.status, [r.number for r in batch.rows.all()]) == ("submitted", [ananya.number])
 

@@ -257,3 +257,11 @@ Full table: `docs/superpowers/specs/2026-10-24-slice9-communication-design.md`.
 | S9-08 | Media tokens are signed, role-bound, 5-minute, and revoked by bumping a version. |
 | S9-09 | Join/leave times are evidence only; reconnects aren't double-counted. |
 | S9-10 | App and module `communication`; permission `communication.manage`; only a test-mode sandbox until D-12; recording off (D-13). |
+
+## Slice 10a (library, transport, hostel)
+
+Full table: `docs/superpowers/specs/2026-10-24-slice10a-library-transport-hostel-design.md`. S10A-01 catalogue and
+copies; S10A-02 locked issue, limits, overdue block, renewals; S10A-03 reservations hold returned copies; S10A-04 fines
+through fees, waivers kept, lost distinct; S10A-05 route capacity over overlapping dates; S10A-06 trips, one boarding,
+approved pickup at drop-off; S10A-07 guardians see only their child's route and trip state; S10A-08 beds never
+doubled, transfers atomic; S10A-09 out-passes; S10A-10 app `campus`, modules available.

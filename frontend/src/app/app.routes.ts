@@ -178,6 +178,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/communication/call-page').then((m) => m.CallPage),
   },
   {
+    path: 'student/campus',
+    title: 'Campus',
+    canActivate: [signedIn, studentOnly],
+    loadComponent: () => import('./features/student/campus-page').then((m) => m.StudentCampusPage),
+  },
+  {
     path: 'student/progress',
     title: 'Degree progress',
     canActivate: [signedIn, studentOnly],
@@ -457,6 +463,23 @@ export const routes: Routes = [
         title: 'Communication',
         canActivate: [requires('communication.manage')],
         loadComponent: () => import('./features/communication/communication-settings').then((m) => m.CommunicationSettings),
+      },
+      {
+        path: 'campus/library',
+        title: 'Library',
+        canActivate: [requires('library.manage')],
+        loadComponent: () => import('./features/campus/library-page').then((m) => m.LibraryPage),
+      },
+      {
+        path: 'campus/transport',
+        title: 'Transport',
+        loadComponent: () => import('./features/campus/transport-page').then((m) => m.TransportPage),
+      },
+      {
+        path: 'campus/hostel',
+        title: 'Hostel',
+        canActivate: [requires('hostel.manage')],
+        loadComponent: () => import('./features/campus/hostel-page').then((m) => m.HostelPage),
       },
       {
         path: 'attendance/corrections',

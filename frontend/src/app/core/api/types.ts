@@ -1134,3 +1134,33 @@ export type ClassSessionT = {
   is_host: boolean;
   participants?: { id: string; full_name: string; role: string; admission: string; present: boolean; seconds: number }[];
 };
+
+export type LibraryLoan = {
+  id: string;
+  title: string;
+  accession: string;
+  borrower: string;
+  issued_on: string;
+  due_on: string;
+  returned_on: string | null;
+  renewals: number;
+  status: 'active' | 'returned' | 'lost';
+  fines: { id: string; amount: string; reason: string; waived_reason: string; invoiced: boolean }[];
+};
+export type LibraryTitle = {
+  id: string;
+  title: string;
+  author: string;
+  isbn: string;
+  subject: string;
+  copies: { accession: string; status: string }[];
+  available: number;
+  waiting: number;
+};
+export type ChildTransport = { route: string; stop: string; time: string | null; today: { direction: string; state: string }[] } | null;
+export type OwnCampus = {
+  loans: LibraryLoan[];
+  transport: ChildTransport;
+  hostel: { id: string; bed: string | null; state: string; starts_on: string; ends_on: string } | null;
+  out_passes: { id: string; leaves_at: string; returns_at: string; reason: string; state: string }[];
+};

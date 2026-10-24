@@ -85,6 +85,7 @@ class Command(BaseCommand):
         self._results(platform_admin)
         self._fees(platform_admin)
         self._communication()
+        self._campus(platform_admin)
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -714,3 +715,46 @@ class Command(BaseCommand):
             {"student": arjun.id, "with": User.objects.get(username="aster.parent").id, "subject": "Settling in",
              "body": "Arjun has settled in well. He asked good questions in Science today.", "client_id": "seed-1"},
         )  # fmt: skip
+
+    def _campus(self, actor) -> None:
+        """Library and transport at Aster (`aster.librarian`, `aster.transport`): two copies of a title, one lent to
+        Arjun; a Lake Road route with Arjun on it and today's trip home. A hostel at Meridian (`meridian.warden`) with
+        Ananya in residence. The modules are added to both plans, as the platform admin would."""
+        from campus import hostel, library, transport
+        from campus.models import Bed, Hostel, Title
+
+        for slug, extra in (("aster", ("library", "transport")), ("meridian", ("hostel",))):
+            institution = Institution.objects.get(slug=slug)
+            institution.modules = sorted({*institution.modules, *extra})
+            institution.save(update_fields=["modules"])
+            self._switch_on(institution, User.objects.get(username=f"{slug}.admin"), *extra)
+        aster, meridian = Institution.objects.get(slug="aster"), Institution.objects.get(slug="meridian")
+        librarian = self._member(aster, actor, "aster.librarian", "Aster Librarian", "librarian", None).user
+        office = self._member(aster, actor, "aster.transport", "Aster Transport Office", "transport_officer", None).user
+        warden = self._member(meridian, actor, "meridian.warden", "Meridian Warden", "warden", None).user
+        if Title.objects.filter(institution=aster).exists():
+            return
+        arjun = aster.students.get(application__learner_name="Arjun Demo")
+        library.add_title(
+            librarian, aster, {"title": "Wings of Fire", "author": "A. P. J. Abdul Kalam", "copies": ["WF-1", "WF-2"]}
+        )
+        library.issue(librarian, aster, "WF-1", student=arjun)
+        van = transport.add_vehicle(office, aster, {"registration": "AP 16 AB 1234", "capacity": 30})
+        stops = [{"name": "Lake Road", "time": "07:40"}, {"name": "Temple Street", "time": "07:55"}]
+        route = transport.add_route(office, aster, {"name": "Lake Road", "vehicle": van, "stops": stops})
+        today = today_for(aster)
+        transport.assign(
+            office, route, arjun, {"stop": "Lake Road", "starts_on": today, "ends_on": dt.date(2028, 3, 31)}
+        )
+        transport.plan_trip(
+            office, route, {"date": today, "direction": "home", "driver": Membership.objects.get(user=office)}
+        )
+        block = Hostel.objects.create(institution=meridian, name="Meridian girls' hostel")
+        for room, label in (("101", "A"), ("101", "B"), ("102", "A")):
+            Bed.objects.create(hostel=block, room=room, label=label)
+        ananya = meridian.students.get(person__full_name="Ananya Demo")
+        place = hostel.request(
+            warden, meridian, ananya, {"starts_on": dt.date(2026, 6, 1), "ends_on": dt.date(2027, 3, 31)}
+        )
+        place = hostel.approve(warden, place, block.beds.first())
+        hostel.step(warden, place, "check-in")

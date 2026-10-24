@@ -3,7 +3,26 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (24 October 2026, slice 9 — BUILD-09)
+## Where things stand (24 October 2026, slice 10a — BUILD-10 part 1)
+
+**Slice 10a (library, transport, hostel) is built and tested** in fast mode. Spec:
+`docs/superpowers/specs/2026-10-24-slice10a-library-transport-hostel-design.md`. Branch
+`slice-10a-library-transport-hostel`, cut from `slice-9-communication`. Next: 10b (HR leave and payroll boundary,
+procurement, stock, assets, lab booking).
+
+| Built in slice 10a | Where |
+|---|---|
+| Library: titles and copies; loans with the copy locked (the last copy goes to one borrower, TST-027); limits, overdue block, renewals, reservations holding a returned copy; fines (overdue or replacement) posted to the student's fee account when Fees is on; waivers kept; lost distinct | `backend/campus/library.py`, `features/campus/library-page.ts` |
+| Transport: vehicles, routes with stops, riders within capacity over overlapping dates (TST-028), one route per student; trips with the crew recording boarding once and drop-off only to an approved pickup; guardians see their child's route and today's trips only | `campus/transport.py`, `features/campus/transport-page.ts`, family portal |
+| Hostel: beds, requests, approvals that never double a bed or a student, check-in/out, transfers, occupancy; out-passes asked by residents and decided by the warden | `campus/hostel.py`, `features/campus/hostel-page.ts`, student **Campus** |
+| Roles Librarian, Transport Officer, Warden; modules library / transport / hostel available | `accounts/roles.py`, `institutions/modules.py` |
+| Student pages no longer need Academics on for Fees, Campus and the rest (each needs its own module) | `academics/registration_views.OwnView` |
+| Demo: Aster's library (Arjun has WF-1) and Lake Road bus; Meridian's hostel (Ananya in 101 A) | `seed_demo.py` |
+
+Checks on 24 Oct 2026: backend `pytest` 587 passed; ruff clean; frontend `ng test` 234 passed; `ng build` clean. Not
+selected: GPS tracking, the mess, hostel deposits and fees.
+
+## Slice 9 (24 October 2026) — BUILD-09
 
 **Slice 9 (communication and teacher-led classes) is built and tested** in fast mode. Spec:
 `docs/superpowers/specs/2026-10-24-slice9-communication-design.md`. Branch `slice-9-communication`, cut from

@@ -62,9 +62,10 @@ class InstitutionView(GenericAPIView):
 
 class Grants(InstitutionView):
     def get(self, request):
-        mine = request.institution.id
+        here = request.institution.id
+        rows = self.mine()
         return Response(
-            [{**services.grant_item(g), "side": "college" if g.college_id == mine else "university"} for g in self.mine()]
+            [{**services.grant_item(g), "side": "college" if g.college_id == here else "university"} for g in rows]
         )
 
 

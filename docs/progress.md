@@ -3,7 +3,35 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (24 October 2026, slice 5b — BUILD-05 part 2)
+## Where things stand (24 October 2026, slice 5c–5e — BUILD-05 complete)
+
+**Slices 5c, 5d and 5e are built and tested; BUILD-05 is complete.** Spec:
+`docs/superpowers/specs/2026-10-24-slice5c-registration-progress-affiliation-design.md`. Plan:
+`docs/superpowers/plans/2026-10-24-slice5c-registration-progress-affiliation.md`. Branch
+`slice-5c-registration-progress`, cut from `slice-5b-programs-curricula`. **Fast mode** (the user's choice, 24 Oct
+2026): no browser check and no fresh review per slice; one full verification pass once everything is built. Next:
+BUILD-06 (timetable, teaching and attendance).
+
+| Built in slices 5c–5e | Where |
+|---|---|
+| Registration windows per term (dates, drop deadline, credit limit, adviser approval) | `backend/academics/registration.py`, `features/academics/windows-section.ts` |
+| Registration with a code per failed rule; lecture and lab together; last seat to one request (TST-010); waitlist with rechecked promotion; drop before / withdraw after the deadline; approvals; holds; overrides with reason, authority and regulation version (never capacity); role Academic Adviser | `registration.py`, `registration_views.py`, offering page, student record **Registration**, student portal **Registration** |
+| Attempts kept for good; outcomes recorded by `academic_record.manage`; repeat rule on the regulation (replace / best / all, credits once); SGPA/CGPA exact and shown to two decimals (TST-013: 7.57 → 8.43) | `academics/progress.py`, student record **Academic record** |
+| Transfer credit with evidence, decision, approved credits, equivalent course and awarding authority; earned vs accepted toward the award | `progress.py` |
+| Advisory degree progress: completed, in progress, planned, failed, unmet, by course | `progress.py`, `features/academics/degree-progress.ts`, student portal **Degree progress** |
+| Teachers' offering class lists | `teaching.py`, `features/academics/teaching-offering-page.ts` |
+| Affiliation: grants proposed in the console, approved by the college, revocable by either side; result batches previewed, submitted, reviewed row by row, corrected as new revisions with history; access rechecked on every read | new app `backend/affiliations/`, `features/console/affiliations-page.ts`, `features/academics/affiliations-page.ts`, `batch-page.ts` |
+| Demo: Meridian's Semester 1 results for Ananya (CGPA 7.67) and Semester 2 registration open (PHY201-A); `meridian.adviser`; Ananya's login; Summit ↔ Meridian grant with a submitted batch | `seed_demo.py` |
+
+Checks on 24 Oct 2026: backend `pytest` 549 passed; `ruff check`, `ruff format --check` and `makemigrations --check`
+clean; frontend `ng test` 213 passed; `ng build` clean. Not done (fast mode): browser check, independent review.
+Found while running the full suite: undoing an import whose students had since registered or been given a hold hit
+protected rows; it is now refused with the reason (test added). Known limits: timetable conflicts wait for BUILD-06;
+outcomes are typed in until exam results (BUILD-07) feed them; the staff register form lists the first 200 offerings;
+registration windows can be added but not edited from the page (the API takes PATCH); overrides and holds apply at
+the student's scope, windows at the whole institution's.
+
+## Slice 5b (24 October 2026) — BUILD-05 part 2
 
 **Slice 5b is built and checked locally.** Spec: `docs/superpowers/specs/2026-10-23-slice5b-programs-curricula-design.md`.
 Plan: `docs/superpowers/plans/2026-10-23-slice5b-programs-curricula.md`. Branch `slice-5b-programs-curricula`, cut from

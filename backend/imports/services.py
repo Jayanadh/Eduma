@@ -6,7 +6,7 @@ import io
 
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
@@ -269,6 +269,15 @@ def undo_blocker(job: ImportJob, students=None) -> str | None:
         return f"{found.number} has been placed in a class."
     if found := students.annotate(episodes=Count("enrollments")).filter(episodes__gt=1).first():
         return f"{found.number} has another enrollment."
+    academic = (
+        Q(enrollments__registrations__isnull=False)
+        | Q(enrollments__attempts__isnull=False)
+        | Q(enrollments__transfers__isnull=False)
+        | Q(holds__isnull=False)
+        | Q(overrides__isnull=False)
+    )
+    if found := students.filter(academic).first():
+        return f"{found.number} has registrations, a hold or an academic record."
     links = GuardianLink.objects.filter(student__in=students)
     if found := links.exclude(source=GuardianLink.Source.IMPORT, status=GuardianLink.Status.PROPOSED).first():
         return f"{found.student.number} has a guardian added or checked since the import."

@@ -55,7 +55,7 @@ def test_job_page_and_undo_do_not_query_per_student(world, on, main, client_for,
     committed = commit(admin, job).json()
     with django_assert_max_num_queries(15):
         admin.get(f"{URL}/{job['id']}")
-    with django_assert_max_num_queries(40):
+    with django_assert_max_num_queries(46):  # a fixed number per related table, never per student
         undone = admin.post(f"{URL}/{job['id']}/undo", {"version": committed["version"]}, format="json")
     assert undone.status_code == 200 and Student.objects.count() == 0
 
@@ -87,3 +87,23 @@ def test_malformed_or_oversized_values_are_row_or_file_errors(world, on, main, c
     refused = upload(admin, broken)
     assert refused.status_code == 422 and refused.json()["errors"][0]["field"] == "file"
     assert ImportJob.objects.count() == 1
+
+
+def test_a_hold_or_registration_since_the_import_blocks_undo(world, on, main, client_for):
+    """Slice 5c: holds, registrations and academic records point at imported students; undo refuses, never a 500."""
+    from academics.models import Hold
+
+    admin = client_for(world.a.slug, world.a_admin)
+    job = upload(admin, csv_file(line())).json()
+    committed = commit(admin, job).json()
+    student = Student.objects.get()
+    Hold.objects.create(
+        institution=world.a,
+        student=student,
+        kind="academic",
+        reason="x",
+        placed_by=world.a_admin,
+        placed_on="2026-10-01",
+    )
+    refused = admin.post(f"{URL}/{job['id']}/undo", {"version": committed["version"]}, format="json")
+    assert refused.status_code == 409 and refused.json()["code"] == "undo_blocked"

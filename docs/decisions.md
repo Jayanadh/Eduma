@@ -160,3 +160,27 @@ Full table and reasons: `docs/superpowers/specs/2026-10-23-slice5b-programs-curr
 | S5B-08 | Programs and courses are managed at their department (none: the whole institution); regulations follow their program; offerings follow the course's department, else their campus. |
 | S5B-09 | The menu follows the category (colleges and universities get Programs, Courses, Offerings); the API allows both everywhere. |
 | S5B-10 | Demo regulation content is labelled synthetic, for development. |
+
+## Slices 5c–5e (registration, attempts and progress, affiliation)
+
+Full table and reasons: `docs/superpowers/specs/2026-10-24-slice5c-registration-progress-affiliation-design.md` §2.
+
+| ID | Decision |
+|---|---|
+| S5C-01 | A registration window per term: opens, closes, drop deadline, credit limit, adviser approval. |
+| S5C-02 | Each failed rule has its own code; six are overridable, enrollment, regulation, offering status, links and capacity never are; timetable conflicts wait for BUILD-06. |
+| S5C-03 | One confirmation covers several offerings that commit together; a lecture with labs needs exactly one lab; seats are claimed under locks; full → 409 `capacity_exhausted` or waitlisted on request (single unlinked offerings). |
+| S5C-04 | States pending approval (holds a seat), waitlisted, registered, rejected, dropped (attempt removed), withdrawn (attempt kept); one active registration per student and offering. |
+| S5C-05 | Waitlist promotion rechecks eligibility; whoever no longer qualifies is rejected with the rule. |
+| S5C-06 | Overrides name student, offering and rule, with reason, expiry, grantor and the regulation and window versions; used once. |
+| S5C-07 | Holds (academic or administrative) block registration until lifted. |
+| S5C-08 | Students register themselves; staff with `registration.manage` for them; new role Academic Adviser. |
+| S5D-01 | A registered registration creates the attempt; outcomes are recorded and never deleted. |
+| S5D-02 | The regulation's repeat rule (replace, best, all) decides which attempts count; credits count once. |
+| S5D-03 | SGPA/CGPA are computed exactly from attempts and shown to two decimals; absent, withheld and exempt are not zeroes. |
+| S5D-04 | Transfer credit records source, evidence, decision, approved credits, equivalent course and awarding authority. |
+| S5D-05 | Degree progress is advisory and labelled so: earned vs accepted toward the award, in progress, planned, unmet. |
+| S5E-01 | Affiliation grants (college → university) are proposed by the platform, approved by the college, revocable by either; in effect only while approved and in dates. |
+| S5E-02 | Result batches snapshot each student's identity, program, regulation and the term's attempts; rows with problems block submitting. |
+| S5E-03 | The university reviews row by row while the grant is in effect, with a reason for each returned row. |
+| S5E-04 | Corrections are new revisions of the same batch; the latest accepted row is the current record; history stays; the university never changes the college's records. |

@@ -45,6 +45,11 @@ urlpatterns = [
     path("students/<uuid:pk>/holds", registration_views.HoldList.as_view()),
     path("holds/<uuid:pk>/lift", registration_views.LiftHold.as_view()),
     path("overrides", registration_views.OverrideList.as_view()),
+    path("attempts", registration_views.AttemptList.as_view()),
+    path("attempts/<uuid:pk>", registration_views.AttemptDetail.as_view()),
+    path("transfers", registration_views.TransferList.as_view()),
+    path("transfers/<uuid:pk>/decide", registration_views.DecideTransfer.as_view()),
+    path("students/<uuid:pk>/progress", registration_views.StudentProgress.as_view()),
     path("courses", he_views.CourseList.as_view()),
     path("courses/<uuid:pk>", he_views.CourseDetail.as_view()),
 ]

@@ -6,20 +6,25 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from academics import registration
+from academics import progress, registration
 from academics.models import (
+    CourseAttempt,
     CourseOffering,
     CourseRegistration,
+    CreditTransfer,
     CurriculumCourse,
     Hold,
     RegistrationOverride,
     RegistrationWindow,
 )
 from academics.serializers import (
+    DecideTransferInput,
     HoldInput,
+    OutcomeInput,
     OverrideInput,
     OwnRegisterInput,
     RegisterInput,
+    TransferInput,
     VersionInput,
     WindowInput,
     WindowPatch,
@@ -206,3 +211,75 @@ class OwnDrop(OwnView):
         return Response(
             registration.registration_item(registration.drop(request.user, found, version, by_student=True))
         )
+
+
+class RecordView(RegistrationView):
+    """Attempts, transfer credit and progress: read with student.read where the student is visible; changed with
+    academic_record.manage."""
+
+    def get_permissions(self):
+        return [holds_any("student.read" if self.request.method == "GET" else progress.RECORD)()]
+
+    def visible(self, pk) -> Student:
+        from students.views import visible_students
+
+        return self.found(visible_students(self.request.user, self.request.institution), pk)
+
+
+class AttemptList(RecordView):
+    def get(self, request):
+        student = self.visible(request.query_params.get("student"))
+        rows = CourseAttempt.objects.filter(enrollment__student=student).select_related("course", "term__year")
+        return Response([progress.attempt_item(a) for a in rows])
+
+
+class AttemptDetail(RecordView):
+    def patch(self, request, pk):
+        rows = CourseAttempt.objects.filter(institution=request.institution).select_related("course", "term__year")
+        found = self.found(rows.select_related("enrollment__student"), pk)
+        return Response(
+            progress.attempt_item(progress.record_outcome(request.user, found, valid(OutcomeInput, request.data)))
+        )
+
+
+class TransferList(RecordView):
+    def get(self, request):
+        student = self.visible(request.query_params.get("student"))
+        rows = CreditTransfer.objects.filter(enrollment__student=student).select_related("course")
+        return Response([progress.transfer_item(t) for t in rows])
+
+    def post(self, request):
+        data = valid(TransferInput, request.data)
+        student = self.student(data.pop("student"))
+        enrollment = student.enrollments.filter(status="active").first() or student.enrollments.first()
+        if enrollment is None:
+            raise NotFound()
+        made = progress.add_transfer(request.user, student, enrollment, data)
+        return Response(progress.transfer_item(made), status=status.HTTP_201_CREATED)
+
+
+class DecideTransfer(RecordView):
+    def post(self, request, pk):
+        rows = CreditTransfer.objects.filter(institution=request.institution).select_related(
+            "enrollment__student", "course"
+        )
+        found = self.found(rows, pk)
+        decided = progress.decide_transfer(request.user, found, valid(DecideTransferInput, request.data))
+        return Response(progress.transfer_item(decided))
+
+
+def _progress_of(student: Student) -> dict:
+    enrollment = student.enrollments.filter(status="active").first() or student.enrollments.first()
+    if enrollment is None:
+        raise NotFound()
+    return progress.progress(enrollment)
+
+
+class StudentProgress(RecordView):
+    def get(self, request, pk):
+        return Response(_progress_of(self.visible(pk)))
+
+
+class OwnProgress(OwnView):
+    def get(self, request):
+        return Response(_progress_of(self.me))

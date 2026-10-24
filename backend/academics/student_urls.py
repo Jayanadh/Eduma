@@ -7,4 +7,5 @@ from academics import registration_views
 urlpatterns = [
     path("registration", registration_views.OwnRegistration.as_view()),
     path("registrations/<uuid:pk>/drop", registration_views.OwnDrop.as_view()),
+    path("progress", registration_views.OwnProgress.as_view()),
 ]

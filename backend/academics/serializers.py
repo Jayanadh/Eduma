@@ -262,3 +262,29 @@ class OverrideInput(serializers.Serializer):
     )
     reason = serializers.CharField(max_length=300)
     expires_on = serializers.DateField()
+
+
+class OutcomeInput(serializers.Serializer):
+    outcome = serializers.ChoiceField(["passed", "failed", "absent", "withheld", "exempt"])
+    grade_point = serializers.DecimalField(
+        max_digits=4, decimal_places=2, min_value=0, max_value=10, required=False, allow_null=True
+    )
+
+
+class TransferInput(serializers.Serializer):
+    student = serializers.UUIDField()
+    source_institution = serializers.CharField(max_length=150)
+    source_course = serializers.CharField(max_length=150)
+    source_credits = serializers.DecimalField(max_digits=4, decimal_places=1, min_value=0, max_value=30)
+    evidence = serializers.CharField(max_length=500)
+
+
+class DecideTransferInput(serializers.Serializer):
+    version = serializers.IntegerField()
+    decision = serializers.ChoiceField(["approved", "rejected"])
+    approved_credits = serializers.DecimalField(
+        max_digits=4, decimal_places=1, min_value=0, max_value=30, required=False
+    )
+    awarding_authority = serializers.CharField(max_length=150, required=False)
+    course = serializers.UUIDField(required=False, allow_null=True)
+    category = serializers.ChoiceField(["core", "elective", "open_elective", "lab", "project"], required=False)

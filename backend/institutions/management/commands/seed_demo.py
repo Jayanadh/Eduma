@@ -82,6 +82,7 @@ class Command(BaseCommand):
         self._meridian_registration(platform_admin)
         self._affiliation(platform_admin)
         self._timetable()
+        self._results(platform_admin)
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -627,3 +628,34 @@ class Command(BaseCommand):
             {"title": "Parts of a plant cell", "instructions": "Draw a plant cell and label five parts.",
              "due_at": timezone.now() + dt.timedelta(days=7)},
         )  # fmt: skip
+
+    def _results(self, actor) -> None:
+        """Assessment and results on at Aster (with report cards) and Meridian (outcomes are for engineering colleges); a published "Theory 40/60" scheme at
+        each (synthetic bands); `meridian.exams` (Examination Officer); Ananya's transcript issued."""
+        from results import services as results
+        from results.models import Scheme
+
+        bands = [
+            {"min": "90", "grade": "O", "point": "10"}, {"min": "75", "grade": "A", "point": "8"},
+            {"min": "60", "grade": "B", "point": "7"}, {"min": "40", "grade": "C", "point": "5"},
+            {"min": "0", "grade": "F", "point": "0"},
+        ]  # fmt: skip
+        components = [
+            {"name": "Internal", "max_marks": 40, "weight": 40},
+            {"name": "Final", "max_marks": 60, "weight": 60, "min_percent": 40},
+        ]
+        for slug, modules in (("aster", ("exams", "report_cards")), ("meridian", ("exams",))):
+            institution = Institution.objects.get(slug=slug)
+            admin = User.objects.get(username=f"{slug}.admin")
+            self._switch_on(institution, admin, *modules)
+            if Scheme.objects.filter(institution=institution).exists():
+                continue
+            draft = results.save_scheme(
+                admin, institution, None, {"name": "Theory 40/60", "bands": bands, "components": components}
+            )
+            results.publish_scheme(admin, draft, draft.version)
+        meridian = Institution.objects.get(slug="meridian")
+        self._member(meridian, actor, "meridian.exams", "Meridian Examination Officer", "exam_officer", None)
+        ananya = meridian.students.get(person__full_name="Ananya Demo")
+        if not ananya.documents.exists():
+            results.transcript(User.objects.get(username="meridian.exams"), ananya)

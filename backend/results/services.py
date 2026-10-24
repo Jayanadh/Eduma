@@ -648,6 +648,11 @@ def result_item(r: ResultVersion | None) -> dict | None:
     }
 
 
+def _last_run(a: Assessment) -> dict | None:
+    run = a.attainment_runs.order_by("-run_at").first()
+    return {"threshold_percent": str(run.threshold_percent), "results": run.results} if run else None
+
+
 def assessment_item(a: Assessment, viewer=None) -> dict:
     target = _target(a)
     candidates = a.candidates.select_related("enrollment__student__person").prefetch_related("marks", "results")
@@ -665,6 +670,7 @@ def assessment_item(a: Assessment, viewer=None) -> dict:
             "label": attendance.label(target),
         },
         "subject": a.subject.name if a.subject_id else None,
+        "course": {"id": str(a.offering.course_id), "code": a.offering.course.code} if a.offering_id else None,
         "scheme": scheme_item(a.scheme),
         "candidates": [
             {
@@ -683,6 +689,21 @@ def assessment_item(a: Assessment, viewer=None) -> dict:
             for c in sorted(candidates, key=lambda c: c.enrollment.student.number)
         ],
         "can_evaluate": can_evaluate(viewer, a) if viewer else False,
+        "cases": [
+            {
+                "id": str(case.id),
+                "student": case.candidate.enrollment.student.number,
+                "reason": case.reason,
+                "requested_by": case.requested_by.full_name,
+            }
+            for case in RevisionCase.objects.filter(
+                candidate__assessment=a, state=RevisionCase.State.REQUESTED
+            ).select_related("candidate__enrollment__student", "requested_by")
+        ],  # fmt: skip
+        "mappings": [
+            {"component": str(m.component_id), "outcome": m.outcome.code} for m in a.mappings.select_related("outcome")
+        ],
+        "attainment": _last_run(a),
     }
 
 

@@ -203,3 +203,23 @@ Full table: `docs/superpowers/specs/2026-10-24-slice6-timetable-attendance-desig
 | S6-10 | Students see their own attendance; guardians when the record is shared; staff on the record. |
 | S6-11 | Assignments with text submissions; changeable until feedback; late flagged. |
 | S6-12 | Module `attendance`; permission `attendance.manage`. Offline capture not selected. |
+
+## Slice 7 (assessments, results and awards)
+
+Full table: `docs/superpowers/specs/2026-10-24-slice7-results-design.md`.
+
+| ID | Decision |
+|---|---|
+| S7-01 | Schemes: components (maximum, weight, minimum %), pass %, grade bands, decimals; published ones frozen; a change is a revision. |
+| S7-02 | Assessments for a section + subject or an offering, pinned to a published scheme revision, with a roster snapshot. |
+| S7-03 | Marks are scores or absent / exempt / withheld; missing is no mark; nothing becomes zero. |
+| S7-04 | Draft → submitted → moderated (someone other than the submitter) → published (`results.publish`), all marks present, one batch. |
+| S7-05 | Total = Σ score ÷ maximum × weight, exact, rounded for display; component minimums can fail a passing total; exempt rescales. |
+| S7-06 | Result versions are immutable with hashed inputs; corrections supersede. |
+| S7-07 | An offering's published result sets the attempt's outcome. |
+| S7-08 | Revaluation raised by a moderator or publisher, approved by another publisher. |
+| S7-09 | School promotion decisions per year. |
+| S7-10 | Report cards, transcripts and awards are numbered, hashed, verifiable snapshots; reissue supersedes; revoke with reason. |
+| S7-11 | Public verification shows institution, kind, number, date, initials and status only. |
+| S7-12 | Course outcomes and attainment runs from published marks; not an accreditation claim. |
+| S7-13 | App `results`; modules `exams`, `report_cards`, `outcomes`; permissions `assessment.manage`, `results.moderate`, `results.publish`. |

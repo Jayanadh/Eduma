@@ -2,7 +2,8 @@ import { Component, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
-import { AttendanceSessionT, ClassAssignment } from '../../core/api/types';
+import { catchError, of } from 'rxjs';
+import { AssessmentT, AttendanceSessionT, ClassAssignment } from '../../core/api/types';
 import { date } from '../../core/format';
 import { load } from '../../core/load';
 import { ToastService } from '../../ui/toast';
@@ -19,6 +20,16 @@ import { ToastService } from '../../ui/toast';
         <button type="submit" class="btn btn-primary btn-sm" [disabled]="busy()">Take attendance</button>
       </form>
     </section>
+    @if (assessments().length) {
+      <section class="card stack section">
+        <h2 class="card-title">Assessments</h2>
+        <ul class="rows">
+          @for (a of assessments(); track a.id) {
+            <li><a [routerLink]="['/app/results/assessments', a.id]">{{ a.title }}</a> <span class="muted small">· {{ a.state_label }}</span></li>
+          }
+        </ul>
+      </section>
+    }
     <section class="card stack section">
       <h2 class="card-title">Assignments</h2>
       <ul class="rows">
@@ -61,6 +72,13 @@ export class ClassTools {
   private readonly assignments = load(() => this.api.get<ClassAssignment[]>('teaching/assignments'));
   protected mine(): ClassAssignment[] {
     return (this.assignments.value() ?? []).filter((a) => a.target.id === this.target());
+  }
+  // Marks are entered on the assessment page; shown when Assessment and results is on (404 otherwise, so empty).
+  private readonly marking = load(() =>
+    this.api.get<AssessmentT[]>('institution/results/assessments', { [this.kind()]: this.target() }).pipe(catchError(() => of([]))),
+  );
+  protected assessments(): AssessmentT[] {
+    return this.marking.value() ?? [];
   }
   protected readonly busy = signal(false);
 

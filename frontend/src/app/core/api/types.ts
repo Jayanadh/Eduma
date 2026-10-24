@@ -997,3 +997,73 @@ export type Timetable = {
 };
 
 export type RoomT = { id: string; version: number; code: string; name: string; capacity: number; campus: Named; is_active: boolean };
+
+export type SchemeComponentT = { id: string; name: string; max_marks: string; weight: string; min_percent: string | null };
+export type Band = { min: string; grade: string; point: string };
+export type SchemeT = {
+  id: string;
+  version: number;
+  name: string;
+  revision: number;
+  status: 'draft' | 'published' | 'retired';
+  pass_percent: string;
+  decimals: number;
+  bands: Band[];
+  components: SchemeComponentT[];
+};
+export type MarkStatus = 'scored' | 'absent' | 'exempt' | 'withheld';
+export type ResultT = {
+  revision: number;
+  total: string | null;
+  grade: string;
+  grade_point: string | null;
+  outcome: 'passed' | 'failed' | 'absent' | 'withheld';
+  failed_components: string[];
+  published_at: string;
+  reason: string;
+};
+export type AssessmentT = {
+  id: string;
+  version: number;
+  title: string;
+  state: 'draft' | 'submitted' | 'moderated' | 'published';
+  state_label: string;
+  returned_reason: string;
+  term: { id: string; name: string };
+  target: { kind: 'section' | 'offering'; id: string; label: string };
+  subject: string | null;
+  course: { id: string; code: string } | null;
+  scheme: SchemeT;
+  candidates: {
+    id: string;
+    student: { id: string; number: string; full_name: string };
+    marks: Record<string, { status: MarkStatus; score: string | null }>;
+    result: ResultT | null;
+  }[];
+  can_evaluate: boolean;
+  cases: { id: string; student: string; reason: string; requested_by: string }[];
+  mappings: { component: string; outcome: string }[];
+  attainment: { threshold_percent: string; results: { outcome: string; candidates: number; attained: number; percent: string | null }[] } | null;
+};
+export type IssuedDocumentT = {
+  id: string;
+  kind: 'report_card' | 'transcript' | 'award';
+  kind_label: string;
+  number: string;
+  title: string;
+  status: 'current' | 'superseded' | 'revoked';
+  reason: string;
+  issued_at: string;
+  token: string;
+  content: Record<string, unknown>;
+  content_hash: string;
+};
+export type Verification = {
+  institution: string;
+  kind: string;
+  number: string;
+  issued_on: string;
+  holder: string;
+  status: 'current' | 'superseded' | 'revoked';
+  superseded_by: string | null;
+};

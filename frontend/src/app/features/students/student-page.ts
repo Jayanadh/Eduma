@@ -6,6 +6,7 @@ import { apiErrorMessage, fieldErrors, isProblem } from '../../core/api-error';
 import { of } from 'rxjs';
 import { AttendanceSummary, StudentRecord } from '../../core/api/types';
 import { AttendanceSummaryView } from '../attendance/attendance-summary';
+import { DocumentsSection } from '../results/documents-section';
 import { AuthStore } from '../../core/auth-store';
 import { date, dateTime } from '../../core/format';
 import { load } from '../../core/load';
@@ -25,6 +26,7 @@ import { RegistrationSection } from './registration-section';
   selector: 'app-student-page',
   imports: [
     AttendanceSummaryView,
+    DocumentsSection,
     GuardiansSection,
     HistorySection,
     LoadError,
@@ -174,6 +176,9 @@ import { RegistrationSection } from './registration-section';
             <app-record-section [student]="student" />
           </div>
         }
+        @if (exams()) {
+          <div class="section"><app-documents-section [student]="student" /></div>
+        }
         <div class="section"><app-history-section [studentId]="student.id" /></div>
       } @else if (data.loading()) {
         <p class="muted" role="status">Loading…</p>
@@ -211,6 +216,7 @@ export class StudentPage {
         : of(null),
     () => this.id(),
   );
+  protected readonly exams = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('exams') ?? false);
   /** Registration and the academic record belong to colleges with Academics on. */
   protected readonly college = computed(
     () => this.auth.higher() && (this.auth.user()?.membership?.modules_enabled?.includes('academics') ?? false),

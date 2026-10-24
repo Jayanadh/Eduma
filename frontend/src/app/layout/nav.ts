@@ -71,6 +71,22 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string; higher
     module: 'attendance',
   },
   {
+    label: 'Assessment schemes',
+    icon: 'layers',
+    link: '/app/results/schemes',
+    group: 'Academics',
+    needs: 'assessment.manage',
+    module: 'exams',
+  },
+  {
+    label: 'Assessments',
+    icon: 'clipboard',
+    link: '/app/results/assessments',
+    group: 'Academics',
+    needs: ['assessment.manage', 'results.moderate', 'results.publish'],
+    module: 'exams',
+  },
+  {
     label: 'Programs',
     icon: 'award',
     link: '/app/academics/programs',

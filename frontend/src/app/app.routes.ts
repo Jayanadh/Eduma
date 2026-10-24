@@ -127,6 +127,17 @@ export const routes: Routes = [
     loadComponent: () => import('./features/student/assignments-page').then((m) => m.StudentAssignmentsPage),
   },
   {
+    path: 'student/results',
+    title: 'Results',
+    canActivate: [signedIn, studentOnly],
+    loadComponent: () => import('./features/student/results-page').then((m) => m.StudentResultsPage),
+  },
+  {
+    path: 'verify/:token',
+    title: 'Document check',
+    loadComponent: () => import('./features/results/verify-page').then((m) => m.VerifyPage),
+  },
+  {
     path: 'student/progress',
     title: 'Degree progress',
     canActivate: [signedIn, studentOnly],
@@ -357,6 +368,23 @@ export const routes: Routes = [
         title: 'Timetable',
         canActivate: [requires('academic_structure.manage')],
         loadComponent: () => import('./features/academics/timetable-page').then((m) => m.TimetablePage),
+      },
+      {
+        path: 'results/schemes',
+        title: 'Assessment schemes',
+        canActivate: [requires('assessment.manage')],
+        loadComponent: () => import('./features/results/schemes-page').then((m) => m.SchemesPage),
+      },
+      {
+        path: 'results/assessments',
+        title: 'Assessments',
+        canActivate: [requires(['assessment.manage', 'results.moderate', 'results.publish'])],
+        loadComponent: () => import('./features/results/assessments-page').then((m) => m.AssessmentsPage),
+      },
+      {
+        path: 'results/assessments/:id',
+        title: 'Assessment',
+        loadComponent: () => import('./features/results/assessment-page').then((m) => m.AssessmentPage),
       },
       {
         path: 'attendance/corrections',

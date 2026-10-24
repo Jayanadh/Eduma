@@ -3,7 +3,30 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (24 October 2026, slice 6 — BUILD-06)
+## Where things stand (24 October 2026, slice 7 — BUILD-07)
+
+**Slice 7 (assessments, results and awards) is built and tested** in fast mode. Spec:
+`docs/superpowers/specs/2026-10-24-slice7-results-design.md`. Branch `slice-7-results`, cut from
+`slice-6-timetable-attendance`. Next: BUILD-08 (fees, payments and reconciliation).
+
+| Built in slice 7 | Where |
+|---|---|
+| Assessment schemes (components with maximum, weight and minimum; pass %, grade bands; published ones frozen, revised as new revisions) | `backend/results/services.py`, `features/results/schemes-page.ts` |
+| Assessments for a class and subject or an offering, with a roster snapshot; marks as scores or absent / exempt / withheld (never zero); draft → submitted → moderated (by someone else) → published | `results/services.py`, `features/results/assessments-page.ts`, `assessment-page.ts` |
+| EX-02 calculation (77/100), component minimums failing a passing total, exempt components rescaled; exact totals rounded for display only | `results.services.calculate` |
+| Immutable result versions with hashed inputs; revaluation by one person, approval by another → new revision, the old one kept | `results/services.py` |
+| Published offering results become the course attempt's outcome (SGPA/CGPA and progress follow) | `results/services.py` |
+| Report cards (subjects, attendance, promotion decision), transcripts, awards (credits met or an authorised exception), university awards from affiliation records; numbered, hashed, verifiable; reissue supersedes; revoke | `results/services.py`, `features/results/documents-section.ts`, batch page |
+| Public verification with initials and status only | `GET /api/v1/public/verify/<token>`, `features/results/verify-page.ts` |
+| Course outcomes, component mappings and attainment runs (engineering) | `results/services.py`, assessment page |
+| Student portal **Results** (published results and documents) | `features/student/results-page.ts` |
+| Demo: schemes at Aster and Meridian, `meridian.exams`, Ananya's transcript | `seed_demo.py` |
+
+Checks on 24 Oct 2026: backend `pytest` 567 passed; ruff and `makemigrations --check` clean; frontend `ng test` 224
+passed; `ng build` clean. Not built: document templates and signing authorities as separate versioned records (the
+issued content is the frozen record); PDF rendering; mark import from a spreadsheet.
+
+## Slice 6 (24 October 2026) — BUILD-06
 
 **Slice 6 (timetable, teaching and attendance) is built and tested** in fast mode (no browser check or review until
 the end). Spec: `docs/superpowers/specs/2026-10-24-slice6-timetable-attendance-design.md`. Branch

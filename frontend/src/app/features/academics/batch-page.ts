@@ -5,6 +5,7 @@ import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
 import { BatchRow, SubmissionBatch } from '../../core/api/types';
 import { load } from '../../core/load';
+import { AuthStore } from '../../core/auth-store';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { LoadError } from '../../ui/load-error';
 import { PageHeader } from '../../ui/page-header';
@@ -54,6 +55,9 @@ import { ToastService } from '../../ui/toast';
                     }
                     @if (!reviewing() && b.status === 'reviewed' && r.status === 'accepted') {
                       <label class="small"><input type="checkbox" [id]="'correct-' + r.id" (change)="mark(r.id, $any($event.target).checked)" /> Correct</label>
+                    }
+                    @if (reviewing() && r.status === 'accepted' && r.current && canAward()) {
+                      <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Issue award to ' + r.number" [disabled]="busy()" (click)="award(r)">Issue award</button>
                     }
                     @if (reviewing() && r.status === 'pending' && b.status === 'submitted') {
                       <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Accept ' + r.number" [disabled]="busy()" (click)="decide(b, r, 'accepted')">Accept</button>
@@ -127,6 +131,23 @@ export class BatchPage {
         } else {
           this.data.value.set(b);
         }
+      },
+      error: (err) => {
+        this.busy.set(false);
+        this.toasts.show(apiErrorMessage(err), 'danger');
+      },
+    });
+  }
+
+  private readonly auth = inject(AuthStore);
+  protected readonly canAward = computed(() => this.auth.can('results.publish'));
+
+  protected award(r: BatchRow): void {
+    this.busy.set(true);
+    this.api.post<{ number: string }>('institution/results/affiliation-awards', { row: r.id }).subscribe({
+      next: (doc) => {
+        this.busy.set(false);
+        this.toasts.show(`Award ${doc.number} issued to ${r.full_name}.`);
       },
       error: (err) => {
         this.busy.set(false);

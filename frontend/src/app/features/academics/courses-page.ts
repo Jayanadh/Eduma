@@ -32,11 +32,13 @@ const KINDS = [
           <div class="card list-card section">
             <ul class="list">
               @for (c of result.results; track c.id) {
-                <li class="list-row">
-                  <span class="list-main">
-                    <span class="list-title">{{ c.code }} · {{ c.title }}</span>
-                    <span class="muted small">{{ c.credits }} credits · {{ c.kind_label }}{{ c.department ? ' · ' + c.department.name : '' }}{{ c.is_active ? '' : ' · inactive' }}</span>
-                  </span>
+                <li>
+                  <div class="list-row">
+                    <span class="list-main">
+                      <span class="list-title">{{ c.code }} · {{ c.title }}</span>
+                      <span class="muted small">{{ c.credits }} credits · {{ c.kind_label }}{{ c.department ? ' · ' + c.department.name : '' }}{{ c.is_active ? '' : ' · inactive' }}</span>
+                    </span>
+                  </div>
                 </li>
               }
             </ul>

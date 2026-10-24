@@ -163,6 +163,13 @@ describe('Programs and curricula', () => {
     const request = http.expectOne('/api/v1/institution/academics/curricula/cv1/courses');
     expect(request.request.body).toEqual({ course: 'c3', category: 'elective', term: 2, elective_group: 'Maths elective', prerequisites: ['c1'] });
     request.flush(curriculum());
+    await fixture.whenStable();
+    // The form is cleared after adding, and what the next add sends matches what it shows.
+    component.choose('c4', 'PHY102 Waves');
+    await fixture.whenStable();
+    root.querySelector<HTMLFormElement>('#add-course')!.dispatchEvent(new Event('submit'));
+    const next = http.expectOne('/api/v1/institution/academics/curricula/cv1/courses');
+    expect(next.request.body).toEqual({ course: 'c4', category: 'core', term: 1, elective_group: '', prerequisites: [] });
   });
 
   it('publishes with the version it shows', async () => {

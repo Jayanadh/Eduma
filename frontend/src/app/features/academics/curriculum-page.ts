@@ -105,9 +105,13 @@ export class CurriculumPage {
       prerequisites: [...this.needs()],
     };
     this.run(this.api.post<Curriculum>(`${this.base()}/courses`, body), `${chosen.label} added.`, () => {
+      form.reset();
+      // The selects are back on their first options; keep what is sent in step with them.
       this.chosen.set(null);
       this.needs.set(new Set());
-      form.reset();
+      this.category.set('core');
+      this.term.set(1);
+      this.search.set('');
     });
   }
 

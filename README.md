@@ -105,7 +105,9 @@ Every demo login uses the password **`Demo-pass-2026`**.
 | `aster.parent` | http://aster.localhost:4201/login | Arjun Demo's verified guardian: lands on **Your children** (Arjun's number and class) and keeps **Applications** (Meera Demo, Class 1, submitted). New families make their own account from **Apply** on the school's page (http://aster.localhost:4201/apply). |
 | `aster.grandparent` | http://aster.localhost:4201/login | Arjun's grandmother, a verified guardian with nothing shared: sees Arjun listed with "Your school has not shared this record with you". |
 | `aster.2027-0001` | http://aster.localhost:4201/login | Arjun Demo, the enrolled student: their own record (student number and class). A new student's login is `<school>.<student number>`, with the first password the registrar chose. |
-| `meridian.admin`, `summit.admin` | their own address | The same for their institutions. Signing in at another institution's address is refused. |
+| `meridian.admin` | http://meridian.localhost:4201/login | A college: **Programs** (B.Sc Physics and its regulation R2026 — a synthetic regulation for development, not any real university's — with courses by semester and prerequisites; draft, publish, retire, **New revision**), **Courses**, **Offerings** (PHY101-A with its lab PHY101L-A1; open, cancel, assign teachers), **Sections** as batches (BSC-PHY 2026 A), and each student's **Program and regulation**. |
+| `meridian.faculty` | http://meridian.localhost:4201/login | A Physics teacher: **My classes** shows batch BSC-PHY 2026 A (as class teacher, with its class list) and the PHY101-A offering. |
+| `summit.admin` | http://summit.localhost:4201/login | The same as `aster.admin` for Summit University. Signing in at another institution's address is refused. |
 | `vector.admin` | http://vector.localhost:4201/login | A first sign-in: the app asks for a new password before anything else. |
 
 ## Tests
@@ -134,7 +136,8 @@ The backend tests cover:
 - image upload checks;
 - the public page in every lifecycle state;
 - admissions: cycles, applying, documents, review, seats, offers, enrollment and who may see what;
-- student records and the student's own record.
+- student records and the student's own record;
+- academics: years, sections, placement, move-up, programs, regulations, courses, offerings, batches and pinning.
 
 ## Settings
 

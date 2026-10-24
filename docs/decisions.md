@@ -144,3 +144,19 @@ Full table and reasons: `docs/superpowers/specs/2026-10-23-slice5a-school-struct
 | S5A-09 | Records, the student's page and the family portal show this year's class; staff see the history. |
 | S5A-10 | Module `academics` gates every route. |
 
+## Slice 5b (programs, regulations, courses, offerings, college batches)
+
+Full table and reasons: `docs/superpowers/specs/2026-10-23-slice5b-programs-curricula-design.md` §2.
+
+| ID | Decision |
+|---|---|
+| S5B-01 | Programs: code unique per institution, qualification, optional department, 1–16 terms. |
+| S5B-02 | Regulations (curriculum versions) go draft → published → retired; only a draft changes; New revision copies a published one into a draft n+1; publishing needs a course. |
+| S5B-03 | Courses: code unique per institution, credits 0–30 in halves, a kind, optional department. |
+| S5B-04 | A regulation lists each course once, with category, term within the program's length, elective group and prerequisites from the same regulation, never in a loop. |
+| S5B-05 | Offerings: course, term, campus, section code, seats; planned → open → closed (or cancelled); a link to another offering of the same term; teachers are teaching assignments of the offering. |
+| S5B-06 | College batches are sections naming a program instead of a grade (exactly one); placement, class lists and move-up are shared. |
+| S5B-07 | Enrolling into a place with a program pins the program and the latest published regulation for that cohort; staff with `student.update` change it, only to a published regulation of the chosen program. |
+| S5B-08 | Programs and courses are managed at their department (none: the whole institution); regulations follow their program; offerings follow the course's department, else their campus. |
+| S5B-09 | The menu follows the category (colleges and universities get Programs, Courses, Offerings); the API allows both everywhere. |
+| S5B-10 | Demo regulation content is labelled synthetic, for development. |

@@ -3,7 +3,38 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (23 October 2026, slice 5a — BUILD-05 part 1)
+## Where things stand (24 October 2026, slice 5b — BUILD-05 part 2)
+
+**Slice 5b is built and checked locally.** Spec: `docs/superpowers/specs/2026-10-23-slice5b-programs-curricula-design.md`.
+Plan: `docs/superpowers/plans/2026-10-23-slice5b-programs-curricula.md`. Branch `slice-5b-programs-curricula`, cut from
+`slice-5a-school-structure` (with its review fixes merged). Next in BUILD-05: 5c course registration (TST-010); 5d
+attempts, equivalence and degree progress (TST-013); 5e university affiliation.
+
+| Built in slice 5b | Where |
+|---|---|
+| Programs and the course catalogue, managed at their department (else the whole institution) | `backend/academics/programs.py`, `features/academics/programs-page.ts`, `courses-page.ts` |
+| Regulations (curriculum versions): draft → published → retired; a published one never changes and New revision drafts a copy; courses by term with category, elective group and prerequisites (no loops) | `backend/academics/curricula.py`, `features/academics/program-page.*`, `curriculum-page.*` |
+| Course offerings per term with seats, status and teachers; a lab linked to its lecture; My classes lists a teacher's offerings | `backend/academics/offerings.py`, `teaching.py`, `features/academics/offerings-page.ts`, `offering-page.ts` |
+| College batches: a section names a program instead of a grade; placement, class lists and move-up work as for classes (a batch moves up only within its program) | `backend/academics/sections.py`, `placement.py`, `moveup.py`, sections pages |
+| Students pinned to a program and regulation: on enrolling into a place that names a program, or changed on the record | `backend/admissions/enrollment.py`, `backend/students/pinning.py`, `features/students/program-section.ts`, cycle editor |
+| The menu follows the institution's category: colleges and universities get Programs, Courses and Offerings | `accounts/serializers.py` (`category`), `layout/nav.ts` |
+| Demo: Meridian College with 2026–27 (two semesters), Physics and Mathematics, BSC-PHY and R2026 (a synthetic regulation for development), PHY101-A with lab PHY101L-A1, `meridian.faculty`, batch BSC-PHY 2026 A, two students | `seed_demo.py` |
+
+Checks on 24 Oct 2026: backend `pytest` 513 passed; `ruff check` and `ruff format --check` clean; frontend `ng test`
+200 passed; `ng build` clean.
+Browser (built-in, Chromium): as `meridian.admin` at 1280 px the menu showed Programs, Courses and Offerings; R2026
+rev 1 showed no edit controls (and the API refused a change with 409 `published`); New revision drafted rev 2 with
+the same courses and prerequisites; MAT101 was taken out and added back in term 2 needing PHY101; rev 2 was published
+and froze; PHY101-B and its lab PHY101L-B1 (linked to it) were offered, the lecture opened and given
+`meridian.faculty`; Rahul Demo was placed in batch BSC-PHY 2026 A (2 of 60) and pinned to R2026 rev 2 from his
+record. As `meridian.faculty` at 390 px My classes showed the batch (class teacher) and PHY101-A and PHY101-B, and the
+batch's class list opened. At 390 px the regulation, offerings and courses pages fitted with no sideways scroll. As
+`aster.admin` the Sections page showed grades and "Add a section", and the menu had no Programs, Courses or
+Offerings. No console errors. Found and fixed: after adding a course to a regulation the form reset its selects but
+kept sending the old category and term (spec added, red first); the course list drew a stray divider. The check's
+rev 2, PHY101-B, PHY101L-B1, Rahul's placement and pin remain in the local database.
+
+## Slice 5a (23 October 2026) — BUILD-05 part 1
 
 **Slice 5a is built and checked locally.** Spec: `docs/superpowers/specs/2026-10-23-slice5a-school-structure-design.md`.
 Plan: `docs/superpowers/plans/2026-10-23-slice5a-school-structure.md`. Branch `slice-5a-school-structure`, cut from

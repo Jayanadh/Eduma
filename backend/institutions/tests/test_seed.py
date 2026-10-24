@@ -13,7 +13,7 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     User.objects.filter(username="aster.admin").update(full_name="Changed")
     call_command("seed_demo")
     assert Institution.objects.count() == 4
-    assert User.objects.count() == 16  # with aster.grandparent and meridian.faculty
+    assert User.objects.count() == 18  # with aster.grandparent, meridian.faculty, .adviser and Ananya
     assert SiteRevision.objects.filter(status="published").count() == 3
     states = dict(Institution.objects.values_list("slug", "lifecycle_status"))
     assert states == {"aster": "active", "meridian": "active", "vector": "setup", "summit": "active"}
@@ -95,6 +95,16 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     assert (batch.code, batch.program.code, batch.placements.count()) == ("BSC-PHY 2026 A", "BSC-PHY", 1)
     pins = sorted(meridian.students.values_list("enrollments__curriculum__regulation", flat=True), key=str)
     assert pins == [None, "R2026"]
+    from academics import progress
+    from affiliations.models import SubmissionBatch
+
+    ananya = meridian.students.get(person__full_name="Ananya Demo")
+    shown = progress.progress(ananya.enrollments.get())
+    assert (shown["cgpa"], shown["credits"]["earned"]) == ("7.67", "9.0")  # (4×8 + 1×9 + 4×7) / 9
+    assert ananya.user.username == "meridian.2026-0001"
+    assert meridian.offerings.get(course__code="PHY201").status == "open"
+    batch = SubmissionBatch.objects.get(grant__university__slug="summit")
+    assert (batch.status, [r.number for r in batch.rows.all()]) == ("submitted", [ananya.number])
 
 
 def test_seed_refuses_without_debug(db, settings):

@@ -79,6 +79,8 @@ class Command(BaseCommand):
         self._aster_enquiries()
         self._aster_academics()
         self._meridian_academics(platform_admin)
+        self._meridian_registration(platform_admin)
+        self._affiliation(platform_admin)
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -506,3 +508,83 @@ class Command(BaseCommand):
             )  # fmt: skip
             made.append(student)
         placement.place(admin, batch, [made[0].id])
+
+    def _meridian_registration(self, actor) -> None:
+        """Semester 1's window (closed) with Ananya's results recorded, and Semester 2's open now with PHY201-A;
+        `meridian.adviser`, and Ananya's own login `meridian.2026-0001`."""
+        from academics import offerings, progress
+        from academics.models import CourseAttempt, CourseRegistration, RegistrationWindow, Term
+        from students.logins import make_login
+
+        meridian = Institution.objects.get(slug="meridian")
+        admin = User.objects.get(username="meridian.admin")
+        self._member(meridian, actor, "meridian.adviser", "Meridian Academic Adviser", "academic_adviser", None)
+        if RegistrationWindow.objects.filter(institution=meridian).exists():
+            return
+        first = Term.objects.get(year__institution=meridian, name="Semester 1")
+        second = Term.objects.get(year__institution=meridian, name="Semester 2")
+        main = meridian.campuses.get(code="MAIN")
+        closed = RegistrationWindow.objects.create(
+            institution=meridian, term=first, opens_on=dt.date(2026, 5, 15), closes_on=dt.date(2026, 6, 15),
+            drop_until=dt.date(2026, 7, 1), max_credits=24,
+        )  # fmt: skip
+        today = today_for(meridian)
+        RegistrationWindow.objects.create(
+            institution=meridian, term=second, opens_on=today - dt.timedelta(days=9),
+            closes_on=today + dt.timedelta(days=22), drop_until=today + dt.timedelta(days=37), max_credits=24,
+        )  # fmt: skip
+        courses = {c.code: c for c in meridian.courses.all()}
+        maths = offerings.save_offering(
+            admin, meridian, None,
+            {"course": courses["MAT101"].id, "term": first.id, "campus": main.id, "code": "A", "capacity": 60},
+        )  # fmt: skip
+        semester_two = offerings.save_offering(
+            admin, meridian, None,
+            {"course": courses["PHY201"].id, "term": second.id, "campus": main.id, "code": "A", "capacity": 40},
+        )  # fmt: skip
+        for offering in (maths, semester_two):
+            offerings.save_offering(admin, meridian, offering, {"status": "open"}, offering.version)
+        lecture = meridian.offerings.get(course__code="PHY101", code="A")
+        lab = meridian.offerings.get(course__code="PHY101L", code="A1")
+        ananya = meridian.students.get(person__full_name="Ananya Demo")
+        enrollment = ananya.enrollments.get()
+        # Semester 1 happened before this demo begins: its registrations and results are written as they would stand.
+        for offering, grade_point in ((lecture, 8), (lab, 9), (maths, 7)):
+            registration = CourseRegistration.objects.create(
+                institution=meridian, enrollment=enrollment, offering=offering, state="registered",
+                curriculum=enrollment.curriculum, window=closed, window_version=closed.version, requested_by=admin,
+            )  # fmt: skip
+            attempt = CourseAttempt.objects.create(
+                institution=meridian, enrollment=enrollment, course=offering.course, attempt_no=1,
+                registration=registration, term=first, credits=offering.course.credits,
+            )  # fmt: skip
+            progress.record_outcome(admin, attempt, {"outcome": "passed", "grade_point": grade_point})
+        ananya.user = make_login(admin, meridian, ananya.number, "Ananya Demo", PASSWORD)
+        ananya.user.must_change_password = False
+        ananya.user.last_login = timezone.now()
+        ananya.user.save()
+        ananya.save()
+
+    def _affiliation(self, actor) -> None:
+        """Summit University affiliates Meridian College: a grant approved by Meridian, and Meridian's Semester 1
+        B.Sc Physics batch submitted for review."""
+        from affiliations import services as affiliation
+        from affiliations.models import AffiliationGrant
+
+        meridian = Institution.objects.get(slug="meridian")
+        summit = Institution.objects.get(slug="summit")
+        self._switch_on(summit, User.objects.get(username="summit.admin"), "academics")
+        if AffiliationGrant.objects.filter(college=meridian, university=summit).exists():
+            return
+        admin = User.objects.get(username="meridian.admin")
+        today = today_for(meridian)
+        grant = affiliation.propose(
+            actor,
+            {"college": meridian, "university": summit, "purpose": "Central examination of B.Sc results (demo)",
+             "starts_on": today - dt.timedelta(days=30), "ends_on": today + dt.timedelta(days=335),
+             "evidence": "Synthetic affiliation order for development"},
+        )  # fmt: skip
+        grant = affiliation.approve(admin, grant, grant.version)
+        term = meridian.academic_years.get(code="2026–27").terms.get(name="Semester 1")
+        batch = affiliation.build(admin, grant, meridian.programs.get(code="BSC-PHY"), term)
+        affiliation.submit(admin, batch)

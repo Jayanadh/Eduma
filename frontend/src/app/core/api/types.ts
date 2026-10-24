@@ -777,3 +777,99 @@ export type Offering = {
   teachers: OfferingTeacher[];
   can_manage: boolean;
 };
+
+export type RegistrationWindow = {
+  id: string;
+  version: number;
+  term: string;
+  term_id: string;
+  year: string;
+  opens_on: string;
+  closes_on: string;
+  drop_until: string;
+  max_credits: string;
+  needs_approval: boolean;
+  open: boolean;
+};
+
+export type Registration = {
+  id: string;
+  version: number;
+  state: 'pending_approval' | 'waitlisted' | 'registered' | 'rejected' | 'dropped' | 'withdrawn';
+  state_label: string;
+  reason_code: string;
+  offering: { id: string; label: string; title: string; credits: string; term: string };
+  student: { id: string; number: string; full_name: string };
+  attempt_no: number | null;
+  regulation: string | null;
+  overrides: { rule: string; reason: string; granted_by: string; regulation: string | null }[];
+  created_at: string;
+};
+
+export type RegistrationChoice = {
+  id: string;
+  label: string;
+  title: string;
+  credits: string;
+  seats_left: number;
+  linked_to: string | null;
+  labs: string[];
+  problems: string[];
+};
+
+export type OwnRegistration = {
+  window: RegistrationWindow | null;
+  offerings: RegistrationChoice[];
+  registrations: Registration[];
+};
+
+export type Attempt = {
+  id: string;
+  course: string;
+  title: string;
+  attempt_no: number;
+  term: string;
+  year: string;
+  credits: string;
+  outcome: string;
+  outcome_label: string;
+  grade_point: string | null;
+};
+
+export type CreditTransfer = {
+  id: string;
+  version: number;
+  source_institution: string;
+  source_course: string;
+  source_credits: string;
+  evidence: string;
+  decision: 'pending' | 'approved' | 'rejected';
+  decision_label: string;
+  approved_credits: string | null;
+  course: string | null;
+  category: string;
+  awarding_authority: string;
+};
+
+export type DegreeProgress = {
+  advisory: true;
+  note: string;
+  program: { code: string; name: string } | null;
+  regulation: string | null;
+  repeat_rule: string;
+  cgpa: string | null;
+  terms: { term: string; year: string; sgpa: string | null }[];
+  credits: { required: string; earned: string; accepted: string; in_progress: string; planned: string; unmet: string };
+  courses: {
+    code: string;
+    title: string;
+    credits: string;
+    category: string;
+    term: number;
+    status: 'completed' | 'in_progress' | 'failed' | 'planned';
+    attempts: number;
+    prerequisites_met: boolean;
+  }[];
+  attempts: Attempt[];
+  transfers: CreditTransfer[];
+};

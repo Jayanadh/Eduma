@@ -110,6 +110,18 @@ export const routes: Routes = [
     loadComponent: () => import('./features/student/student-home').then((m) => m.StudentHome),
   },
   {
+    path: 'student/registration',
+    title: 'Registration',
+    canActivate: [signedIn, studentOnly],
+    loadComponent: () => import('./features/student/registration-page').then((m) => m.RegistrationPage),
+  },
+  {
+    path: 'student/progress',
+    title: 'Degree progress',
+    canActivate: [signedIn, studentOnly],
+    loadComponent: () => import('./features/student/progress-page').then((m) => m.ProgressPage),
+  },
+  {
     path: 'app',
     loadComponent: () => import('./layout/shell').then((m) => m.Shell),
     canActivateChild: [signedIn, memberOnly],

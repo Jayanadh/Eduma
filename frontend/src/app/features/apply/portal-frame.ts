@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthStore } from '../../core/auth-store';
 import { SiteStore } from '../../core/site-store';
@@ -24,6 +24,13 @@ import { Icon } from '../../ui/icon';
         <nav class="portal-nav" aria-label="Family">
           <a routerLink="/family" routerLinkActive="active">Your children</a>
           <a routerLink="/apply/applications" routerLinkActive="active">Applications</a>
+        </nav>
+      }
+      @if (auth.user()?.membership?.kind === 'student' && auth.higher() && academics()) {
+        <nav class="portal-nav" aria-label="Student">
+          <a routerLink="/student" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Your record</a>
+          <a routerLink="/student/registration" routerLinkActive="active">Registration</a>
+          <a routerLink="/student/progress" routerLinkActive="active">Degree progress</a>
         </nav>
       }
       <h1 class="page-title">{{ heading() }}</h1>
@@ -92,6 +99,7 @@ export class PortalFrame {
   readonly heading = input.required<string>();
   protected readonly auth = inject(AuthStore);
   protected readonly site = inject(SiteStore);
+  protected readonly academics = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('academics') ?? false);
   private readonly confirm = inject(ConfirmDialog);
 
   protected async signOut(): Promise<void> {

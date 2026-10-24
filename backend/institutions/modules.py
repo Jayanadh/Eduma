@@ -33,7 +33,7 @@ MODULES: dict[str, Module] = {
         _core("admissions", "Admissions and enrollment", "students", available=True),
         _core("students", "Students and guardians", available=True),
         _core("academics", "Academic structure and timetable", available=True),
-        _core("attendance", "Attendance", "academics"),
+        _core("attendance", "Attendance", "academics", available=True),
         _core("exams", "Assessment and results", "academics"),
         _core(
             "report_cards",

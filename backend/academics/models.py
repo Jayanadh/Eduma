@@ -467,3 +467,81 @@ class CreditTransfer(VersionedModel):
 
     class Meta:
         ordering = ["created_at"]
+
+
+class Room(VersionedModel):
+    """A teaching room on a campus (slice 6 S6-01)."""
+
+    institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="rooms")
+    campus = models.ForeignKey("organization.Campus", on_delete=models.PROTECT, related_name="+")
+    code = models.CharField(max_length=20)
+    name = models.CharField(max_length=80)
+    capacity = models.PositiveIntegerField(default=40)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["code"]
+        constraints = [models.UniqueConstraint(fields=["institution", "code"], name="unique_room_code")]
+
+
+class TimetableVersion(VersionedModel):
+    """A term's timetable; publishing one supersedes the one before (S6-02)."""
+
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        PUBLISHED = "published", "Published"
+        SUPERSEDED = "superseded", "Superseded"
+
+    institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="+")
+    term = models.ForeignKey(Term, on_delete=models.PROTECT, related_name="timetables")
+    number = models.PositiveSmallIntegerField()
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.DRAFT)
+    published_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    published_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-number"]
+        constraints = [models.UniqueConstraint(fields=["term", "number"], name="unique_timetable_number")]
+
+
+class TimetableSlot(models.Model):
+    """A weekly lesson: a section (with its subject) or an offering, at a time, in a room, with a teacher."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    timetable = models.ForeignKey(TimetableVersion, on_delete=models.CASCADE, related_name="slots")
+    weekday = models.PositiveSmallIntegerField()  # 1 Monday … 7 Sunday
+    starts_at = models.TimeField()
+    ends_at = models.TimeField()
+    section = models.ForeignKey(Section, null=True, blank=True, on_delete=models.PROTECT, related_name="slots")
+    subject = models.ForeignKey(Subject, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    offering = models.ForeignKey(CourseOffering, null=True, blank=True, on_delete=models.PROTECT, related_name="slots")
+    room = models.ForeignKey(Room, null=True, blank=True, on_delete=models.PROTECT, related_name="slots")
+    teacher = models.ForeignKey(
+        "accounts.Membership", null=True, blank=True, on_delete=models.PROTECT, related_name="slots"
+    )
+
+    class Meta:
+        ordering = ["weekday", "starts_at"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(section__isnull=False, offering__isnull=True)
+                | models.Q(section__isnull=True, offering__isnull=False),
+                name="slot_one_target",
+            )
+        ]
+
+
+class Substitution(models.Model):
+    """Someone else takes one day's lesson (S6-04)."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    slot = models.ForeignKey(TimetableSlot, on_delete=models.PROTECT, related_name="substitutions")
+    date = models.DateField()
+    teacher = models.ForeignKey("accounts.Membership", on_delete=models.PROTECT, related_name="substitutions")
+    reason = models.CharField(max_length=200)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["slot", "date"], name="one_substitution_per_day")]

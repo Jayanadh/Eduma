@@ -76,6 +76,12 @@ PERMISSIONS: dict[str, Permission] = {
             "Review result batches from affiliated colleges",
             True,
         ),
+        Permission(
+            "attendance.manage",
+            "Academics",
+            "See every class's attendance, approve corrections and lock sessions",
+            False,
+        ),
         Permission("student.read", "Students", "See student records", False),
         Permission("student.update", "Students", "Correct student details", False),
         Permission(
@@ -147,6 +153,7 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "registration.manage",
             "registration.override",
             "academic_record.manage",
+            "attendance.manage",
         ),
         _role(
             "academic_adviser",

@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from academics import curricula, he_views, registration, registration_views, views
+from academics import curricula, he_views, registration, registration_views, timetable_views, views
 
 urlpatterns = [
     path("years", views.YearList.as_view()),
@@ -50,6 +50,14 @@ urlpatterns = [
     path("transfers", registration_views.TransferList.as_view()),
     path("transfers/<uuid:pk>/decide", registration_views.DecideTransfer.as_view()),
     path("students/<uuid:pk>/progress", registration_views.StudentProgress.as_view()),
+    path("rooms", timetable_views.Rooms.as_view()),
+    path("rooms/<uuid:pk>", timetable_views.RoomDetail.as_view()),
+    path("timetables", timetable_views.Timetables.as_view()),
+    path("timetables/<uuid:pk>", timetable_views.TimetableDetail.as_view()),
+    path("timetables/<uuid:pk>/slots", timetable_views.Slots.as_view()),
+    path("timetables/<uuid:pk>/slots/<uuid:slot>", timetable_views.SlotDetail.as_view()),
+    path("timetables/<uuid:pk>/publish", timetable_views.Publish.as_view()),
+    path("substitutions", timetable_views.Substitutions.as_view()),
     path("courses", he_views.CourseList.as_view()),
     path("courses/<uuid:pk>", he_views.CourseDetail.as_view()),
 ]

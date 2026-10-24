@@ -118,6 +118,19 @@ PERMISSIONS: dict[str, Permission] = {
         Permission(
             "hostel.manage", "Campus services", "Run hostels: beds, allocations, transfers and out-passes", False
         ),
+        Permission(
+            "hr.manage", "Staff services", "Set leave types, see everyone's leave and record staff attendance", False
+        ),
+        Permission("hr.leave_approve", "Staff services", "Approve or reject other people's leave", False),
+        Permission("payroll.manage", "Staff services", "See and change pay, and prepare payroll", True),
+        Permission("payroll.approve", "Staff services", "Approve payroll someone else prepared", True),
+        Permission(
+            "procurement.manage", "Staff services", "Raise requisitions, order, receive goods and move stock", False
+        ),
+        Permission("procurement.approve", "Staff services", "Approve requisitions under the procurement rule", False),
+        Permission(
+            "assets.manage", "Staff services", "Keep the asset register, maintenance, disposal and bookings", False
+        ),
         Permission("student.read", "Students", "See student records", False),
         Permission("student.update", "Students", "Correct student details", False),
         Permission(
@@ -171,6 +184,9 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "fees.read",
             "fees.approve",
             "communication.manage",
+            "hr.leave_approve",
+            "payroll.approve",
+            "procurement.approve",
         ),
         _role(
             "head_of_department",
@@ -214,6 +230,22 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "enquiry.manage",
         ),
         _role("librarian", "Librarian", "Runs the library.", "library.manage"),
+        _role(
+            "hr_officer",
+            "HR Officer",
+            "Runs leave and staff attendance.",
+            "membership.read",
+            "hr.manage",
+            "hr.leave_approve",
+        ),
+        _role("payroll_officer", "Payroll Officer", "Keeps pay and prepares payroll.", "payroll.manage"),
+        _role(
+            "store_keeper",
+            "Store Keeper",
+            "Runs purchasing, stores and the asset register.",
+            "procurement.manage",
+            "assets.manage",
+        ),
         _role(
             "transport_officer",
             "Transport Officer",

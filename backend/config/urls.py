@@ -6,6 +6,7 @@ from accounts.views import ChangePasswordView, LoginView, LogoutView, SessionVie
 from admissions.applicant_auth import SignupView
 from admissions.enquiry_views import PublicEnquiry
 from admissions.public import public_admissions
+from affiliations.views import ConsoleGrants
 from common.views import AuditEventList, health
 from institutions.urls import platform_patterns
 from institutions.views import OwnInstitutionView, module_catalogue, platform_overview
@@ -33,6 +34,7 @@ urlpatterns = [
     path("api/v1/institution/", include("students.urls")),
     path("api/v1/institution/imports", include("imports.urls")),
     path("api/v1/institution/academics/", include("academics.urls")),
+    path("api/v1/institution/affiliations", include("affiliations.urls")),
     path("api/v1/teaching/", include("academics.teaching_urls")),
     path("api/v1/student/me", OwnRecord.as_view(), name="student-me"),
     path("api/v1/student/", include("academics.student_urls")),
@@ -41,6 +43,7 @@ urlpatterns = [
     path("api/v1/platform/overview", platform_overview, name="platform-overview"),
     path("api/v1/platform/modules", module_catalogue, name="platform-modules"),
     path("api/v1/platform/audit", AuditEventList.as_view(), name="platform-audit"),
+    path("api/v1/platform/affiliations", ConsoleGrants.as_view(), name="platform-affiliations"),
     path("api/v1/platform/institutions/<uuid:institution_id>/audit", AuditEventList.as_view()),
     path("api/v1/platform/", include(platform_patterns)),
 ]

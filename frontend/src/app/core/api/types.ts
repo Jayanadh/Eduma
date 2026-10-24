@@ -767,6 +767,9 @@ export type Offering = {
   label: string;
   code: string;
   capacity: number;
+  registered: number;
+  pending: number;
+  waitlisted: number;
   status: 'planned' | 'open' | 'closed' | 'cancelled';
   status_label: string;
   course: { id: string; code: string; title: string; credits: string };

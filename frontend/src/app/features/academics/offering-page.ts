@@ -9,11 +9,12 @@ import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { LoadError } from '../../ui/load-error';
 import { PageHeader } from '../../ui/page-header';
 import { ToastService } from '../../ui/toast';
+import { OfferingRegistrations } from './offering-registrations';
 
 /** One offering: its status and who teaches it. Its class list arrives with course registration. */
 @Component({
   selector: 'app-offering-page',
-  imports: [LoadError, PageHeader],
+  imports: [LoadError, OfferingRegistrations, PageHeader],
   template: `
     <div class="page">
       <app-load-error [message]="data.error()" (retry)="data.reload()" />
@@ -21,7 +22,7 @@ import { ToastService } from '../../ui/toast';
         <app-page-header
           eyebrow="Offering"
           [title]="o.label + ' · ' + o.course.title"
-          [subtitle]="o.term.year + ' ' + o.term.name + ' · ' + o.campus.name + ' · ' + o.capacity + ' seats · ' + o.status_label"
+          [subtitle]="o.term.year + ' ' + o.term.name + ' · ' + o.campus.name + ' · ' + o.registered + ' of ' + o.capacity + ' registered · ' + o.status_label"
           backLink="/app/academics/offerings"
         >
           @if (o.can_manage && o.term.year_status !== 'closed') {
@@ -39,6 +40,7 @@ import { ToastService } from '../../ui/toast';
         <p class="muted small section">
           {{ o.course.credits }} credits{{ o.linked_to ? ' · goes with ' + o.linked_to.label : '' }}{{ o.linked.length ? ' · ' + o.linked.join(', ') + ' go with it' : '' }}
         </p>
+        <app-offering-registrations [offering]="o.id" (changed)="data.reload()" />
         <section class="card stack section">
           <h2 class="card-title">Teachers</h2>
           <ul class="rows">

@@ -30,12 +30,12 @@ import { PageHeader } from '../../ui/page-header';
                       @if (c.class_teacher) { <span class="badge badge-info">Class teacher</span> }
                     </a>
                   } @else if (c.offering; as o) {
-                    <div class="list-row">
+                    <a class="list-row" [routerLink]="['/app/teaching/offerings', o.id]">
                       <span class="list-main">
                         <span class="list-title">{{ o.course }}-{{ o.code }} · {{ o.title }} · {{ o.term }}</span>
-                        <span class="muted small">{{ o.year }} · Course offering; its class list comes with course registration</span>
+                        <span class="muted small">{{ o.year }} · Course offering</span>
                       </span>
-                    </div>
+                    </a>
                   }
                 </li>
               }

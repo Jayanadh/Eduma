@@ -11,16 +11,18 @@ import { PageHeader } from '../../ui/page-header';
 import { Pager } from '../../ui/pager';
 import { SearchBox } from '../../ui/search-box';
 import { ToastService } from '../../ui/toast';
+import { WindowsSection } from './windows-section';
 
 const NONE = { count: 0, next: null, previous: null, results: [] };
 
 /** Each term's course offerings, and a form to offer a course (a lab linked to its lecture). */
 @Component({
   selector: 'app-offerings-page',
-  imports: [EmptyState, LoadError, PageHeader, Pager, RouterLink, SearchBox],
+  imports: [EmptyState, LoadError, PageHeader, Pager, RouterLink, SearchBox, WindowsSection],
   template: `
     <div class="page">
       <app-page-header eyebrow="Academics" title="Offerings" subtitle="The courses taught each term, with their seats and teachers." />
+      <app-windows-section />
       <div class="field section">
         <label for="filter-term">Term</label>
         <select id="filter-term" (change)="term.set($any($event.target).value); page.set(1)">
@@ -38,7 +40,7 @@ const NONE = { count: 0, next: null, previous: null, results: [] };
                   <a class="list-row" [routerLink]="['/app/academics/offerings', o.id]">
                     <span class="list-main">
                       <span class="list-title">{{ o.label }} · {{ o.course.title }}</span>
-                      <span class="muted small">{{ o.term.year }} {{ o.term.name }} · {{ o.campus.name }} · {{ o.capacity }} seats{{ o.linked_to ? ' · with ' + o.linked_to.label : '' }}</span>
+                      <span class="muted small">{{ o.term.year }} {{ o.term.name }} · {{ o.campus.name }} · {{ o.registered }} of {{ o.capacity }} registered{{ o.waitlisted ? ' · ' + o.waitlisted + ' waiting' : '' }}{{ o.linked_to ? ' · with ' + o.linked_to.label : '' }}</span>
                     </span>
                     <span class="badge badge-info">{{ o.status_label }}</span>
                   </a>

@@ -15,11 +15,23 @@ import { ToastService } from '../../ui/toast';
 import { GuardiansSection } from './guardians-section';
 import { HistorySection } from './history-section';
 import { ProgramSection } from './program-section';
+import { RecordSection } from './record-section';
+import { RegistrationSection } from './registration-section';
 
 /** One student's record: details (correctable with student.update), enrollments, where they came from, their login. */
 @Component({
   selector: 'app-student-page',
-  imports: [GuardiansSection, HistorySection, LoadError, PageHeader, ProgramSection, ReactiveFormsModule, RouterLink],
+  imports: [
+    GuardiansSection,
+    HistorySection,
+    LoadError,
+    PageHeader,
+    ProgramSection,
+    ReactiveFormsModule,
+    RecordSection,
+    RegistrationSection,
+    RouterLink,
+  ],
   template: `
     <div class="page">
       <app-load-error [message]="data.error()" (retry)="data.reload()" />
@@ -150,6 +162,12 @@ import { ProgramSection } from './program-section';
             </section>
           </div>
         </div>
+        @if (college() && student.enrollment?.program) {
+          <div class="grid-2 section">
+            <app-registration-section [student]="student" />
+            <app-record-section [student]="student" />
+          </div>
+        }
         <div class="section"><app-history-section [studentId]="student.id" /></div>
       } @else if (data.loading()) {
         <p class="muted" role="status">Loading…</p>
@@ -180,6 +198,10 @@ export class StudentPage {
   protected readonly date = date;
   protected readonly dateTime = dateTime;
   protected readonly canEdit = computed(() => this.auth.can('student.update'));
+  /** Registration and the academic record belong to colleges with Academics on. */
+  protected readonly college = computed(
+    () => this.auth.higher() && (this.auth.user()?.membership?.modules_enabled?.includes('academics') ?? false),
+  );
   protected readonly data = load(
     () => this.api.get<StudentRecord>(`institution/students/${this.id()}`),
     () => this.id(),

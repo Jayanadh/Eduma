@@ -44,6 +44,9 @@ function offering(overrides: Partial<Offering> = {}): Offering {
     label: 'PHY101-A',
     code: 'A',
     capacity: 60,
+    registered: 0,
+    pending: 0,
+    waitlisted: 0,
     status: 'planned',
     status_label: 'Planned',
     course: { id: 'c1', code: 'PHY101', title: 'Mechanics', credits: '4.0' },
@@ -184,6 +187,6 @@ describe('College academics', () => {
     const root = fixture.nativeElement as HTMLElement;
     expect(root.textContent).toContain('BSC-PHY 2026 A · B.Sc Physics');
     expect(root.textContent).toContain('PHY101-A · Mechanics · Semester 1');
-    expect(root.querySelectorAll('a.list-row').length).toBe(1);
+    expect([...root.querySelectorAll('a.list-row')].map((a) => a.getAttribute('href'))).toEqual(['/app/teaching/s1', '/app/teaching/offerings/o1']);
   });
 });

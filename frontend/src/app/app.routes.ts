@@ -323,6 +323,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/academics/teaching-page').then((m) => m.TeachingPage),
       },
       {
+        path: 'teaching/offerings/:id',
+        title: 'Class list',
+        loadComponent: () => import('./features/academics/teaching-offering-page').then((m) => m.TeachingOfferingPage),
+      },
+      {
         path: 'teaching/:id',
         title: 'Class list',
         loadComponent: () => import('./features/academics/teaching-roster-page').then((m) => m.TeachingRosterPage),

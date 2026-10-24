@@ -3,7 +3,29 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (24 October 2026, slice 7 — BUILD-07)
+## Where things stand (24 October 2026, slice 8 — BUILD-08)
+
+**Slice 8 (fees, payments and reconciliation) is built and tested** in fast mode. Spec:
+`docs/superpowers/specs/2026-10-24-slice8-fees-design.md`. Branch `slice-8-fees`, cut from `slice-7-results`. Next:
+BUILD-09 (communication and teacher-led classes).
+
+| Built in slice 8 | Where |
+|---|---|
+| Fee heads; fee plans (published ones frozen; revisions); invoices from a plan (recording its revision) or a single charge | `backend/fees/services.py`, `features/fees/fees-page.ts`, `fees-section.ts` |
+| Balances worked out from posted records (net charges, net allocated, outstanding); EX-01 exact (3,000 → 4,000 after a 1,000 refund) | `fees.services.balances` |
+| Credit notes and refunds asked by one person, approved by another; a credit note below what is paid returns the excess to credit; refund capacity reserved | `fees/services.py` |
+| Office collections with atomic receipt numbers; allocation oldest-due first; overpayment shown as credit | `fees/services.py` |
+| Balanced journals under unique posting keys (append-only); trial balance; CSV journal export as the accounting boundary | `fees/services.py`, fees office |
+| Online payments only through a configured provider: a labelled test-mode sandbox with HMAC-signed webhooks, de-duplicated events, out-of-order safety, mismatches quarantined as reconciliation cases; unconfigured → 409 `integration_not_configured` | `fees/services.py`, `POST /api/v1/webhooks/payments/<provider>/<institution>` |
+| Settlements moving clearing to bank with provider fees; mismatches open cases | `fees/services.py` |
+| Statements on the staff record, the student portal **Fees** and the family portal (shared records), with "confirmation pending" until the provider confirms | `features/fees/statement-view.ts`, `pay-online.ts`, `features/student/fees-page.ts` |
+| Demo: `aster.accountant`; Arjun's account replays EX-01 (3,000 owed); online payment unconfigured | `seed_demo.py` |
+
+Checks on 24 Oct 2026: backend `pytest` 573 passed; ruff and `makemigrations --check` clean; frontend `ng test` 227
+passed; `ng build` clean. Not built (decisions D-11, D-12 open): a real payment provider, tax treatment, chargebacks
+and disputes, bank-destination changes; receipts are records, not PDFs.
+
+## Slice 7 (24 October 2026) — BUILD-07
 
 **Slice 7 (assessments, results and awards) is built and tested** in fast mode. Spec:
 `docs/superpowers/specs/2026-10-24-slice7-results-design.md`. Branch `slice-7-results`, cut from

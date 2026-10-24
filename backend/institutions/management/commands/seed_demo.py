@@ -83,6 +83,7 @@ class Command(BaseCommand):
         self._affiliation(platform_admin)
         self._timetable()
         self._results(platform_admin)
+        self._fees(platform_admin)
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -295,12 +296,15 @@ class Command(BaseCommand):
         from accounts.models import Employee
 
         aster = Institution.objects.get(slug="aster")
-        staff = aster.memberships.filter(kind=Membership.Kind.STAFF).order_by("user__username")
-        for number, membership in enumerate(staff, start=1):
-            Employee.objects.get_or_create(
+        staff = aster.memberships.filter(kind=Membership.Kind.STAFF, employee__isnull=True).order_by("user__username")
+        # New staff in a later seed run continue the numbering instead of reusing AST-001.
+        taken = Employee.objects.filter(institution=aster).count()
+        for number, membership in enumerate(staff, start=taken + 1):
+            Employee.objects.create(
                 institution=aster,
                 membership=membership,
-                defaults={"employee_number": f"AST-{number:03d}", "joined_on": dt.date(2024, 6, 1)},
+                employee_number=f"AST-{number:03d}",
+                joined_on=dt.date(2024, 6, 1),
             )
 
     def _aster_enquiries(self) -> None:
@@ -659,3 +663,34 @@ class Command(BaseCommand):
         ananya = meridian.students.get(person__full_name="Ananya Demo")
         if not ananya.documents.exists():
             results.transcript(User.objects.get(username="meridian.exams"), ananya)
+
+    def _fees(self, actor) -> None:
+        """Fees on at Aster with `aster.accountant`; Arjun's account follows the pack's EX-01: a 10,000 tuition invoice,
+        a 1,000 concession approved by the principal and 6,000 paid at the office, leaving 3,000 owed. Online payment
+        is left unconfigured, so families see "pay at the office"."""
+        from decimal import Decimal
+
+        from fees import services as fees
+        from fees.models import FeeHead
+
+        aster = Institution.objects.get(slug="aster")
+        self._switch_on(aster, User.objects.get(username="aster.admin"), "fees")
+        accountant = self._member(aster, actor, "aster.accountant", "Aster Accountant", "accountant", None).user
+        if FeeHead.objects.filter(institution=aster).exists():
+            return
+        tuition = fees.save_head(accountant, aster, {"code": "TUITION", "name": "Tuition"})
+        fees.save_head(accountant, aster, {"code": "TRANSPORT", "name": "Transport"})
+        arjun = aster.students.get(application__learner_name="Arjun Demo")
+        invoice = fees.issue_invoice(
+            accountant,
+            arjun,
+            {
+                "due_on": dt.date(2026, 11, 15),
+                "lines": [{"head": tuition.id, "amount": Decimal("10000.00"), "description": "Tuition 2027–28"}],
+            },
+        )
+        note = fees.request_credit(
+            accountant, invoice, {"kind": "concession", "amount": Decimal("1000.00"), "reason": "Sibling concession"}
+        )
+        fees.decide_credit(User.objects.get(username="aster.principal"), note, approve=True)
+        fees.collect(accountant, arjun, {"amount": Decimal("6000.00"), "channel": "cash", "reference": "Counter 1"})

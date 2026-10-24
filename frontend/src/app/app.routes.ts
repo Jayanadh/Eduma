@@ -138,6 +138,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/results/verify-page').then((m) => m.VerifyPage),
   },
   {
+    path: 'student/fees',
+    title: 'Fees',
+    canActivate: [signedIn, studentOnly],
+    loadComponent: () => import('./features/student/fees-page').then((m) => m.StudentFeesPage),
+  },
+  {
     path: 'student/progress',
     title: 'Degree progress',
     canActivate: [signedIn, studentOnly],
@@ -385,6 +391,12 @@ export const routes: Routes = [
         path: 'results/assessments/:id',
         title: 'Assessment',
         loadComponent: () => import('./features/results/assessment-page').then((m) => m.AssessmentPage),
+      },
+      {
+        path: 'fees',
+        title: 'Fees office',
+        canActivate: [requires(['fees.manage', 'fees.approve', 'fees.reconcile'])],
+        loadComponent: () => import('./features/fees/fees-page').then((m) => m.FeesPage),
       },
       {
         path: 'attendance/corrections',

@@ -26,11 +26,12 @@ import { Icon } from '../../ui/icon';
           <a routerLink="/apply/applications" routerLinkActive="active">Applications</a>
         </nav>
       }
-      @if (auth.user()?.membership?.kind === 'student' && (academics() || attendance() || exams())) {
+      @if (auth.user()?.membership?.kind === 'student' && (academics() || attendance() || exams() || fees())) {
         <nav class="portal-nav" aria-label="Student">
           <a routerLink="/student" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Your record</a>
           @if (attendance()) { <a routerLink="/student/assignments" routerLinkActive="active">Assignments</a> }
           @if (exams()) { <a routerLink="/student/results" routerLinkActive="active">Results</a> }
+          @if (fees()) { <a routerLink="/student/fees" routerLinkActive="active">Fees</a> }
           @if (auth.higher() && academics()) {
             <a routerLink="/student/registration" routerLinkActive="active">Registration</a>
             <a routerLink="/student/progress" routerLinkActive="active">Degree progress</a>
@@ -104,6 +105,7 @@ export class PortalFrame {
   protected readonly auth = inject(AuthStore);
   protected readonly site = inject(SiteStore);
   protected readonly academics = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('academics') ?? false);
+  protected readonly fees = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('fees') ?? false);
   protected readonly exams = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('exams') ?? false);
   protected readonly attendance = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('attendance') ?? false);
   private readonly confirm = inject(ConfirmDialog);

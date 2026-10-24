@@ -2,7 +2,7 @@ export type NavItem = {
   label: string;
   icon: string;
   link: string;
-  group?: 'People' | 'Admissions' | 'Academics' | 'Administration';
+  group?: 'People' | 'Admissions' | 'Academics' | 'Fees' | 'Administration';
 };
 
 /**
@@ -123,6 +123,14 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string; higher
     higher: true,
   },
   { label: 'My classes', icon: 'book', link: '/app/teaching', group: 'Academics', module: 'academics' },
+  {
+    label: 'Fees office',
+    icon: 'file-text',
+    link: '/app/fees',
+    group: 'Fees',
+    needs: ['fees.manage', 'fees.approve', 'fees.reconcile'],
+    module: 'fees',
+  },
   {
     label: 'Organization',
     icon: 'building',

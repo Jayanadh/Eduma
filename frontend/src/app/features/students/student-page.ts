@@ -7,6 +7,7 @@ import { of } from 'rxjs';
 import { AttendanceSummary, StudentRecord } from '../../core/api/types';
 import { AttendanceSummaryView } from '../attendance/attendance-summary';
 import { DocumentsSection } from '../results/documents-section';
+import { FeesSection } from '../fees/fees-section';
 import { AuthStore } from '../../core/auth-store';
 import { date, dateTime } from '../../core/format';
 import { load } from '../../core/load';
@@ -27,6 +28,7 @@ import { RegistrationSection } from './registration-section';
   imports: [
     AttendanceSummaryView,
     DocumentsSection,
+    FeesSection,
     GuardiansSection,
     HistorySection,
     LoadError,
@@ -179,6 +181,9 @@ import { RegistrationSection } from './registration-section';
         @if (exams()) {
           <div class="section"><app-documents-section [student]="student" /></div>
         }
+        @if (fees()) {
+          <div class="section"><app-fees-section [student]="student" /></div>
+        }
         <div class="section"><app-history-section [studentId]="student.id" /></div>
       } @else if (data.loading()) {
         <p class="muted" role="status">Loading…</p>
@@ -215,6 +220,9 @@ export class StudentPage {
         ? this.api.get<AttendanceSummary>(`institution/students/${this.id()}/attendance`)
         : of(null),
     () => this.id(),
+  );
+  protected readonly fees = computed(
+    () => (this.auth.user()?.membership?.modules_enabled?.includes('fees') ?? false) && this.auth.can('fees.read'),
   );
   protected readonly exams = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('exams') ?? false);
   /** Registration and the academic record belong to colleges with Academics on. */

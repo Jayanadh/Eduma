@@ -13,7 +13,7 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     User.objects.filter(username="aster.admin").update(full_name="Changed")
     call_command("seed_demo")
     assert Institution.objects.count() == 4
-    assert User.objects.count() == 19  # with aster.grandparent, meridian.faculty, .adviser, .exams and Ananya
+    assert User.objects.count() == 20  # aster.grandparent, .accountant; meridian.faculty, .adviser, .exams; Ananya
     assert SiteRevision.objects.filter(status="published").count() == 3
     states = dict(Institution.objects.values_list("slug", "lifecycle_status"))
     assert states == {"aster": "active", "meridian": "active", "vector": "setup", "summit": "active"}
@@ -67,9 +67,9 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     from configuration.registry import setting
 
     assert setting(aster_inst, "modules.enabled") == [
-        "academics", "admissions", "attendance", "exams", "report_cards", "students"
+        "academics", "admissions", "attendance", "exams", "fees", "report_cards", "students"
     ]  # fmt: skip
-    assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 3
+    assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 4
     assert setting(aster_inst, "access.role_approval") is False
     deputy = User.objects.get(username="aster.deputy")
     assert deputy.full_name == "Aster Deputy Admin" and deputy.check_password("Demo-pass-2026")
@@ -113,6 +113,10 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     assert "attendance" in setting(aster_inst, "modules.enabled")
     transcript = ananya.documents.get()
     assert (transcript.kind, transcript.content["cgpa"]) == ("transcript", "7.67")
+    from fees import services as fees
+
+    arjun_fees = fees.statement(aster_inst.students.get(application__learner_name="Arjun Demo"))
+    assert (arjun_fees["outstanding"], len(arjun_fees["payments"])) == ("3000.00", 1)
     batch = SubmissionBatch.objects.get(grant__university__slug="summit")
     assert (batch.status, [r.number for r in batch.rows.all()]) == ("submitted", [ananya.number])
 

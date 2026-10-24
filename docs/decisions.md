@@ -223,3 +223,20 @@ Full table: `docs/superpowers/specs/2026-10-24-slice7-results-design.md`.
 | S7-11 | Public verification shows institution, kind, number, date, initials and status only. |
 | S7-12 | Course outcomes and attainment runs from published marks; not an accreditation claim. |
 | S7-13 | App `results`; modules `exams`, `report_cards`, `outcomes`; permissions `assessment.manage`, `results.moderate`, `results.publish`. |
+
+## Slice 8 (fees, payments and reconciliation)
+
+Full table: `docs/superpowers/specs/2026-10-24-slice8-fees-design.md`.
+
+| ID | Decision |
+|---|---|
+| S8-01 | Fee heads and plans; published plans frozen; invoices keep the plan revision. |
+| S8-02 | Balances are computed from posted records; 0 ≤ net allocated ≤ net charges. |
+| S8-03 | Credit notes need a second person; going below what is paid returns the excess to credit. |
+| S8-04 | Office payments are received when recorded; online ones only on a verified provider event; one receipt per payment, numbers never reused; unapplied money stays visible. |
+| S8-05 | Refunds reserve capacity, need a second person, and post only when the money is confirmed returned; they never reduce the charge. |
+| S8-06 | Balanced, append-only journals with unique posting keys; trial balance and CSV export are the accounting boundary. |
+| S8-07 | Provider events are signed, stored and de-duplicated; out-of-order events never undo a final state; mismatches are quarantined. |
+| S8-08 | Settlements move clearing to bank and record provider fees; mismatches open cases. |
+| S8-09 | Staff with `fees.read`, the student, and guardians of shared records see statements. |
+| S8-10 | App and module `fees`; permissions `fees.read/manage/collect/approve/reconcile`; only a test-mode sandbox provider until D-12. |

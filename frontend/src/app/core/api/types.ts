@@ -1067,3 +1067,43 @@ export type Verification = {
   status: 'current' | 'superseded' | 'revoked';
   superseded_by: string | null;
 };
+
+export type FeeInvoice = {
+  id: string;
+  number: string;
+  issued_on: string;
+  due_on: string;
+  plan_revision: number | null;
+  lines: { head: string; description: string; amount: string }[];
+  issued_charges: string;
+  credit_notes: string;
+  net_charges: string;
+  net_allocated: string;
+  outstanding: string;
+  state: 'issued' | 'partially_paid' | 'paid' | 'cancelled';
+  credit_notes_list: { id: string; kind: string; amount: string; reason: string; state: string }[];
+};
+export type FeePayment = {
+  id: string;
+  amount: string;
+  channel: string;
+  state: 'pending' | 'succeeded' | 'failed' | 'expired';
+  state_label: string;
+  reference: string;
+  order_id: string | null;
+  created_at: string;
+  receipt: { number: string; issued_at: string } | null;
+  unapplied: string;
+  refunds: { id: string; amount: string; state: string; reason: string }[];
+};
+export type FeeStatement = {
+  student: { id: string; number: string; full_name: string };
+  currency: string;
+  invoices: FeeInvoice[];
+  payments: FeePayment[];
+  outstanding: string;
+  unapplied: string;
+  online: boolean;
+};
+export type FeeHeadT = { id: string; code: string; name: string };
+export type FeePlanT = { id: string; version: number; name: string; revision: number; status: string; lines: { head: string; amount: string; due_on: string }[] };

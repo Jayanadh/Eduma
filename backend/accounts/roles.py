@@ -106,6 +106,18 @@ PERMISSIONS: dict[str, Permission] = {
             "Set the communication policy and the media provider, and message any student's family",
             True,
         ),
+        Permission(
+            "library.manage",
+            "Campus services",
+            "Run the library: catalogue, loans, returns, reservations and fines",
+            False,
+        ),
+        Permission(
+            "transport.manage", "Campus services", "Run transport: vehicles, routes, riders, trips and pickups", False
+        ),
+        Permission(
+            "hostel.manage", "Campus services", "Run hostels: beds, allocations, transfers and out-passes", False
+        ),
         Permission("student.read", "Students", "See student records", False),
         Permission("student.update", "Students", "Correct student details", False),
         Permission(
@@ -201,6 +213,15 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "application.review",
             "enquiry.manage",
         ),
+        _role("librarian", "Librarian", "Runs the library.", "library.manage"),
+        _role(
+            "transport_officer",
+            "Transport Officer",
+            "Runs buses, routes and riders.",
+            "transport.manage",
+            "student.read",
+        ),
+        _role("warden", "Warden", "Runs the hostel.", "hostel.manage", "student.read"),
         _role(
             "accountant",
             "Accountant / Cashier",

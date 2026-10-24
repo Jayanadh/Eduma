@@ -326,6 +326,8 @@ class Verify(GenericAPIView):
 
 
 class OwnResults(OwnView):
+    module = "exams"
+
     def get(self, request):
         require_module(request.institution, "exams")
         rows = services.ResultVersion.objects.filter(
@@ -346,6 +348,8 @@ class OwnResults(OwnView):
 
 
 class OwnDocuments(OwnView):
+    module = "exams"
+
     def get(self, request):
         require_module(request.institution, "exams")
         return Response([services.document_item(d) for d in self.me.documents.exclude(status="revoked")])

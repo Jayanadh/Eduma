@@ -370,14 +370,16 @@ class Webhook(GenericAPIView):
 
 
 class OwnFees(OwnView):
+    module = "fees"
+
     def get(self, request):
-        require_module(request.institution, "fees")
         return Response(services.statement(self.me))
 
 
 class OwnOrder(OwnView):
+    module = "fees"
+
     def post(self, request):
-        require_module(request.institution, "fees")
         invoice = _found(Invoice.objects.filter(account__student=self.me), request.data.get("invoice"))
         return Response(
             services.payment_item(services.create_order(self.me, invoice, request.user)), status=status.HTTP_201_CREATED

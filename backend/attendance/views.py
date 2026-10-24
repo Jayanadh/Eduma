@@ -200,12 +200,16 @@ class StudentAttendance(GenericAPIView):
 
 
 class OwnAttendance(OwnView):
+    module = "attendance"
+
     def get(self, request):
         require_module(request.institution, "attendance")
         return Response(services.summary(self.me.enrollments.all()))
 
 
 class OwnAssignments(OwnView):
+    module = "attendance"
+
     def get(self, request):
         require_module(request.institution, "attendance")
         enrollment = self.me.enrollments.filter(status="active").first()
@@ -216,6 +220,8 @@ class OwnAssignments(OwnView):
 
 
 class HandIn(OwnView):
+    module = "attendance"
+
     def post(self, request, pk):
         require_module(request.institution, "attendance")
         enrollment = self.me.enrollments.filter(status="active").first()

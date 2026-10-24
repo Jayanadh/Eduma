@@ -22,10 +22,10 @@ def test_lists_builtin_then_custom_with_counts(world, admin):
     factories.member(world.a, custom_role=role)
     factories.member(world.a, custom_role=role)
     items = admin.get(ROLES, {"page_size": 200}).json()["results"]
-    assert [i["id"] for i in items[:10]] == list(BUILTIN_ROLES)
-    assert all(i["builtin"] for i in items[:10])
+    assert [i["id"] for i in items[:13]] == list(BUILTIN_ROLES)
+    assert all(i["builtin"] for i in items[:13])
     assert items[0]["label"] == "Institution Admin" and items[0]["assigned_count"] == 1
-    assert items[10] == {
+    assert items[13] == {
         "id": str(role.id),
         "builtin": False,
         "label": "Front office",
@@ -35,7 +35,7 @@ def test_lists_builtin_then_custom_with_counts(world, admin):
         "is_active": True,
         "version": role.version,
     }
-    assert admin.get(ROLES).json()["count"] == 11 and len(admin.get(ROLES).json()["results"]) == 5
+    assert admin.get(ROLES).json()["count"] == 14 and len(admin.get(ROLES).json()["results"]) == 5
 
 
 def test_create_custom_role_within_ceiling(world, admin):
@@ -119,6 +119,7 @@ def test_registry_and_who_may_read(world, admin, client_for):
         "Results",
         "Fees",
         "Communication",
+        "Campus services",
         "Students",
     ]
     assert groups[2]["permissions"][0] == {
@@ -159,4 +160,4 @@ def test_roles_list_searches_from_three_letters(world, admin):
     """Final review #15: every list is searchable."""
     factories.custom_role(world.a, name="Front office")
     assert [r["label"] for r in admin.get(ROLES, {"search": "fro"}).json()["results"]] == ["Front office"]
-    assert admin.get(ROLES, {"search": "fr"}).json()["count"] == 11
+    assert admin.get(ROLES, {"search": "fr"}).json()["count"] == 14

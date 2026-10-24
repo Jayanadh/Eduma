@@ -167,6 +167,13 @@ def issue_invoice(actor, student: Student, data: dict) -> Invoice:
         due_on = data.get("due_on")
         if not due_on:
             raise ValidationError({"due_on": ["Give the due date."]})
+    return create_invoice(actor, student, lines, due_on, plan)
+
+
+def create_invoice(actor, student: Student, lines: list[dict], due_on, plan: FeePlan | None = None) -> Invoice:
+    """Issue and post an invoice. Callers check authority: fees staff through issue_invoice, other services (library
+    fines) for their own approved charges."""
+    institution = student.institution
     with transaction.atomic():
         invoice = Invoice.objects.create(
             account=account_of(student),
@@ -722,3 +729,8 @@ def statement(student: Student) -> dict:
         "unapplied": money(sum((unapplied_of(p) for p in payments), ZERO)),
         "online": ProviderConfig.objects.filter(institution=student.institution).exists(),
     }
+
+
+def head_for(institution, code: str, name: str) -> FeeHead:
+    found, _ = FeeHead.objects.get_or_create(institution=institution, code=code, defaults={"name": name})
+    return found

@@ -45,7 +45,7 @@ def test_modules_admissions_and_students_are_available():
     from institutions.modules import MODULES
 
     assert MODULES["admissions"].available and MODULES["students"].available
-    assert not MODULES["library"].available
+    assert not MODULES["placements"].available
 
 
 def test_me_says_which_modules_are_on(world):

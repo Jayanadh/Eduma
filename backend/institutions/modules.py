@@ -23,8 +23,8 @@ def _core(key, label, *depends_on, default_for=ALL, available=False) -> Module:
     return Module(key, label, "core", depends_on, default_for, available)
 
 
-def _operations(key, label) -> Module:
-    return Module(key, label, "operations")
+def _operations(key, label, available=False) -> Module:
+    return Module(key, label, "operations", available=available)
 
 
 MODULES: dict[str, Module] = {
@@ -59,9 +59,9 @@ MODULES: dict[str, Module] = {
         _core("fees", "Fees", "students", available=True),
         _core("communication", "Messages, calls and online classes", "students", available=True),
         _core("reports", "Reports"),
-        _operations("library", "Library"),
-        _operations("transport", "Transport"),
-        _operations("hostel", "Hostel and mess"),
+        _operations("library", "Library", available=True),
+        _operations("transport", "Transport", available=True),
+        _operations("hostel", "Hostel and mess", available=True),
         _operations("hr_payroll", "HR and payroll"),
         _operations("assets", "Assets, purchasing and labs"),
         _operations("services", "Student services and cases"),

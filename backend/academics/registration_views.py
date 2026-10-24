@@ -143,9 +143,10 @@ class OverrideList(RegistrationView):
 
 
 class OwnView(GenericAPIView):
-    """A student's own registration, on their institution's host."""
+    """A student's own pages, on their institution's host, while `module` is on (None: the view checks its own)."""
 
     permission_classes = [IsAuthenticated]
+    module: str | None = "academics"
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
@@ -154,7 +155,8 @@ class OwnView(GenericAPIView):
         )
         if membership is None or membership.kind != Membership.Kind.STUDENT:
             raise NotFound()
-        require_module(request.institution, "academics")
+        if self.module:
+            require_module(request.institution, self.module)
         self.me = request.institution.students.filter(user=request.user).select_related("person").first()
         if self.me is None:
             raise NotFound()

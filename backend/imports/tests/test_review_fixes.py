@@ -55,7 +55,7 @@ def test_job_page_and_undo_do_not_query_per_student(world, on, main, client_for,
     committed = commit(admin, job).json()
     with django_assert_max_num_queries(15):
         admin.get(f"{URL}/{job['id']}")
-    with django_assert_max_num_queries(56):  # a fixed number per related table, never per student
+    with django_assert_max_num_queries(66):  # a fixed number per related table, never per student
         undone = admin.post(f"{URL}/{job['id']}/undo", {"version": committed["version"]}, format="json")
     assert undone.status_code == 200 and Student.objects.count() == 0
 

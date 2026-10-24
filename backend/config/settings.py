@@ -86,6 +86,7 @@ LOCAL_APPS = [
     "results",
     "fees",
     "communication",
+    "campus",
     "imports",
     "sites",
 ]

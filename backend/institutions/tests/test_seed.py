@@ -13,7 +13,7 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     User.objects.filter(username="aster.admin").update(full_name="Changed")
     call_command("seed_demo")
     assert Institution.objects.count() == 4
-    assert User.objects.count() == 15  # with aster.grandparent
+    assert User.objects.count() == 16  # with aster.grandparent and meridian.faculty
     assert SiteRevision.objects.filter(status="published").count() == 3
     states = dict(Institution.objects.values_list("slug", "lifecycle_status"))
     assert states == {"aster": "active", "meridian": "active", "vector": "setup", "summit": "active"}
@@ -47,7 +47,7 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     assert sorted(Enquiry.objects.values_list("source", "status")) == [("walk_in", "following_up"), ("website", "open")]
     from academics.models import EnrollmentPeriod, Section
 
-    assert sorted(Section.objects.values_list("year__code", "code")) == [
+    assert sorted(Section.objects.filter(institution=aster_inst).values_list("year__code", "code")) == [
         ("2026–27", "6A"),
         ("2026–27", "6B"),
         ("2027–28", "6A"),
@@ -82,6 +82,19 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     assert student.user.check_password("Demo-pass-2026") and not student.user.must_change_password
     for username in ("aster.admissions", "aster.registrar", "aster.parent"):
         assert User.objects.get(username=username).check_password("Demo-pass-2026")
+    from academics.models import CourseOffering, CurriculumVersion
+
+    meridian = Institution.objects.get(slug="meridian")
+    assert setting(meridian, "modules.enabled") == ["academics", "admissions", "students"]
+    regulation = CurriculumVersion.objects.get(program__institution=meridian)
+    assert (str(regulation), regulation.status, regulation.courses.count()) == ("R2026 rev 1", "published", 4)
+    lab = CourseOffering.objects.get(institution=meridian, code="A1")
+    assert (str(lab), str(lab.linked_to)) == ("PHY101L-A1", "PHY101-A")
+    assert lab.linked_to.teaching.get().membership.user.username == "meridian.faculty"
+    batch = Section.objects.get(institution=meridian)
+    assert (batch.code, batch.program.code, batch.placements.count()) == ("BSC-PHY 2026 A", "BSC-PHY", 1)
+    pins = sorted(meridian.students.values_list("enrollments__curriculum__regulation", flat=True), key=str)
+    assert pins == [None, "R2026"]
 
 
 def test_seed_refuses_without_debug(db, settings):

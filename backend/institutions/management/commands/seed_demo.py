@@ -78,6 +78,7 @@ class Command(BaseCommand):
         self._aster_employees()
         self._aster_enquiries()
         self._aster_academics()
+        self._meridian_academics(platform_admin)
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -127,31 +128,50 @@ class Command(BaseCommand):
         )
         scopes = {"CITY": city, "SCI": sci}
         for username, full_name, role, scope_code in ASTER_STAFF:
-            person, _ = User.objects.get_or_create(
-                username=username, defaults={"full_name": full_name, "created_by": actor}
-            )
-            person.set_password(PASSWORD)
-            person.must_change_password = False
-            person.last_login = person.last_login or timezone.now()
-            person.save()
-            membership, _ = Membership.objects.get_or_create(
-                institution=aster, user=person, defaults={"created_by": actor}
-            )
-            if membership.assignments.exists():
-                continue
-            scope = scopes.get(scope_code)
+            custom = front if role == front.name else None
+            self._member(aster, actor, username, full_name, "" if custom else role, scopes.get(scope_code), custom)
+
+    def _member(self, institution, actor, username, full_name, role_key, scope, custom_role=None) -> Membership:
+        """A staff login with the demo password and one role at `scope` (None: the whole institution)."""
+        person, _ = User.objects.get_or_create(
+            username=username, defaults={"full_name": full_name, "created_by": actor}
+        )
+        person.set_password(PASSWORD)
+        person.must_change_password = False
+        person.last_login = person.last_login or timezone.now()
+        person.save()
+        membership, _ = Membership.objects.get_or_create(
+            institution=institution, user=person, defaults={"created_by": actor}
+        )
+        if not membership.assignments.exists():
             kind = "institution" if scope is None else "campus" if isinstance(scope, Campus) else "department"
             RoleAssignment.objects.create(
                 membership=membership,
-                institution=aster,
-                role_key="" if role == front.name else role,
-                custom_role=front if role == front.name else None,
+                institution=institution,
+                role_key=role_key,
+                custom_role=custom_role,
                 scope_type=kind,
                 campus=scope if kind == "campus" else None,
                 department=scope if kind == "department" else None,
-                starts_on=today_for(aster),
+                starts_on=today_for(institution),
                 created_by=actor,
             )
+        return membership
+
+    def _switch_on(self, institution, admin, *keys) -> None:
+        """Modules switched on through the same steps an admin takes."""
+        from configuration import services as settings_services
+        from configuration.registry import setting
+
+        modules = setting(institution, "modules.enabled")
+        if set(keys) <= set(modules):
+            return
+        draft = settings_services.open_draft(institution, admin, "modules.enabled")
+        value = sorted({*modules, *keys})
+        draft = settings_services.save_draft(institution, admin, "modules.enabled", draft.version, value)
+        settings_services.submit(
+            institution, admin, "modules.enabled", draft.version, today_for(institution), "Demo data"
+        )
 
     def _aster_settings(self) -> None:
         """Aster has switched on Admissions, Students and Academics, through the same steps an admin takes."""
@@ -318,17 +338,10 @@ class Command(BaseCommand):
 
         from academics import placement, sections, structure
         from academics.models import GradeLevel, Subject
-        from configuration import services as settings_services
-        from configuration.registry import setting
 
         aster = Institution.objects.get(slug="aster")
         admin = User.objects.get(username="aster.admin")
-        modules = setting(aster, "modules.enabled")
-        if "academics" not in modules:
-            draft = settings_services.open_draft(aster, admin, "modules.enabled")
-            value = sorted({*modules, "academics"})
-            draft = settings_services.save_draft(aster, admin, "modules.enabled", draft.version, value)
-            settings_services.submit(aster, admin, "modules.enabled", draft.version, today_for(aster), "Demo data")
+        self._switch_on(aster, admin, "academics")
         if aster.academic_years.exists():
             return
         years = {}
@@ -381,3 +394,115 @@ class Command(BaseCommand):
         arjun = aster.students.filter(application__learner_name="Arjun Demo").first()
         if arjun is not None:
             placement.place(admin, next_6a, [arjun.id])
+
+    def _meridian_academics(self, actor) -> None:
+        """Meridian College as a college: 2026–27 with two semesters, Physics and Mathematics, program BSC-PHY and its
+        regulation R2026 — a synthetic regulation for development, not any real university's — published; semester 1
+        offerings PHY101-A with its lab PHY101L-A1; meridian.faculty teaching PHY101-A and the batch BSC-PHY 2026 A;
+        two students, one placed in the batch and one pinned to the program alone."""
+        from academics import curricula, offerings, placement, programs, sections, structure
+        from students.models import Enrollment, Person, Student
+
+        meridian = Institution.objects.get(slug="meridian")
+        admin = User.objects.get(username="meridian.admin")
+        self._switch_on(meridian, admin, "academics", "admissions", "students")
+        main = Campus.objects.get_or_create(institution=meridian, code="MAIN", defaults={"name": "Main campus"})[0]
+        physics = Department.objects.get_or_create(
+            institution=meridian, code="PHY", defaults={"name": "Physics", "campus": main}
+        )[0]
+        maths = Department.objects.get_or_create(
+            institution=meridian, code="MATH", defaults={"name": "Mathematics", "campus": main}
+        )[0]
+        faculty = self._member(meridian, actor, "meridian.faculty", "Meridian Physics Faculty", "teacher", physics)
+        if meridian.academic_years.exists():
+            return
+        year = structure.save_year(
+            admin,
+            meridian,
+            None,
+            {"code": "2026–27", "starts_on": dt.date(2026, 6, 1), "ends_on": dt.date(2027, 3, 31), "status": "current"},
+        )
+        semester_1 = structure.save_term(
+            admin,
+            year,
+            None,
+            {"name": "Semester 1", "ordinal": 1, "starts_on": dt.date(2026, 6, 1), "ends_on": dt.date(2026, 10, 31)},
+        )
+        structure.save_term(
+            admin,
+            year,
+            None,
+            {"name": "Semester 2", "ordinal": 2, "starts_on": dt.date(2026, 11, 1), "ends_on": dt.date(2027, 3, 31)},
+        )
+        program = programs.save_program(
+            admin,
+            meridian,
+            None,
+            {"code": "BSC-PHY", "name": "B.Sc Physics", "qualification": "B.Sc", "length_terms": 6,
+             "department": physics.id},
+        )  # fmt: skip
+        courses = {
+            code: programs.save_course(
+                admin,
+                meridian,
+                None,
+                {"code": code, "title": title, "credits": credits, "kind": kind, "department": department.id},
+            )
+            for code, title, credits, kind, department in (
+                ("PHY101", "Mechanics", 4, "theory", physics),
+                ("PHY101L", "Mechanics Lab", 1, "lab", physics),
+                ("MAT101", "Calculus", 4, "theory", maths),
+                ("PHY201", "Electromagnetism", 4, "theory", physics),
+            )
+        }
+        regulation = curricula.create(admin, program, {"regulation": "R2026", "cohort": 2026, "credits_required": 120})
+        for code, category, term, needs in (
+            ("PHY101", "core", 1, []),
+            ("PHY101L", "lab", 1, []),
+            ("MAT101", "core", 1, []),
+            ("PHY201", "core", 3, ["PHY101"]),
+        ):
+            regulation = curricula.add_course(
+                admin,
+                regulation,
+                {"course": courses[code].id, "category": category, "term": term,
+                 "prerequisites": [courses[n].id for n in needs]},
+            )  # fmt: skip
+        regulation = curricula.publish(admin, regulation, regulation.version)
+        lecture = offerings.save_offering(
+            admin,
+            meridian,
+            None,
+            {"course": courses["PHY101"].id, "term": semester_1.id, "campus": main.id, "code": "A", "capacity": 60},
+        )
+        offerings.save_offering(
+            admin,
+            meridian,
+            None,
+            {"course": courses["PHY101L"].id, "term": semester_1.id, "campus": main.id, "code": "A1", "capacity": 30,
+             "linked_to": lecture.id},
+        )  # fmt: skip
+        offerings.assign_teacher(admin, lecture, faculty.id)
+        batch = sections.save_section(
+            admin,
+            meridian,
+            None,
+            {"year": year.id, "program": program.id, "campus": main.id, "code": "BSC-PHY 2026 A", "capacity": 60,
+             "class_teacher": faculty.id},
+        )  # fmt: skip
+        made = []
+        for name, curriculum in (("Ananya Demo", regulation), ("Rahul Demo", None)):
+            person = Person.objects.create(institution=meridian, full_name=name)
+            student = Student.objects.create(
+                institution=meridian,
+                person=person,
+                number=Student.objects.next_number(meridian, 2026),
+                admitted_on=dt.date(2026, 6, 1),
+            )
+            Enrollment.objects.create(
+                student=student, institution=meridian, academic_year=year.code, place_code="BSC-PHY",
+                place_label="B.Sc Physics", campus=main, entry_date=dt.date(2026, 6, 1), program=program,
+                curriculum=curriculum,
+            )  # fmt: skip
+            made.append(student)
+        placement.place(admin, batch, [made[0].id])

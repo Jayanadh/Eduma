@@ -386,10 +386,9 @@ class OwnOrder(OwnView):
 
 class ChildFees(FamilyView):
     def child(self, pk):
-        for student, shared in self.children().items():
-            if student.pk == pk and shared and module_on(self.request.institution, "fees"):
-                return student
-        raise NotFound()
+        if not module_on(self.request.institution, "fees"):
+            raise NotFound()
+        return self.allowing(pk, "access_fees")
 
     def get(self, request, pk):
         return Response(services.statement(self.child(pk)))

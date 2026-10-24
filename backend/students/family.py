@@ -70,6 +70,22 @@ class FamilyView(GenericAPIView):
             found[link.student] = found.get(link.student, False) or link.access_record
         return found
 
+    def allowing(self, pk, flag: str) -> Student:
+        """The child, when one of this login's links in effect today allows `flag` (access_fees, access_messages…)."""
+        institution, today = self.request.institution, today_for(self.request.institution)
+        link = (
+            GuardianLink.objects.filter(
+                institution=institution, student_id=pk, user=self.request.user, status=GuardianLink.Status.ACTIVE,
+                starts_on__lte=today, **{flag: True},
+            )
+            .filter(Q(ends_on__isnull=True) | Q(ends_on__gte=today))
+            .select_related("student__person")
+            .first()
+        )  # fmt: skip
+        if link is None:
+            raise NotFound()
+        return link.student
+
 
 class Children(FamilyView):
     def get(self, request):

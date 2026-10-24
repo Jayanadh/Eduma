@@ -57,7 +57,7 @@ MODULES: dict[str, Module] = {
             default_for=frozenset({"university"}),
         ),
         _core("fees", "Fees", "students", available=True),
-        _core("communication", "Messages, calls and online classes", "students"),
+        _core("communication", "Messages, calls and online classes", "students", available=True),
         _core("reports", "Reports"),
         _operations("library", "Library"),
         _operations("transport", "Transport"),

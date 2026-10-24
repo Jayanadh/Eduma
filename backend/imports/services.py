@@ -279,6 +279,7 @@ def undo_blocker(job: ImportJob, students=None) -> str | None:
         | Q(enrollments__promotions__isnull=False)
         | Q(documents__isnull=False)
         | Q(fee_accounts__isnull=False)
+        | Q(conversations__isnull=False)
         | Q(holds__isnull=False)
         | Q(overrides__isnull=False)
     )

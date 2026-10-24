@@ -100,6 +100,12 @@ PERMISSIONS: dict[str, Permission] = {
             "Set up the payment provider, record settlements, resolve reconciliation cases and export journals",
             True,
         ),
+        Permission(
+            "communication.manage",
+            "Communication",
+            "Set the communication policy and the media provider, and message any student's family",
+            True,
+        ),
         Permission("student.read", "Students", "See student records", False),
         Permission("student.update", "Students", "Correct student details", False),
         Permission(
@@ -152,6 +158,7 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "student.read",
             "fees.read",
             "fees.approve",
+            "communication.manage",
         ),
         _role(
             "head_of_department",

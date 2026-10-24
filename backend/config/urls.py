@@ -10,6 +10,7 @@ from affiliations.views import ConsoleGrants
 from common.views import AuditEventList, health
 from institutions.urls import platform_patterns
 from institutions.views import OwnInstitutionView, module_catalogue, platform_overview
+from results.views import Verify
 from sites.public import PublicSiteView, public_asset
 from sites.urls import site_patterns
 from students.views import OwnRecord
@@ -36,6 +37,8 @@ urlpatterns = [
     path("api/v1/institution/academics/", include("academics.urls")),
     path("api/v1/institution/affiliations", include("affiliations.urls")),
     path("api/v1/institution/attendance/", include("attendance.urls")),
+    path("api/v1/institution/results/", include("results.urls")),
+    path("api/v1/public/verify/<str:token>", Verify.as_view(), name="public-verify"),
     path("api/v1/teaching/", include("academics.teaching_urls")),
     path("api/v1/student/me", OwnRecord.as_view(), name="student-me"),
     path("api/v1/student/", include("academics.student_urls")),

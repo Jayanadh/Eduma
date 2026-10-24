@@ -82,6 +82,14 @@ PERMISSIONS: dict[str, Permission] = {
             "See every class's attendance, approve corrections and lock sessions",
             False,
         ),
+        Permission("assessment.manage", "Results", "Set up assessment schemes and assessments, and enter marks", False),
+        Permission("results.moderate", "Results", "Moderate submitted marks and raise revaluations", False),
+        Permission(
+            "results.publish",
+            "Results",
+            "Publish results, approve revaluations, decide promotion and issue report cards, transcripts and awards",
+            False,
+        ),
         Permission("student.read", "Students", "See student records", False),
         Permission("student.update", "Students", "Correct student details", False),
         Permission(
@@ -154,6 +162,8 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "registration.override",
             "academic_record.manage",
             "attendance.manage",
+            "assessment.manage",
+            "results.publish",
         ),
         _role(
             "academic_adviser",
@@ -176,9 +186,12 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
         _role(
             "exam_officer",
             "Examination Officer",
-            "Records course outcomes and decides transfer credit; assessment arrives with Assessment and results.",
+            "Runs assessments: schemes, marks, moderation, publication, revaluation and documents.",
             "student.read",
             "academic_record.manage",
+            "assessment.manage",
+            "results.moderate",
+            "results.publish",
         ),
     )
 }

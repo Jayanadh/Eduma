@@ -34,12 +34,13 @@ MODULES: dict[str, Module] = {
         _core("students", "Students and guardians", available=True),
         _core("academics", "Academic structure and timetable", available=True),
         _core("attendance", "Attendance", "academics", available=True),
-        _core("exams", "Assessment and results", "academics"),
+        _core("exams", "Assessment and results", "academics", available=True),
         _core(
             "report_cards",
             "Grades, sections, report cards and promotion",
             "exams",
             default_for=frozenset({"school"}),
+            available=True,
         ),
         _core("course_registration", "Course registration, credits and degree audit", "academics", default_for=HIGHER),
         _core(
@@ -47,6 +48,7 @@ MODULES: dict[str, Module] = {
             "Lab batches, projects and outcome evidence",
             "exams",
             default_for=frozenset({"engineering_college", "university"}),
+            available=True,
         ),
         _core(
             "affiliations",

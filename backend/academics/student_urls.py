@@ -4,6 +4,7 @@ from django.urls import path
 
 from academics import registration_views
 from attendance import views as attendance
+from results import views as results
 
 urlpatterns = [
     path("registration", registration_views.OwnRegistration.as_view()),
@@ -12,4 +13,6 @@ urlpatterns = [
     path("attendance", attendance.OwnAttendance.as_view()),
     path("assignments", attendance.OwnAssignments.as_view()),
     path("assignments/<uuid:pk>/submit", attendance.HandIn.as_view()),
+    path("results", results.OwnResults.as_view()),
+    path("documents", results.OwnDocuments.as_view()),
 ]

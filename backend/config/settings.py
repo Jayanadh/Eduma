@@ -83,6 +83,7 @@ LOCAL_APPS = [
     "academics",
     "affiliations",
     "attendance",
+    "results",
     "imports",
     "sites",
 ]

@@ -30,6 +30,17 @@ def teaches(user, section: Section) -> bool:
     return assignments(user, section.institution).filter(section=section).exists()
 
 
+def _register_rows(rows) -> list:
+    return [
+        {
+            "number": r.enrollment.student.number,
+            "full_name": r.enrollment.student.person.full_name,
+            "status": r.enrollment.student.status,
+        }
+        for r in rows.select_related("enrollment__student__person").order_by("enrollment__student__number")
+    ]
+
+
 class TeachingView(GenericAPIView):
     permission_classes = [IsAuthenticated]
 
@@ -78,6 +89,16 @@ def _target(row: TeachingAssignment) -> dict:
     return {
         "section": {"id": str(section.id), "code": section.code, "grade": section.level.name, "year": section.year.code}
     }
+
+
+class OfferingRoster(TeachingView):
+    """An offering's registered students, for the teachers assigned to it (slice 5c)."""
+
+    def get(self, request, offering):
+        found = CourseOffering.objects.filter(institution=request.institution, pk=offering).first()
+        if found is None or not assignments(request.user, request.institution).filter(offering=found).exists():
+            raise NotFound()
+        return Response(_register_rows(found.registrations.filter(state="registered")))
 
 
 class ClassRoster(TeachingView):

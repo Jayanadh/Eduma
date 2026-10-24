@@ -218,3 +218,47 @@ class OfferingPatch(serializers.Serializer):
 
 class OfferingTeacherInput(serializers.Serializer):
     membership = serializers.UUIDField()
+
+
+class WindowInput(serializers.Serializer):
+    term = serializers.UUIDField()
+    opens_on = serializers.DateField()
+    closes_on = serializers.DateField()
+    drop_until = serializers.DateField()
+    max_credits = serializers.DecimalField(max_digits=4, decimal_places=1, min_value=0, required=False)
+    needs_approval = serializers.BooleanField(required=False)
+
+
+class WindowPatch(serializers.Serializer):
+    version = serializers.IntegerField()
+    opens_on = serializers.DateField(required=False)
+    closes_on = serializers.DateField(required=False)
+    drop_until = serializers.DateField(required=False)
+    max_credits = serializers.DecimalField(max_digits=4, decimal_places=1, min_value=0, required=False)
+    needs_approval = serializers.BooleanField(required=False)
+
+
+class RegisterInput(serializers.Serializer):
+    student = serializers.UUIDField()
+    offerings = serializers.ListField(child=serializers.UUIDField(), min_length=1, max_length=12)
+    waitlist = serializers.BooleanField(required=False, default=False)
+
+
+class OwnRegisterInput(serializers.Serializer):
+    offerings = serializers.ListField(child=serializers.UUIDField(), min_length=1, max_length=12)
+    waitlist = serializers.BooleanField(required=False, default=False)
+
+
+class HoldInput(serializers.Serializer):
+    kind = serializers.ChoiceField(["academic", "administrative"])
+    reason = serializers.CharField(max_length=300)
+
+
+class OverrideInput(serializers.Serializer):
+    student = serializers.UUIDField()
+    offering = serializers.UUIDField()
+    rule = serializers.ChoiceField(
+        ["window_closed", "hold", "not_in_regulation", "prerequisite", "already_passed", "credit_limit"]
+    )
+    reason = serializers.CharField(max_length=300)
+    expires_on = serializers.DateField()

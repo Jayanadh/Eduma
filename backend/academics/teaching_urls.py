@@ -7,4 +7,5 @@ from academics import teaching
 urlpatterns = [
     path("classes", teaching.Classes.as_view()),
     path("classes/<uuid:section>/students", teaching.ClassRoster.as_view()),
+    path("offerings/<uuid:offering>/students", teaching.OfferingRoster.as_view()),
 ]

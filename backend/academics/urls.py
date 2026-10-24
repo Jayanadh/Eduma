@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from academics import curricula, he_views, views
+from academics import curricula, he_views, registration, registration_views, views
 
 urlpatterns = [
     path("years", views.YearList.as_view()),
@@ -36,6 +36,15 @@ urlpatterns = [
     path("offerings/<uuid:pk>", he_views.OfferingDetail.as_view()),
     path("offerings/<uuid:pk>/teachers", he_views.OfferingTeachers.as_view()),
     path("offerings/<uuid:pk>/teachers/<uuid:assignment>/end", he_views.OfferingEndTeaching.as_view()),
+    path("windows", registration_views.WindowList.as_view()),
+    path("windows/<uuid:pk>", registration_views.WindowDetail.as_view()),
+    path("registrations", registration_views.RegistrationList.as_view()),
+    path("registrations/<uuid:pk>/approve", registration_views.RegistrationAction.as_view(action=registration.approve)),
+    path("registrations/<uuid:pk>/reject", registration_views.RegistrationAction.as_view(action=registration.reject)),
+    path("registrations/<uuid:pk>/drop", registration_views.RegistrationAction.as_view(action=registration.drop)),
+    path("students/<uuid:pk>/holds", registration_views.HoldList.as_view()),
+    path("holds/<uuid:pk>/lift", registration_views.LiftHold.as_view()),
+    path("overrides", registration_views.OverrideList.as_view()),
     path("courses", he_views.CourseList.as_view()),
     path("courses/<uuid:pk>", he_views.CourseDetail.as_view()),
 ]

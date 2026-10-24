@@ -21,7 +21,9 @@ def assignments(user, institution):
     rows = rows.exclude(ends_on__lt=today).exclude(section__year__status=AcademicYear.Status.CLOSED)
     rows = rows.exclude(offering__term__year__status=AcademicYear.Status.CLOSED)
     rows = rows.exclude(offering__status=CourseOffering.Status.CANCELLED)
-    return rows.select_related("section__year", "section__grade", "subject", "offering__course", "offering__term__year")
+    return rows.select_related(
+        "section__year", "section__grade", "section__program", "subject", "offering__course", "offering__term__year"
+    )
 
 
 def teaches(user, section: Section) -> bool:
@@ -72,9 +74,9 @@ def _target(row: TeachingAssignment) -> dict:
                 "year": offering.term.year.code,
             }
         }
-    section = row.section
+    section = row.section  # "grade" is the level's name: a college batch's program
     return {
-        "section": {"id": str(section.id), "code": section.code, "grade": section.grade.name, "year": section.year.code}
+        "section": {"id": str(section.id), "code": section.code, "grade": section.level.name, "year": section.year.code}
     }
 
 

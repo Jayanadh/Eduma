@@ -97,6 +97,11 @@ class Section(VersionedModel):
     def __str__(self) -> str:
         return self.code
 
+    @property
+    def level(self):
+        """The grade of a school class or the program of a college batch."""
+        return self.grade or self.program
+
 
 class TeachingAssignment(models.Model):
     """Who teaches what in a section; a relationship that opens the section's roster to that teacher."""
@@ -154,7 +159,18 @@ class EnrollmentPeriod(VersionedModel):
 
     class Meta:
         ordering = ["-year__starts_on"]
-        constraints = [models.UniqueConstraint(fields=["enrollment", "year"], name="one_placement_per_year")]
+        constraints = [
+            models.UniqueConstraint(fields=["enrollment", "year"], name="one_placement_per_year"),
+            models.CheckConstraint(
+                condition=models.Q(grade__isnull=False, program__isnull=True)
+                | models.Q(grade__isnull=True, program__isnull=False),
+                name="period_grade_or_program",
+            ),
+        ]
+
+    @property
+    def level(self):
+        return self.grade or self.program
 
 
 class Program(VersionedModel):

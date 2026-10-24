@@ -148,7 +148,7 @@ class SubjectDetail(NamedDetail):
 class SectionView(AcademicsView):
     def section(self) -> Section:
         found = Section.objects.filter(institution=self.request.institution, pk=self.kwargs["pk"])
-        return self.found(found.select_related("year", "grade", "campus", "institution"), self.kwargs["pk"])
+        return self.found(found.select_related("year", "grade", "program", "campus", "institution"), self.kwargs["pk"])
 
 
 class SectionList(SectionView):
@@ -156,9 +156,9 @@ class SectionList(SectionView):
 
     def get(self, request):
         rows = Section.objects.filter(institution=request.institution).select_related(
-            "year", "grade", "campus", "institution"
+            "year", "grade", "program", "campus", "institution"
         )
-        for name in ("year", "grade", "campus"):
+        for name in ("year", "grade", "program", "campus"):
             if value := request.query_params.get(name):
                 rows = rows.filter(**{f"{name}_id": value})
         page = self.paginate_queryset(rows.order_by("-year__starts_on", "grade__order", "code"))
@@ -253,7 +253,9 @@ class MoveUpView(SectionView):
     def sections(self):
         source = self.section()
         data = valid(MoveUpInput, self.request.data)
-        found = Section.objects.filter(institution=self.request.institution).select_related("year", "grade", "campus")
+        found = Section.objects.filter(institution=self.request.institution).select_related(
+            "year", "grade", "program", "campus"
+        )
         return source, self.found(found, data["target"]), data
 
 

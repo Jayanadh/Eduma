@@ -16,6 +16,12 @@ MODES = ("promote", "repeat")
 def _check(source: Section, target: Section, mode: str) -> None:
     if target.year.starts_on <= source.year.starts_on:
         raise ValidationError({"target": ["Choose a section in a later academic year."]})
+    if source.program_id or target.program_id:
+        if target.program_id != source.program_id:
+            raise ValidationError({"target": ["Choose a batch of the same program."]})
+        if mode == "repeat":
+            raise ValidationError({"mode": ["A batch moves up with its program; it doesn't repeat a year."]})
+        return
     if mode == "repeat" and target.grade_id != source.grade_id:
         raise ValidationError({"mode": ["Repeating keeps the same grade."]})
     if mode == "promote" and target.grade_id == source.grade_id:
@@ -69,7 +75,7 @@ def commit(actor, source: Section, target: Section, mode: str, student_ids: list
     wanted = {str(pk) for pk in student_ids}
     with transaction.atomic():
         list(Section.objects.select_for_update().filter(pk__in=[source.pk, target.pk]).order_by("pk"))  # fixed order
-        fresh = Section.objects.select_related("year", "grade", "campus", "institution")
+        fresh = Section.objects.select_related("year", "grade", "program", "campus", "institution")
         source, target = fresh.get(pk=source.pk), fresh.get(pk=target.pk)
         _source(actor, source)
         require_manageable(actor, target)
@@ -83,6 +89,7 @@ def commit(actor, source: Section, target: Section, mode: str, student_ids: list
                 year=target.year,
                 section=target,
                 grade=target.grade,
+                program=target.program,
                 campus=target.campus,
                 is_repeat=mode == "repeat",
                 placed_by=actor,

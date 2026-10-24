@@ -21,7 +21,7 @@ def require_manageable(actor, section: Section) -> None:
 def _locked(section: Section) -> Section:
     return (
         Section.objects.select_for_update(of=("self",))
-        .select_related("year", "grade", "campus", "institution")
+        .select_related("year", "grade", "program", "campus", "institution")
         .get(pk=section.pk)
     )
 
@@ -71,7 +71,8 @@ def place(actor, section: Section, student_ids: list) -> list[EnrollmentPeriod]:
             period = earlier.get(episode.id) or EnrollmentPeriod(
                 enrollment=episode, institution=section.institution, year=section.year
             )
-            period.section, period.grade, period.campus = section, section.grade, section.campus
+            period.section, period.grade, period.program = section, section.grade, section.program
+            period.campus = section.campus
             period.state, period.ended_because, period.placed_by = EnrollmentPeriod.State.ACTIVE, "", actor
             period.save()
             made.append(period)
@@ -97,7 +98,8 @@ def move(actor, period: EnrollmentPeriod, target: Section) -> EnrollmentPeriod:
         if period.section_id == target.pk:
             return period
         check_room(target, 1)
-        period.section, period.grade, period.campus = target, target.grade, target.campus
+        period.section, period.grade, period.program = target, target.grade, target.program
+        period.campus = target.campus
         period.save()
         student = period.enrollment.student
         audit.log(
@@ -121,13 +123,13 @@ def end(actor, period: EnrollmentPeriod) -> EnrollmentPeriod:
 
 
 def label(period: EnrollmentPeriod | None) -> str | None:
-    return f"{period.grade.name} · {period.section.code}" if period else None
+    return f"{period.level.name} · {period.section.code}" if period else None
 
 
 def current_period(student: Student) -> EnrollmentPeriod | None:
     """This year's placement; before or between years, the latest one."""
     active = EnrollmentPeriod.objects.filter(enrollment__student=student, state=EnrollmentPeriod.State.ACTIVE)
-    active = active.select_related("grade", "section", "year", "campus")
+    active = active.select_related("grade", "program", "section", "year", "campus")
     this_year = active.filter(year__status=AcademicYear.Status.CURRENT).first()
     return this_year or active.order_by("-year__starts_on").first()
 

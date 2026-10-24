@@ -47,12 +47,12 @@ def placements(student: Student) -> list[dict]:
     from academics.models import EnrollmentPeriod
 
     rows = EnrollmentPeriod.objects.filter(enrollment__student=student).select_related(
-        "year", "grade", "section", "campus"
+        "year", "grade", "program", "section", "campus"
     )
     return [
         {
             "year": row.year.code,
-            "grade": row.grade.name,
+            "grade": row.level.name,  # a college batch's program
             "section": row.section.code,
             "campus": row.campus.name,
             "state": row.state,

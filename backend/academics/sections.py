@@ -52,8 +52,13 @@ def save_section(actor, institution, section: Section | None, data: dict, versio
             _open(section.year)  # the year it is in now: a closed year's section can't be moved out of it
             if placed(section):
                 # Placements carry the section's year, grade and campus; changing them would contradict the rosters.
-                moving = {name: data[name] for name in ("year", "grade", "campus") if name in data}
-                current = {"year": section.year_id, "grade": section.grade_id, "campus": section.campus_id}
+                moving = {name: data[name] for name in ("year", "grade", "program", "campus") if name in data}
+                current = {
+                    "year": section.year_id,
+                    "grade": section.grade_id,
+                    "program": section.program_id,
+                    "campus": section.campus_id,
+                }
                 if changed := [name for name, value in moving.items() if str(value) != str(current[name])]:
                     raise ValidationError(
                         {changed[0]: ["Students are placed here; take them out before changing this."]}
@@ -66,10 +71,19 @@ def save_section(actor, institution, section: Section | None, data: dict, versio
                 raise ValidationError({"year": ["Choose one of this school's academic years."]})
             section.year = found
         if "grade" in data:
-            found = institution.grades.filter(pk=data["grade"], is_active=True).first()
-            if found is None:
-                raise ValidationError({"grade": ["Choose an active grade."]})
-            section.grade = found
+            section.grade = None
+            if data["grade"] is not None:
+                if (grade := institution.grades.filter(pk=data["grade"], is_active=True).first()) is None:
+                    raise ValidationError({"grade": ["Choose an active grade."]})
+                section.grade = grade
+        if "program" in data:
+            section.program = None
+            if data["program"] is not None:
+                if (program := institution.programs.filter(pk=data["program"], is_active=True).first()) is None:
+                    raise ValidationError({"program": ["Choose an active program."]})
+                section.program = program
+        if (section.grade_id is None) == (section.program_id is None):
+            raise ValidationError({"grade": ["Choose a grade for a school class or a program for a college batch."]})
         if "campus" in data:
             found = institution.campuses.filter(pk=data["campus"], is_active=True).first()
             if found is None:
@@ -178,7 +192,11 @@ def section_item(section: Section, viewer) -> dict:
         "capacity": section.capacity,
         "placed": placed(section),
         "year": {"id": str(section.year_id), "code": section.year.code, "status": section.year.status},
-        "grade": {"id": str(section.grade_id), "name": section.grade.name},
+        "grade": {"id": str(section.grade_id), "name": section.grade.name} if section.grade_id else None,
+        "program": {"id": str(section.program_id), "code": section.program.code, "name": section.program.name}
+        if section.program_id
+        else None,
+        "level": section.level.name,
         "campus": {"id": str(section.campus_id), "name": section.campus.name},
         "class_teacher": {"id": str(teacher.id), "full_name": teacher.user.full_name} if teacher else None,
         "teachers": [

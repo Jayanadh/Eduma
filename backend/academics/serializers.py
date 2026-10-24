@@ -91,7 +91,9 @@ def named_item(row) -> dict:
 
 class SectionInput(serializers.Serializer):
     year = serializers.UUIDField()
-    grade = serializers.UUIDField()
+    # One of the two: a grade for a school class, a program for a college batch.
+    grade = serializers.UUIDField(required=False, allow_null=True)
+    program = serializers.UUIDField(required=False, allow_null=True)
     campus = serializers.UUIDField()
     code = serializers.CharField(max_length=20)
     capacity = serializers.IntegerField(min_value=1, max_value=1000)
@@ -101,7 +103,6 @@ class SectionInput(serializers.Serializer):
 class SectionPatch(SectionInput):
     version = serializers.IntegerField()
     year = serializers.UUIDField(required=False)
-    grade = serializers.UUIDField(required=False)
     campus = serializers.UUIDField(required=False)
     code = serializers.CharField(max_length=20, required=False)
     capacity = serializers.IntegerField(min_value=1, max_value=1000, required=False)

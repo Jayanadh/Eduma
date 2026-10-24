@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from academics.models import AcademicYear
+from academics.models import AcademicYear, Course
 
 
 class YearInput(serializers.Serializer):
@@ -124,3 +124,42 @@ class MoveUpInput(serializers.Serializer):
     target = serializers.UUIDField()
     mode = serializers.ChoiceField(["promote", "repeat"])
     students = serializers.ListField(child=serializers.UUIDField(), required=False, default=list, max_length=1000)
+
+
+class ProgramInput(serializers.Serializer):
+    code = serializers.CharField(max_length=20)
+    name = serializers.CharField(max_length=120)
+    qualification = serializers.CharField(max_length=40)
+    length_terms = serializers.IntegerField(min_value=1, max_value=16)
+    department = serializers.UUIDField(required=False, allow_null=True)
+    is_active = serializers.BooleanField(required=False)
+
+
+class ProgramPatch(ProgramInput):
+    version = serializers.IntegerField()
+    code = serializers.CharField(max_length=20, required=False)
+    name = serializers.CharField(max_length=120, required=False)
+    qualification = serializers.CharField(max_length=40, required=False)
+    length_terms = serializers.IntegerField(min_value=1, max_value=16, required=False)
+
+
+class CourseInput(serializers.Serializer):
+    code = serializers.CharField(max_length=20)
+    title = serializers.CharField(max_length=150)
+    credits = serializers.DecimalField(max_digits=3, decimal_places=1, min_value=0, max_value=30)
+    kind = serializers.ChoiceField(Course.Kind.choices)
+    department = serializers.UUIDField(required=False, allow_null=True)
+    is_active = serializers.BooleanField(required=False)
+
+    def validate_credits(self, value):
+        if value * 2 % 1:
+            raise serializers.ValidationError("Credits go in halves: 3, 3.5, 4…")
+        return value
+
+
+class CoursePatch(CourseInput):
+    version = serializers.IntegerField()
+    code = serializers.CharField(max_length=20, required=False)
+    title = serializers.CharField(max_length=150, required=False)
+    credits = serializers.DecimalField(max_digits=3, decimal_places=1, min_value=0, max_value=30, required=False)
+    kind = serializers.ChoiceField(Course.Kind.choices, required=False)

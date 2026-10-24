@@ -100,6 +100,9 @@ def test_teachers_added_and_ended(world, admin, school):
     ended = admin.post(f"{API}/sections/{section['id']}/teachers/{assignment.id}/end", {}, format="json")
     assert ended.status_code == 200
     assert [t["in_effect"] for t in admin.get(f"{API}/sections/{section['id']}").json()["teachers"]] == [False]
+    # Final review: ending it again keeps the day it really ended.
+    again = admin.post(f"{API}/sections/{section['id']}/teachers/{assignment.id}/end", {}, format="json")
+    assert again.status_code == 409 and again.json()["code"] == "invalid_transition"
 
 
 def test_other_institution_ids(world, admin, school, client_for):

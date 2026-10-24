@@ -102,3 +102,62 @@ def test_isolation_and_module(world, admin, depts, client_for):
     assert birch.get(f"{API}/programs/{made['id']}").status_code == 404
     switch_on(world.a, modules=("admissions", "students"))
     assert admin.get(f"{API}/programs").status_code == 404
+
+
+def test_a_published_regulation_keeps_its_credits_and_terms(admin, depts):
+    """Final review: a published regulation must not change through its courses or program."""
+    course = admin.post(f"{API}/courses", course_body(), format="json").json()
+    program = admin.post(f"{API}/programs", program_body(), format="json").json()
+    draft = admin.post(
+        f"{API}/programs/{program['id']}/curricula",
+        {"regulation": "R1", "cohort": 2026, "credits_required": "120"},
+        format="json",
+    ).json()
+    shown = admin.post(
+        f"{API}/curricula/{draft['id']}/courses", {"course": course["id"], "category": "core", "term": 4}, format="json"
+    ).json()
+    url = f"{API}/courses/{course['id']}"
+    in_draft = admin.patch(url, {"version": course["version"], "credits": "3"}, format="json")
+    assert in_draft.status_code == 200, in_draft.json()
+    course = in_draft.json()
+    admin.post(f"{API}/curricula/{draft['id']}/publish", {"version": shown["version"]}, format="json")
+    frozen = admin.patch(url, {"version": course["version"], "credits": "2"}, format="json")
+    assert frozen.status_code == 409 and frozen.json()["code"] == "in_use"
+    assert (
+        admin.patch(url, {"version": course["version"], "title": "Classical mechanics"}, format="json").status_code
+        == 200
+    )
+    program_url = f"{API}/programs/{program['id']}"
+    shorter = admin.patch(program_url, {"version": program["version"], "length_terms": 3}, format="json")
+    assert shorter.status_code == 422 and [e["field"] for e in shorter.json()["errors"]] == ["length_terms"]
+    assert (
+        admin.patch(program_url, {"version": program["version"], "length_terms": 4}, format="json").status_code == 200
+    )
+
+
+def test_department_scope_for_programs_and_own_edits(world, depts, client_for):
+    physics, chemistry = depts
+    manager = client_for(world.a.slug, factories.member(world.a, role="registrar", scope=physics))
+    mine = manager.post(f"{API}/courses", course_body(department=str(physics.id)), format="json").json()
+    own = manager.patch(
+        f"{API}/courses/{mine['id']}", {"version": mine["version"], "title": "Mechanics I"}, format="json"
+    )
+    assert own.status_code == 200
+    assert manager.post(f"{API}/programs", program_body(department=str(physics.id)), format="json").status_code == 201
+    assert (
+        manager.post(f"{API}/programs", program_body(code="C", department=str(chemistry.id)), format="json").status_code
+        == 403
+    )
+    assert manager.post(f"{API}/programs", program_body(code="W"), format="json").status_code == 403
+
+
+def test_another_institutions_course_is_not_found(world, admin, depts, client_for):
+    made = admin.post(f"{API}/courses", course_body(), format="json").json()
+    switch_on(world.b, modules=("admissions", "students", "academics"))
+    birch = client_for(world.b.slug, world.b_admin)
+    assert (
+        birch.patch(
+            f"{API}/courses/{made['id']}", {"version": made["version"], "title": "X"}, format="json"
+        ).status_code
+        == 404
+    )

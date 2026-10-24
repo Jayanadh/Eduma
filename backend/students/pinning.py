@@ -2,6 +2,7 @@
 student.update, always to a published regulation of the same program."""
 
 from django.db import transaction
+from django.db.models import Q
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from accounts.permissions import has_perm
@@ -28,7 +29,9 @@ def pin(actor, student: Student, version: int, program, curriculum=None) -> Stud
             raise Problem(409, "invalid_transition", f"{student.number} is not enrolled now.")
         chosen = None
         if program is not None:
-            chosen = student.institution.programs.filter(pk=program, is_active=True).first()
+            # The program already followed stays choosable after it is made inactive, like a retired regulation.
+            active = Q(is_active=True) | Q(pk=enrollment.program_id)
+            chosen = student.institution.programs.filter(active, pk=program).first()
             if chosen is None:
                 raise ValidationError({"program": ["Choose an active program."]})
         regulation = None

@@ -301,4 +301,23 @@ describe('Student pages', () => {
     const request = http.expectOne('/api/v1/institution/students/s1/program');
     expect(request.request.body).toEqual({ version: 3, program: 'p1', curriculum: 'cv1' });
   });
+
+  it('keeps an inactive program a student already follows in the choices', async () => {
+    const registrar = makeMe();
+    registrar.membership = { ...registrar.membership!, category: 'college', permissions: ['student.read', 'student.update'] };
+    await signInAs(registrar);
+    const fixture = TestBed.createComponent(ProgramSection);
+    const pinned = { ...ENROLLMENT, program: { id: 'p1', code: 'BSC-PHY', name: 'B.Sc Physics' }, curriculum: null };
+    fixture.componentRef.setInput('student', record({ enrollment: pinned, can_change_program: true }));
+    await fixture.whenStable();
+    const root = fixture.nativeElement as HTMLElement;
+    [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Change')!.click();
+    await fixture.whenStable();
+    http.expectOne('/api/v1/institution/academics/programs').flush([
+      { id: 'p1', code: 'BSC-PHY', name: 'B.Sc Physics', is_active: false },
+      { id: 'p2', code: 'OLD', name: 'Old program', is_active: false },
+    ]);
+    await fixture.whenStable();
+    expect([...root.querySelectorAll('#pin-program option')].map((o) => o.textContent?.trim())).toEqual(['None', 'B.Sc Physics']);
+  });
 });

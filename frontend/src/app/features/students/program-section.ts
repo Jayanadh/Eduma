@@ -27,7 +27,9 @@ import { ToastService } from '../../ui/toast';
               <select id="pin-program" (change)="pick($any($event.target).value)">
                 <option value="">None</option>
                 @for (p of programs.value() ?? []; track p.id) {
-                  @if (p.is_active) { <option [value]="p.id" [selected]="p.id === program()">{{ p.name }}</option> }
+                  @if (p.is_active || p.id === student().enrollment?.program?.id) {
+                    <option [value]="p.id" [selected]="p.id === program()">{{ p.name }}</option>
+                  }
                 }
               </select>
             </div>

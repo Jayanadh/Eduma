@@ -197,4 +197,23 @@ describe('Programs and curricula', () => {
     request.flush(curriculum({ id: 'cv2', revision: 2 }));
     expect(navigate).toHaveBeenCalledWith(['/app/academics/curricula', 'cv2']);
   });
+
+  it('drops a ticked prerequisite once that course is removed', async () => {
+    const fixture = await open(curriculum());
+    const root = fixture.nativeElement as HTMLElement;
+    const needs = root.querySelector<HTMLInputElement>('#needs-c1')!;
+    needs.checked = true;
+    needs.dispatchEvent(new Event('change'));
+    [...root.querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === 'Remove PHY101')!.click();
+    await fixture.whenStable();
+    const without = curriculum();
+    without.terms = without.terms.slice(1);
+    without.terms[0].courses[0].prerequisites = [];
+    http.expectOne('/api/v1/institution/academics/curricula/cv1/courses/e1').flush(without);
+    await fixture.whenStable();
+    (fixture.componentInstance as unknown as { choose(id: string, label: string): void }).choose('c3', 'MAT101 Calculus');
+    await fixture.whenStable();
+    root.querySelector<HTMLFormElement>('#add-course')!.dispatchEvent(new Event('submit'));
+    expect(http.expectOne('/api/v1/institution/academics/curricula/cv1/courses').request.body.prerequisites).toEqual([]);
+  });
 });

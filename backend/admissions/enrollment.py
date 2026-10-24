@@ -55,6 +55,7 @@ def enroll(actor, application: Application, version: int, password: str) -> Stud
             user=login,
         )
         year_starts = dt.date(cycle.entry_year, setting(institution, "academic.year_start"), 1)
+        curriculum = for_cohort(place.program, cycle.entry_year) if place.program_id else None
         Enrollment.objects.create(
             student=student,
             institution=institution,
@@ -64,7 +65,7 @@ def enroll(actor, application: Application, version: int, password: str) -> Stud
             campus=place.campus,
             entry_date=max(year_starts, today),
             program=place.program,
-            curriculum=for_cohort(place.program, cycle.entry_year) if place.program_id else None,
+            curriculum=curriculum,
         )
         audit.log(
             actor,
@@ -72,7 +73,12 @@ def enroll(actor, application: Application, version: int, password: str) -> Stud
             student,
             f"{number} enrolled from application {application.number}",
             institution=institution,
-            changes={"application": application.number, "login": login.username},
+            changes={
+                "application": application.number,
+                "login": login.username,
+                "program": place.program.code if place.program_id else None,
+                "curriculum": f"{place.program.code} {curriculum}" if curriculum else None,
+            },
         )
         propose_from_application(actor, student, application)
         application.stage = Stage.ENROLLED

@@ -47,6 +47,8 @@ def _episodes(section: Section, student_ids: list) -> list[Enrollment]:
             refused.append(f"{student.number} is not enrolled")
         elif enrolled_for is not None and enrolled_for.starts_on > section.year.starts_on:
             refused.append(f"{student.number} is enrolled from {enrolled_for.code}")
+        elif not _fits(section, episode):
+            refused.append(f"{student.number} follows another program")
         else:
             episodes.append(episode)
     if refused:
@@ -86,9 +88,16 @@ def place(actor, section: Section, student_ids: list) -> list[EnrollmentPeriod]:
         return made
 
 
+def _fits(section: Section, episode: Enrollment) -> bool:
+    """A batch is one program's cohort; a student not pinned to a program yet may join it (imports carry none)."""
+    return not section.program_id or episode.program_id in (None, section.program_id)
+
+
 def move(actor, period: EnrollmentPeriod, target: Section) -> EnrollmentPeriod:
     if target.year_id != period.year_id:
         raise ValidationError({"section": ["Choose a section in the same academic year."]})
+    if not _fits(target, period.enrollment):
+        raise ValidationError({"section": ["This student follows another program."]})
     with transaction.atomic():
         source = period.section
         require_manageable(actor, source)

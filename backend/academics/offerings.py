@@ -53,9 +53,16 @@ def _link(institution, offering: CourseOffering, linked_id) -> CourseOffering | 
     return found
 
 
+def _lock_term(term_id) -> None:
+    """Links are checked with the term's offerings locked, so A→B and B→A saved at once can't both pass."""
+    list(CourseOffering.objects.select_for_update().filter(term_id=term_id).order_by("pk").values_list("pk", flat=True))
+
+
 def save_offering(actor, institution, offering: CourseOffering | None, data: dict, version: int | None = None):
     with transaction.atomic():
         if offering is not None:
+            if data.get("linked_to"):
+                _lock_term(offering.term_id)  # before its own row, in one order, so two links can't deadlock
             offering = (
                 CourseOffering.objects.select_for_update(of=("self",))
                 .select_related("course", "term__year", "institution")
@@ -67,6 +74,11 @@ def save_offering(actor, institution, offering: CourseOffering | None, data: dic
             wanted = data.get("status", offering.status)
             if wanted != offering.status and (offering.status, wanted) not in FORWARD:
                 raise Problem(409, "invalid_transition", f"A {offering.status} offering can't become {wanted}.")
+            settled = offering.status in (CourseOffering.Status.CLOSED, CourseOffering.Status.CANCELLED)
+            if settled and any(name in data for name in ("campus", "code", "capacity", "linked_to")):
+                raise Problem(
+                    409, "invalid_transition", f"{label(offering)} is {offering.status}; it no longer changes."
+                )
         else:
             course = institution.courses.filter(pk=data["course"], is_active=True).first()
             if course is None:
@@ -75,6 +87,8 @@ def save_offering(actor, institution, offering: CourseOffering | None, data: dic
             if term is None:
                 raise ValidationError({"term": ["Choose one of this institution's terms."]})
             offering = CourseOffering(institution=institution, course=course, term=term)
+            if data.get("linked_to"):
+                _lock_term(term.id)
         if "campus" in data:
             if (campus := institution.campuses.filter(pk=data["campus"], is_active=True).first()) is None:
                 raise ValidationError({"campus": ["Choose an active campus."]})
@@ -115,8 +129,11 @@ def assign_teacher(actor, offering: CourseOffering, membership_id) -> TeachingAs
 
 def end_teaching(actor, offering: CourseOffering, assignment: TeachingAssignment) -> None:
     _require(actor, offering)
+    today = today_for(offering.institution)
+    if assignment.ends_on is not None and assignment.ends_on < today:
+        raise Problem(409, "invalid_transition", "This assignment has already ended.")
     # As for sections: the last day it counted was yesterday.
-    assignment.ends_on = today_for(offering.institution) - dt.timedelta(days=1)
+    assignment.ends_on = today - dt.timedelta(days=1)
     assignment.save(update_fields=["ends_on"])
     audit.log(
         actor,

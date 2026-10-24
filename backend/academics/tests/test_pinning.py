@@ -53,6 +53,11 @@ def test_enrolling_pins_program_and_regulation(world, bsc, cycle, accepted, regi
     record = registrar.get(f"{STUDENTS}/{student.id}").json()
     assert record["enrollment"]["program"]["code"] == "BSC-PHY"
     assert record["enrollment"]["curriculum"]["label"] == "R2026 rev 2"
+    enrolled_event = AuditEvent.objects.get(action="student.enrolled")
+    assert (enrolled_event.changes["program"], enrolled_event.changes["curriculum"]) == (
+        "BSC-PHY",
+        "BSC-PHY R2026 rev 2",
+    )
 
 
 def test_only_a_retired_regulation_pins_the_program_alone(world, bsc, cycle, accepted, registrar):  # noqa: F811
@@ -98,3 +103,11 @@ def test_cycle_places_accept_a_program(world, bsc, main, client_for):  # noqa: F
     elsewhere = Program.objects.create(institution=world.b, code="X", name="X", qualification="X", length_terms=2)
     places[0]["program"] = str(elsewhere.id)
     assert admin.post(CYCLES, cycle_body(main, places=places), format="json").status_code == 422
+
+
+def test_a_deactivated_program_can_still_be_resaved(world, bsc, cycle, accepted, registrar):  # noqa: F811
+    """Final review: like a retired regulation, the program a student already follows stays choosable."""
+    student = enrolled(world, cycle, accepted, registrar, bsc)
+    Program.objects.filter(pk=bsc.pk).update(is_active=False)
+    body = {"version": Student.objects.get().version, "program": str(bsc.id), "curriculum": None}
+    assert registrar.post(f"{STUDENTS}/{student.id}/program", body, format="json").status_code == 200

@@ -164,8 +164,11 @@ def end_teaching(actor, assignment: TeachingAssignment) -> TeachingAssignment:
     section = assignment.section
     if not can_manage_section(actor, section):
         raise PermissionDenied("Your role does not cover this section's campus.")
+    today = today_for(section.institution)
+    if assignment.ends_on is not None and assignment.ends_on < today:
+        raise Problem(409, "invalid_transition", "This assignment has already ended.")
     # Ends now: the last day it counted was yesterday (an assignment made today then never counts).
-    assignment.ends_on = today_for(section.institution) - dt.timedelta(days=1)
+    assignment.ends_on = today - dt.timedelta(days=1)
     assignment.save(update_fields=["ends_on"])
     audit.log(
         actor,

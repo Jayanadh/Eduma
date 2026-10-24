@@ -34,6 +34,22 @@ Offerings. No console errors. Found and fixed: after adding a course to a regula
 kept sending the old category and term (spec added, red first); the course list drew a stray divider. The check's
 rev 2, PHY101-B, PHY101L-B1, Rahul's placement and pin remain in the local database.
 
+Final review (fresh reviewer, 24 Oct 2026): every Review Focus item held. Fixed with a failing test first: a
+published regulation could still change underneath, through a course's credits (now 409 `in_use` once the course is
+in a published or retired regulation) or the program's length (now 422 below the highest term any regulation uses); a
+batch accepted a student pinned to another program (refused; students not pinned yet may still join, as imports carry
+no program); a cancelled or closed offering still took edits, and two simultaneous links could form a loop (the term's
+offerings are now locked while a link is checked); ending an already-ended teaching assignment moved its end date
+(sections and offerings, 409 now); a student whose program was made inactive couldn't have it re-saved, and the pin
+card hid it; the regulation page kept sending a prerequisite after that course was removed; the enrollment audit now
+records the program and regulation pinned. Added tests for a department-scoped manager editing their own course and
+programs by department, and another institution's course (404). Backend `pytest` 519 passed, frontend `ng test` 202
+passed, lint and build clean. Deferred minors: a lab may be linked to an offering of another department; the pin
+endpoint lets `student.update` move a student to another program (only another program's regulation is refused, as
+§7.6 asks); the Courses page has no edit form; add forms show to managers of any scope (out-of-scope adds end in a
+403 message); Academic setup still lists grades for colleges; `for_cohort` breaks a same-cohort tie between two
+regulation codes by revision number; lists check permissions per row.
+
 ## Slice 5a (23 October 2026) — BUILD-05 part 1
 
 **Slice 5a is built and checked locally.** Spec: `docs/superpowers/specs/2026-10-23-slice5a-school-structure-design.md`.

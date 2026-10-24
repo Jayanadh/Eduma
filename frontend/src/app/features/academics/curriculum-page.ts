@@ -102,7 +102,8 @@ export class CurriculumPage {
       category: this.category(),
       term: this.term(),
       elective_group: form.querySelector<HTMLInputElement>('#add-group')?.value.trim() ?? '',
-      prerequisites: [...this.needs()],
+      // Only courses still in the regulation: one ticked and then removed would make the server refuse the add.
+      prerequisites: [...this.needs()].filter((id) => this.entries().some((e) => e.course.id === id)),
     };
     this.run(this.api.post<Curriculum>(`${this.base()}/courses`, body), `${chosen.label} added.`, () => {
       form.reset();

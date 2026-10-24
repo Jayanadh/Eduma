@@ -114,3 +114,22 @@ def test_a_placement_names_exactly_one(world, bsc):
         EnrollmentPeriod.objects.create(
             enrollment=student.enrollments.get(), institution=world.a, year=bsc.year, section=batch, campus=bsc.main
         )
+
+
+def test_a_batch_refuses_students_of_another_program(world, admin, bsc):
+    """Final review: a batch is one program's cohort. Students not pinned yet may join (imports carry no program)."""
+    batch = Section.objects.get(pk=admin.post(f"{API}/sections", batch_body(bsc), format="json").json()["id"])
+    commerce = enrolled_student(world.a, "2026-0005", name="Bea Commerce")
+    commerce.enrollments.update(program=bsc.bcom)
+    refused = place(admin, batch, commerce)
+    assert refused.status_code == 422 and fields(refused) == ["students"]
+    unpinned = enrolled_student(world.a, "2026-0006")
+    assert place(admin, batch, unpinned).status_code == 201
+    physics = enrolled_student(world.a, "2026-0007")
+    physics.enrollments.update(program=bsc.bsc)
+    assert place(admin, batch, physics).status_code == 201
+    other = admin.post(
+        f"{API}/sections", batch_body(bsc, program=str(bsc.bcom.id), code="BCOM 2026 A"), format="json"
+    ).json()
+    moved = admin.post(f"{API}/sections/{batch.id}/students/{physics.id}/move", {"section": other["id"]}, format="json")
+    assert moved.status_code == 422

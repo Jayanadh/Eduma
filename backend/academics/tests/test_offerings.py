@@ -148,3 +148,22 @@ def factories_year(institution):
     return AcademicYear.objects.create(
         institution=institution, code="2026–27", starts_on=dt.date(2026, 6, 1), ends_on=dt.date(2027, 3, 31)
     )
+
+
+def test_a_cancelled_offering_is_settled_and_endings_stay(world, admin, terms):
+    """Final review: a cancelled offering takes no more edits; ending an ended assignment keeps its end."""
+    made = offer(admin, terms).json()
+    teacher = factories.member(world.a, role="teacher")
+    shown = admin.post(
+        f"{API}/offerings/{made['id']}/teachers",
+        {"membership": str(Membership.objects.get(user=teacher).id)},
+        format="json",
+    ).json()
+    url = f"{API}/offerings/{made['id']}"
+    ended = admin.post(f"{url}/teachers/{shown['teachers'][0]['id']}/end").json()
+    again = admin.post(f"{url}/teachers/{shown['teachers'][0]['id']}/end")
+    assert again.status_code == 409 and again.json()["code"] == "invalid_transition"
+    assert again.status_code == 409 and ended["teachers"][0]["ends_on"]
+    cancelled = admin.patch(url, {"version": ended["version"], "status": "cancelled"}, format="json").json()
+    edited = admin.patch(url, {"version": cancelled["version"], "capacity": 10}, format="json")
+    assert edited.status_code == 409 and edited.json()["code"] == "invalid_transition"

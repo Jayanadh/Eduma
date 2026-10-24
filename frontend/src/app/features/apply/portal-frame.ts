@@ -26,11 +26,14 @@ import { Icon } from '../../ui/icon';
           <a routerLink="/apply/applications" routerLinkActive="active">Applications</a>
         </nav>
       }
-      @if (auth.user()?.membership?.kind === 'student' && auth.higher() && academics()) {
+      @if (auth.user()?.membership?.kind === 'student' && (academics() || attendance())) {
         <nav class="portal-nav" aria-label="Student">
           <a routerLink="/student" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Your record</a>
-          <a routerLink="/student/registration" routerLinkActive="active">Registration</a>
-          <a routerLink="/student/progress" routerLinkActive="active">Degree progress</a>
+          @if (attendance()) { <a routerLink="/student/assignments" routerLinkActive="active">Assignments</a> }
+          @if (auth.higher() && academics()) {
+            <a routerLink="/student/registration" routerLinkActive="active">Registration</a>
+            <a routerLink="/student/progress" routerLinkActive="active">Degree progress</a>
+          }
         </nav>
       }
       <h1 class="page-title">{{ heading() }}</h1>
@@ -100,6 +103,7 @@ export class PortalFrame {
   protected readonly auth = inject(AuthStore);
   protected readonly site = inject(SiteStore);
   protected readonly academics = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('academics') ?? false);
+  protected readonly attendance = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('attendance') ?? false);
   private readonly confirm = inject(ConfirmDialog);
 
   protected async signOut(): Promise<void> {

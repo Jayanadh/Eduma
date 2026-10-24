@@ -121,6 +121,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/student/registration-page').then((m) => m.RegistrationPage),
   },
   {
+    path: 'student/assignments',
+    title: 'Assignments',
+    canActivate: [signedIn, studentOnly],
+    loadComponent: () => import('./features/student/assignments-page').then((m) => m.StudentAssignmentsPage),
+  },
+  {
     path: 'student/progress',
     title: 'Degree progress',
     canActivate: [signedIn, studentOnly],
@@ -345,6 +351,28 @@ export const routes: Routes = [
         path: 'teaching',
         title: 'My classes',
         loadComponent: () => import('./features/academics/teaching-page').then((m) => m.TeachingPage),
+      },
+      {
+        path: 'academics/timetable',
+        title: 'Timetable',
+        canActivate: [requires('academic_structure.manage')],
+        loadComponent: () => import('./features/academics/timetable-page').then((m) => m.TimetablePage),
+      },
+      {
+        path: 'attendance/corrections',
+        title: 'Attendance corrections',
+        canActivate: [requires('attendance.manage')],
+        loadComponent: () => import('./features/attendance/corrections-page').then((m) => m.CorrectionsPage),
+      },
+      {
+        path: 'teaching/attendance/:id',
+        title: 'Attendance',
+        loadComponent: () => import('./features/attendance/attendance-page').then((m) => m.AttendancePage),
+      },
+      {
+        path: 'teaching/assignments/:id',
+        title: 'Assignment',
+        loadComponent: () => import('./features/attendance/assignment-page').then((m) => m.AssignmentPage),
       },
       {
         path: 'teaching/offerings/:id',

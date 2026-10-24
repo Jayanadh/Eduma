@@ -3,7 +3,29 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (24 October 2026, slice 5c–5e — BUILD-05 complete)
+## Where things stand (24 October 2026, slice 6 — BUILD-06)
+
+**Slice 6 (timetable, teaching and attendance) is built and tested** in fast mode (no browser check or review until
+the end). Spec: `docs/superpowers/specs/2026-10-24-slice6-timetable-attendance-design.md`. Branch
+`slice-6-timetable-attendance`, cut from `slice-5c-registration-progress`. Next: BUILD-07 (assessments, results,
+report cards, transcripts).
+
+| Built in slice 6 | Where |
+|---|---|
+| Rooms; timetable versions per term with clashes (room, teacher, class) listed and blocking publication; substitutions | `backend/academics/timetable.py`, `features/academics/timetable-page.ts` |
+| Teacher's day from the published timetable (covers included) and registers: mark, save, submit; managers lock | `academics/timetable.py`, `backend/attendance/services.py`, `features/academics/teaching-page.ts`, `features/attendance/attendance-page.ts` |
+| Eligible rosters only (a mid-year joiner counts from their entry date, TST-011); unmarked is not absent; excused not counted | `attendance/services.py` |
+| Corrections after submitting, approved by another manager, keeping the original | `attendance/services.py`, `features/attendance/corrections-page.ts` |
+| Attendance on the staff record, the student's home and the family portal (when shared) | `features/attendance/attendance-summary.ts` |
+| Assignments: teachers post to a class; students hand in text until feedback; late flagged | `attendance/services.py`, `features/attendance/class-tools.ts`, `assignment-page.ts`, `features/student/assignments-page.ts` |
+| Demo: Aster's Term 1 timetable (Science in 6A each weekday with `aster.teacher`, LAB-1) and an assignment | `seed_demo.py` |
+
+Checks on 24 Oct 2026: backend `pytest` 558 passed; ruff and `makemigrations --check` clean; frontend `ng test` 220
+passed; `ng build` clean. Not selected: offline attendance capture (BUILD-06 "only if selected"); an LMS adapter;
+file attachments on assignments. Undoing an import now also refuses when imported students have attendance or
+submissions.
+
+## Slice 5c–5e (24 October 2026) — BUILD-05 complete
 
 **Slices 5c, 5d and 5e are built and tested; BUILD-05 is complete.** Spec:
 `docs/superpowers/specs/2026-10-24-slice5c-registration-progress-affiliation-design.md`. Plan:

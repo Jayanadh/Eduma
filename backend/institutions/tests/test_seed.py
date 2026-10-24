@@ -66,8 +66,8 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     from configuration.models import SettingRevision
     from configuration.registry import setting
 
-    assert setting(aster_inst, "modules.enabled") == ["academics", "admissions", "students"]
-    assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 1
+    assert setting(aster_inst, "modules.enabled") == ["academics", "admissions", "attendance", "students"]
+    assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 2
     assert setting(aster_inst, "access.role_approval") is False
     deputy = User.objects.get(username="aster.deputy")
     assert deputy.full_name == "Aster Deputy Admin" and deputy.check_password("Demo-pass-2026")
@@ -103,6 +103,12 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     assert (shown["cgpa"], shown["credits"]["earned"]) == ("7.67", "9.0")  # (4×8 + 1×9 + 4×7) / 9
     assert ananya.user.username == "meridian.2026-0001"
     assert meridian.offerings.get(course__code="PHY201").status == "open"
+    from academics.models import TimetableVersion
+    from attendance.models import Assignment
+
+    published = TimetableVersion.objects.get(institution=aster_inst, status="published")
+    assert published.slots.count() == 5 and Assignment.objects.filter(institution=aster_inst).count() == 1
+    assert "attendance" in setting(aster_inst, "modules.enabled")
     batch = SubmissionBatch.objects.get(grant__university__slug="summit")
     assert (batch.status, [r.number for r in batch.rows.all()]) == ("submitted", [ananya.number])
 

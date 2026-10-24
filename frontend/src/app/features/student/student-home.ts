@@ -1,6 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { Api } from '../../core/api/api';
-import { OwnStudentRecord } from '../../core/api/types';
+import { of } from 'rxjs';
+import { AttendanceSummary, OwnStudentRecord } from '../../core/api/types';
+import { AuthStore } from '../../core/auth-store';
+import { AttendanceSummaryView } from '../attendance/attendance-summary';
 import { date } from '../../core/format';
 import { load } from '../../core/load';
 import { LoadError } from '../../ui/load-error';
@@ -10,7 +13,7 @@ import { PortalFrame } from '../apply/portal-frame';
  * module. */
 @Component({
   selector: 'app-student-home',
-  imports: [LoadError, PortalFrame],
+  imports: [AttendanceSummaryView, LoadError, PortalFrame],
   template: `
     <app-portal-frame heading="Your record">
       <app-load-error [message]="data.error()" (retry)="data.reload()" />
@@ -29,6 +32,9 @@ import { PortalFrame } from '../apply/portal-frame';
             </p>
           }
         </section>
+        @if (attendance.value(); as summary) {
+          <section class="card"><h2 class="card-title">Attendance</h2><app-attendance-summary [summary]="summary" /></section>
+        }
         <p class="notice notice-info">More arrives here with each module your school switches on.</p>
       } @else if (data.loading()) {
         <p class="muted" role="status">Loading…</p>
@@ -46,6 +52,10 @@ import { PortalFrame } from '../apply/portal-frame';
 })
 export class StudentHome {
   private readonly api = inject(Api);
+  private readonly auth = inject(AuthStore);
   protected readonly date = date;
   protected readonly data = load(() => this.api.get<OwnStudentRecord>('student/me'));
+  protected readonly attendance = load(() =>
+    (this.auth.user()?.membership?.modules_enabled?.includes('attendance') ?? false) ? this.api.get<AttendanceSummary>('student/attendance') : of(null),
+  );
 }

@@ -56,7 +56,7 @@ describe('navFor', () => {
       navFor('institution', can, (module) => module === 'academics', higher)
         .filter((item) => item.group === 'Academics')
         .map((item) => item.label);
-    expect(academics(false)).toEqual(['Academic setup', 'Sections', 'My classes']);
-    expect(academics(true)).toEqual(['Academic setup', 'Sections', 'Programs', 'Courses', 'Offerings', 'My classes']);
+    expect(academics(false)).toEqual(['Academic setup', 'Sections', 'Timetable', 'My classes']);
+    expect(academics(true)).toEqual(['Academic setup', 'Sections', 'Timetable', 'Programs', 'Courses', 'Offerings', 'My classes']);
   });
 });

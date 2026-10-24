@@ -55,6 +55,22 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string; higher
     module: 'academics',
   },
   {
+    label: 'Timetable',
+    icon: 'clock',
+    link: '/app/academics/timetable',
+    group: 'Academics',
+    needs: 'academic_structure.manage',
+    module: 'academics',
+  },
+  {
+    label: 'Attendance corrections',
+    icon: 'check-square',
+    link: '/app/attendance/corrections',
+    group: 'Academics',
+    needs: 'attendance.manage',
+    module: 'attendance',
+  },
+  {
     label: 'Programs',
     icon: 'award',
     link: '/app/academics/programs',

@@ -273,11 +273,13 @@ def undo_blocker(job: ImportJob, students=None) -> str | None:
         Q(enrollments__registrations__isnull=False)
         | Q(enrollments__attempts__isnull=False)
         | Q(enrollments__transfers__isnull=False)
+        | Q(enrollments__attendance__isnull=False)
+        | Q(enrollments__submissions__isnull=False)
         | Q(holds__isnull=False)
         | Q(overrides__isnull=False)
     )
     if found := students.filter(academic).first():
-        return f"{found.number} has registrations, a hold or an academic record."
+        return f"{found.number} has registrations, attendance, a hold or an academic record."
     links = GuardianLink.objects.filter(student__in=students)
     if found := links.exclude(source=GuardianLink.Source.IMPORT, status=GuardianLink.Status.PROPOSED).first():
         return f"{found.student.number} has a guardian added or checked since the import."

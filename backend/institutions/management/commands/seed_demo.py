@@ -81,6 +81,7 @@ class Command(BaseCommand):
         self._meridian_academics(platform_admin)
         self._meridian_registration(platform_admin)
         self._affiliation(platform_admin)
+        self._timetable()
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -588,3 +589,41 @@ class Command(BaseCommand):
         term = meridian.academic_years.get(code="2026–27").terms.get(name="Semester 1")
         batch = affiliation.build(admin, grant, meridian.programs.get(code="BSC-PHY"), term)
         affiliation.submit(admin, batch)
+
+    def _timetable(self) -> None:
+        """Aster: Attendance on, room LAB-1, Term 1's timetable published (Science in 6A each weekday morning with
+        aster.teacher), and a Science assignment for 6A."""
+        from academics import timetable
+        from academics.models import Room, Section, Subject, Term, TimetableVersion
+        from attendance import services as attendance
+
+        aster = Institution.objects.get(slug="aster")
+        admin = User.objects.get(username="aster.admin")
+        self._switch_on(aster, admin, "attendance")
+        if Room.objects.filter(institution=aster).exists():
+            return
+        main = aster.campuses.get(code="MAIN")
+        room = timetable.save_room(
+            admin, aster, None, {"campus": main.id, "code": "LAB-1", "name": "Science lab", "capacity": 40}
+        )
+        term = Term.objects.get(year__institution=aster, year__code="2026–27", ordinal=1)
+        section = Section.objects.get(institution=aster, year=term.year, code="6A")
+        science = Subject.objects.get(institution=aster, code="SCI")
+        teacher = Membership.objects.get(institution=aster, user__username="aster.teacher")
+        draft = timetable.new_version(admin, term)
+        for weekday in range(1, 6):
+            timetable.add_slot(
+                admin,
+                draft,
+                {"weekday": weekday, "starts_at": dt.time(9), "ends_at": dt.time(9, 45), "section": section.id,
+                 "subject": science.id, "room": room.id, "teacher": teacher.id},
+            )  # fmt: skip
+        draft = TimetableVersion.objects.get(pk=draft.pk)
+        timetable.publish(admin, draft, draft.version)
+        attendance.post_assignment(
+            teacher.user,
+            aster,
+            section,
+            {"title": "Parts of a plant cell", "instructions": "Draw a plant cell and label five parts.",
+             "due_at": timezone.now() + dt.timedelta(days=7)},
+        )  # fmt: skip

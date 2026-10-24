@@ -925,3 +925,75 @@ export type SubmissionBatch = {
   submitted_at: string | null;
   rows: BatchRow[];
 };
+
+export type AttendanceCode = 'present' | 'late' | 'absent' | 'excused';
+
+export type AttendanceSessionT = {
+  id: string;
+  version: number;
+  state: 'draft' | 'submitted' | 'locked';
+  state_label: string;
+  date: string;
+  target: { kind: 'section' | 'offering'; id: string; label: string };
+  submitted_at: string | null;
+  roster: { student: { id: string; number: string; full_name: string }; code: AttendanceCode | null; reason: string; mark: string | null }[];
+  unmarked: number;
+};
+
+export type AttendanceSummary = {
+  present: number;
+  late: number;
+  absent: number;
+  excused: number;
+  counted: number;
+  percentage: string | null;
+  absences: { date: string; label: string; code: string }[];
+};
+
+export type AttendanceCorrectionT = {
+  id: string;
+  state: string;
+  previous_code: string;
+  new_code: string;
+  reason: string;
+  date: string;
+  label: string;
+  student: { number: string; full_name: string };
+  requested_by: string;
+};
+
+export type ClassAssignment = {
+  id: string;
+  title: string;
+  instructions: string;
+  due_at: string;
+  target: { kind: 'section' | 'offering'; id: string; label: string };
+  submissions?: { id: string; student: { number: string; full_name: string }; text: string; submitted_at: string; late: boolean; feedback: string }[];
+  submission?: { text: string; submitted_at: string; late: boolean; feedback: string } | null;
+};
+
+export type Lesson = {
+  id: string;
+  weekday: number;
+  starts_at: string;
+  ends_at: string;
+  target: { kind: 'section' | 'offering'; id: string; label: string };
+  subject: string | null;
+  room: { id: string; code: string } | null;
+  teacher: { id: string; full_name: string } | null;
+  substitute?: boolean;
+  session?: { id: string; state: string } | null;
+};
+
+export type Timetable = {
+  id: string;
+  version: number;
+  number: number;
+  status: 'draft' | 'published' | 'superseded';
+  status_label: string;
+  term: { id: string; name: string; year: string };
+  slots: Lesson[];
+  conflicts: { kind: string; slots: string[]; weekday: number; detail: string }[];
+};
+
+export type RoomT = { id: string; version: number; code: string; name: string; capacity: number; campus: Named; is_active: boolean };

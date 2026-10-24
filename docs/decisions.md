@@ -184,3 +184,22 @@ Full table and reasons: `docs/superpowers/specs/2026-10-24-slice5c-registration-
 | S5E-02 | Result batches snapshot each student's identity, program, regulation and the term's attempts; rows with problems block submitting. |
 | S5E-03 | The university reviews row by row while the grant is in effect, with a reason for each returned row. |
 | S5E-04 | Corrections are new revisions of the same batch; the latest accepted row is the current record; history stays; the university never changes the college's records. |
+
+## Slice 6 (timetable, teaching and attendance)
+
+Full table: `docs/superpowers/specs/2026-10-24-slice6-timetable-attendance-design.md`.
+
+| ID | Decision |
+|---|---|
+| S6-01 | Rooms per campus. |
+| S6-02 | Timetable versions per term (draft → published, publishing supersedes); weekly slots for a section or an offering. |
+| S6-03 | Clashes of room, teacher, section or offering are listed and block publishing (409 `timetable_conflict`). |
+| S6-04 | Substitutions move one day's lesson to another teacher. |
+| S6-05 | A teacher's day comes from published timetables, minus lessons someone covers, plus covers. |
+| S6-06 | Sessions draft → submitted → locked; present and late count, absent counts against, excused doesn't count; unmarked is not absent. |
+| S6-07 | Rosters include only students enrolled on that date. |
+| S6-08 | Teachers mark their own classes for the last 7 days; managers any day, and lock. |
+| S6-09 | Corrections after submitting are approved by another manager and keep the original mark. |
+| S6-10 | Students see their own attendance; guardians when the record is shared; staff on the record. |
+| S6-11 | Assignments with text submissions; changeable until feedback; late flagged. |
+| S6-12 | Module `attendance`; permission `attendance.manage`. Offline capture not selected. |

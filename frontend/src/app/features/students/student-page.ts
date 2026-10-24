@@ -3,7 +3,9 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { RouterLink } from '@angular/router';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage, fieldErrors, isProblem } from '../../core/api-error';
-import { StudentRecord } from '../../core/api/types';
+import { of } from 'rxjs';
+import { AttendanceSummary, StudentRecord } from '../../core/api/types';
+import { AttendanceSummaryView } from '../attendance/attendance-summary';
 import { AuthStore } from '../../core/auth-store';
 import { date, dateTime } from '../../core/format';
 import { load } from '../../core/load';
@@ -22,6 +24,7 @@ import { RegistrationSection } from './registration-section';
 @Component({
   selector: 'app-student-page',
   imports: [
+    AttendanceSummaryView,
     GuardiansSection,
     HistorySection,
     LoadError,
@@ -162,6 +165,9 @@ import { RegistrationSection } from './registration-section';
             </section>
           </div>
         </div>
+        @if (attendance.value(); as summary) {
+          <section class="card section"><h2 class="card-title">Attendance</h2><app-attendance-summary [summary]="summary" /></section>
+        }
         @if (college() && student.enrollment?.program) {
           <div class="grid-2 section">
             <app-registration-section [student]="student" />
@@ -198,6 +204,13 @@ export class StudentPage {
   protected readonly date = date;
   protected readonly dateTime = dateTime;
   protected readonly canEdit = computed(() => this.auth.can('student.update'));
+  protected readonly attendance = load(
+    () =>
+      this.auth.user()?.membership?.modules_enabled?.includes('attendance')
+        ? this.api.get<AttendanceSummary>(`institution/students/${this.id()}/attendance`)
+        : of(null),
+    () => this.id(),
+  );
   /** Registration and the academic record belong to colleges with Academics on. */
   protected readonly college = computed(
     () => this.auth.higher() && (this.auth.user()?.membership?.modules_enabled?.includes('academics') ?? false),

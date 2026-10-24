@@ -32,6 +32,10 @@ urlpatterns = [
     path("curricula/<uuid:pk>/publish", he_views.CurriculumAction.as_view(action=curricula.publish)),
     path("curricula/<uuid:pk>/retire", he_views.CurriculumAction.as_view(action=curricula.retire)),
     path("curricula/<uuid:pk>/revise", he_views.CurriculumAction.as_view(action=curricula.revise)),
+    path("offerings", he_views.OfferingList.as_view()),
+    path("offerings/<uuid:pk>", he_views.OfferingDetail.as_view()),
+    path("offerings/<uuid:pk>/teachers", he_views.OfferingTeachers.as_view()),
+    path("offerings/<uuid:pk>/teachers/<uuid:assignment>/end", he_views.OfferingEndTeaching.as_view()),
     path("courses", he_views.CourseList.as_view()),
     path("courses/<uuid:pk>", he_views.CourseDetail.as_view()),
 ]

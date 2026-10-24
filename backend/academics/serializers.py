@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from academics.models import AcademicYear, Course, CurriculumCourse
+from academics.models import AcademicYear, Course, CourseOffering, CurriculumCourse
 
 
 class YearInput(serializers.Serializer):
@@ -193,3 +193,25 @@ class CurriculumCoursePatch(CurriculumCourseInput):
 
 class VersionInput(serializers.Serializer):
     version = serializers.IntegerField()
+
+
+class OfferingInput(serializers.Serializer):
+    course = serializers.UUIDField()
+    term = serializers.UUIDField()
+    campus = serializers.UUIDField()
+    code = serializers.CharField(max_length=20)
+    capacity = serializers.IntegerField(min_value=1, max_value=2000)
+    linked_to = serializers.UUIDField(required=False, allow_null=True)
+
+
+class OfferingPatch(serializers.Serializer):
+    version = serializers.IntegerField()
+    campus = serializers.UUIDField(required=False)
+    code = serializers.CharField(max_length=20, required=False)
+    capacity = serializers.IntegerField(min_value=1, max_value=2000, required=False)
+    status = serializers.ChoiceField(CourseOffering.Status.choices, required=False)
+    linked_to = serializers.UUIDField(required=False, allow_null=True)
+
+
+class OfferingTeacherInput(serializers.Serializer):
+    membership = serializers.UUIDField()

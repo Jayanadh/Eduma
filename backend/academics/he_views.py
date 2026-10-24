@@ -4,8 +4,8 @@ from django.db.models import Q
 from rest_framework import status
 from rest_framework.response import Response
 
-from academics import curricula, programs
-from academics.models import CurriculumVersion
+from academics import curricula, offerings, programs
+from academics.models import CourseOffering, CurriculumVersion
 from academics.serializers import (
     CourseInput,
     CoursePatch,
@@ -13,6 +13,9 @@ from academics.serializers import (
     CurriculumCoursePatch,
     CurriculumInput,
     CurriculumPatch,
+    OfferingInput,
+    OfferingPatch,
+    OfferingTeacherInput,
     ProgramInput,
     ProgramPatch,
     VersionInput,
@@ -122,3 +125,56 @@ class CurriculumAction(CurriculumView):
         version = valid(VersionInput, request.data)["version"]
         result = self.action(request.user, self.curriculum(), version)
         return self.shown(result, created=self.action is curricula.revise)
+
+
+class OfferingView(AcademicsView):
+    def offering(self) -> CourseOffering:
+        rows = CourseOffering.objects.filter(institution=self.request.institution)
+        rows = rows.select_related("course", "term__year", "campus", "institution", "linked_to__course")
+        return self.found(rows, self.kwargs["pk"])
+
+    def shown(self, offering, created=False) -> Response:
+        code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return Response(offerings.offering_item(offering, self.request.user), status=code)
+
+
+class OfferingList(OfferingView):
+    pagination_class = Pages
+
+    def get(self, request):
+        rows = CourseOffering.objects.filter(institution=request.institution).select_related(
+            "course", "term__year", "campus", "institution", "linked_to__course"
+        )
+        for name in ("term", "course"):
+            if value := request.query_params.get(name):
+                rows = rows.filter(**{f"{name}_id": value})
+        page = self.paginate_queryset(rows.order_by("-term__starts_on", "course__code", "code"))
+        return self.get_paginated_response([offerings.offering_item(row, request.user) for row in page])
+
+    def post(self, request):
+        data = valid(OfferingInput, request.data)
+        return self.shown(offerings.save_offering(request.user, request.institution, None, data), created=True)
+
+
+class OfferingDetail(OfferingView):
+    def get(self, request, pk):
+        return self.shown(self.offering())
+
+    def patch(self, request, pk):
+        data = valid(OfferingPatch, request.data)
+        found = offerings.save_offering(request.user, request.institution, self.offering(), data, data.pop("version"))
+        return self.shown(found)
+
+
+class OfferingTeachers(OfferingView):
+    def post(self, request, pk):
+        offering = self.offering()
+        offerings.assign_teacher(request.user, offering, valid(OfferingTeacherInput, request.data)["membership"])
+        return self.shown(offering, created=True)
+
+
+class OfferingEndTeaching(OfferingView):
+    def post(self, request, pk, assignment):
+        offering = self.offering()
+        offerings.end_teaching(request.user, offering, self.found(offering.teaching.all(), assignment))
+        return self.shown(offering)

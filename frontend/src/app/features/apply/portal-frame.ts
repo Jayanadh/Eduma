@@ -23,15 +23,17 @@ import { Icon } from '../../ui/icon';
       @if (auth.user()?.membership?.kind === 'guardian') {
         <nav class="portal-nav" aria-label="Family">
           <a routerLink="/family" routerLinkActive="active">Your children</a>
+          @if (comms()) { <a routerLink="/family/messages" routerLinkActive="active">Messages</a> }
           <a routerLink="/apply/applications" routerLinkActive="active">Applications</a>
         </nav>
       }
-      @if (auth.user()?.membership?.kind === 'student' && (academics() || attendance() || exams() || fees())) {
+      @if (auth.user()?.membership?.kind === 'student' && (academics() || attendance() || exams() || fees() || comms())) {
         <nav class="portal-nav" aria-label="Student">
           <a routerLink="/student" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Your record</a>
           @if (attendance()) { <a routerLink="/student/assignments" routerLinkActive="active">Assignments</a> }
           @if (exams()) { <a routerLink="/student/results" routerLinkActive="active">Results</a> }
           @if (fees()) { <a routerLink="/student/fees" routerLinkActive="active">Fees</a> }
+          @if (comms()) { <a routerLink="/student/classes" routerLinkActive="active">Online classes</a> }
           @if (auth.higher() && academics()) {
             <a routerLink="/student/registration" routerLinkActive="active">Registration</a>
             <a routerLink="/student/progress" routerLinkActive="active">Degree progress</a>
@@ -105,6 +107,7 @@ export class PortalFrame {
   protected readonly auth = inject(AuthStore);
   protected readonly site = inject(SiteStore);
   protected readonly academics = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('academics') ?? false);
+  protected readonly comms = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('communication') ?? false);
   protected readonly fees = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('fees') ?? false);
   protected readonly exams = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('exams') ?? false);
   protected readonly attendance = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('attendance') ?? false);

@@ -144,6 +144,40 @@ export const routes: Routes = [
     loadComponent: () => import('./features/student/fees-page').then((m) => m.StudentFeesPage),
   },
   {
+    path: 'student/classes',
+    title: 'Online classes',
+    canActivate: [signedIn, studentOnly],
+    loadComponent: () => import('./features/communication/classes-page').then((m) => m.StudentClassesPage),
+  },
+  {
+    path: 'student/classes/:id',
+    title: 'Online class',
+    data: { portal: true },
+    canActivate: [signedIn, studentOnly],
+    loadComponent: () => import('./features/communication/class-page').then((m) => m.ClassPage),
+  },
+  {
+    path: 'family/messages',
+    title: 'Messages',
+    data: { portal: true },
+    canActivate: [signedIn, guardianOnly],
+    loadComponent: () => import('./features/communication/messages-page').then((m) => m.MessagesPage),
+  },
+  {
+    path: 'family/messages/:id',
+    title: 'Conversation',
+    data: { portal: true },
+    canActivate: [signedIn, guardianOnly],
+    loadComponent: () => import('./features/communication/thread-page').then((m) => m.ThreadPage),
+  },
+  {
+    path: 'family/calls/:id',
+    title: 'Call',
+    data: { portal: true },
+    canActivate: [signedIn, guardianOnly],
+    loadComponent: () => import('./features/communication/call-page').then((m) => m.CallPage),
+  },
+  {
     path: 'student/progress',
     title: 'Degree progress',
     canActivate: [signedIn, studentOnly],
@@ -397,6 +431,32 @@ export const routes: Routes = [
         title: 'Fees office',
         canActivate: [requires(['fees.manage', 'fees.approve', 'fees.reconcile'])],
         loadComponent: () => import('./features/fees/fees-page').then((m) => m.FeesPage),
+      },
+      {
+        path: 'messages',
+        title: 'Messages',
+        loadComponent: () => import('./features/communication/messages-page').then((m) => m.MessagesPage),
+      },
+      {
+        path: 'messages/:id',
+        title: 'Conversation',
+        loadComponent: () => import('./features/communication/thread-page').then((m) => m.ThreadPage),
+      },
+      {
+        path: 'calls/:id',
+        title: 'Call',
+        loadComponent: () => import('./features/communication/call-page').then((m) => m.CallPage),
+      },
+      {
+        path: 'classes/:id',
+        title: 'Online class',
+        loadComponent: () => import('./features/communication/class-page').then((m) => m.ClassPage),
+      },
+      {
+        path: 'communication',
+        title: 'Communication',
+        canActivate: [requires('communication.manage')],
+        loadComponent: () => import('./features/communication/communication-settings').then((m) => m.CommunicationSettings),
       },
       {
         path: 'attendance/corrections',

@@ -84,6 +84,7 @@ class Command(BaseCommand):
         self._timetable()
         self._results(platform_admin)
         self._fees(platform_admin)
+        self._communication()
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -694,3 +695,22 @@ class Command(BaseCommand):
         )
         fees.decide_credit(User.objects.get(username="aster.principal"), note, approve=True)
         fees.collect(accountant, arjun, {"amount": Decimal("6000.00"), "channel": "cash", "reference": "Counter 1"})
+
+    def _communication(self) -> None:
+        """Messages on at Aster; Arjun's parent also shares fees and messages; his Science teacher has written to them.
+        No media provider is set up, so calls and online classes say so honestly."""
+        from communication import services as comms
+        from communication.models import Conversation
+
+        aster = Institution.objects.get(slug="aster")
+        self._switch_on(aster, User.objects.get(username="aster.admin"), "communication")
+        arjun = aster.students.get(application__learner_name="Arjun Demo")
+        arjun.guardian_links.filter(user__username="aster.parent").update(access_fees=True, access_messages=True)
+        if Conversation.objects.filter(institution=aster).exists():
+            return
+        comms.start(
+            User.objects.get(username="aster.teacher"),
+            aster,
+            {"student": arjun.id, "with": User.objects.get(username="aster.parent").id, "subject": "Settling in",
+             "body": "Arjun has settled in well. He asked good questions in Science today.", "client_id": "seed-1"},
+        )  # fmt: skip

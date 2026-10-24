@@ -1107,3 +1107,30 @@ export type FeeStatement = {
 };
 export type FeeHeadT = { id: string; code: string; name: string };
 export type FeePlanT = { id: string; version: number; name: string; revision: number; status: string; lines: { head: string; amount: string; due_on: string }[] };
+
+export type ConversationT = {
+  id: string;
+  kind: 'staff' | 'family';
+  subject: string;
+  student: { number: string; full_name: string } | null;
+  participants: string[];
+  others: { id: string; full_name: string; role: string }[];
+  unread: number;
+  last_sequence: number;
+  messages?: { sequence: number; sender: string; mine: boolean; body: string; at: string }[];
+};
+export type NotificationT = { id: string; text: string; link: string; at: string; read: boolean };
+export type MediaToken = { value: string; role: string; expires_in: number; provider: string; mode: string };
+export type CallT = { id: string; state: string; state_label: string; reason: string; caller: string; callee: string; token: MediaToken | null };
+export type ClassSessionT = {
+  id: string;
+  title: string;
+  state: 'scheduled' | 'live' | 'paused' | 'ended';
+  state_label: string;
+  starts_at: string;
+  host: string;
+  target: { kind: string; id: string; label: string };
+  recording: false;
+  is_host: boolean;
+  participants?: { id: string; full_name: string; role: string; admission: string; present: boolean; seconds: number }[];
+};

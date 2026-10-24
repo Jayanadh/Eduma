@@ -13,6 +13,7 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string; higher
   { label: 'Home', icon: 'home', link: '/app' },
   { label: 'Students', icon: 'graduation', link: '/app/students', group: 'People', needs: 'student.read', module: 'students' },
   { label: 'Staff', icon: 'users', link: '/app/staff', group: 'People', needs: 'membership.read' },
+  { label: 'Messages', icon: 'message', link: '/app/messages', group: 'People', module: 'communication' },
   { label: 'Roles', icon: 'key', link: '/app/roles', group: 'People', needs: 'role.manage' },
   {
     label: 'Cycles',
@@ -152,6 +153,14 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string; higher
     group: 'Administration',
     needs: 'data.import',
     module: 'students',
+  },
+  {
+    label: 'Communication',
+    icon: 'bell',
+    link: '/app/communication',
+    group: 'Administration',
+    needs: 'communication.manage',
+    module: 'communication',
   },
   { label: 'Public site', icon: 'globe', link: '/app/site', group: 'Administration', needs: 'institution_brand.update' },
   { label: 'Profile', icon: 'user', link: '/app/profile', group: 'Administration' },

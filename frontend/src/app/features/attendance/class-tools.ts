@@ -3,7 +3,8 @@ import { Router, RouterLink } from '@angular/router';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
 import { catchError, of } from 'rxjs';
-import { AssessmentT, AttendanceSessionT, ClassAssignment } from '../../core/api/types';
+import { AssessmentT, AttendanceSessionT, ClassAssignment, ClassSessionT } from '../../core/api/types';
+import { AuthStore } from '../../core/auth-store';
 import { date } from '../../core/format';
 import { load } from '../../core/load';
 import { ToastService } from '../../ui/toast';
@@ -28,6 +29,19 @@ import { ToastService } from '../../ui/toast';
             <li><a [routerLink]="['/app/results/assessments', a.id]">{{ a.title }}</a> <span class="muted small">· {{ a.state_label }}</span></li>
           }
         </ul>
+      </section>
+    }
+    @if (comms()) {
+      <section class="card stack section">
+        <h2 class="card-title">Online classes</h2>
+        <ul class="rows">
+          @for (s of online(); track s.id) { <li><a [routerLink]="['/app/classes', s.id]">{{ s.title }}</a> <span class="muted small">· {{ date(s.starts_at) }} · {{ s.state_label }}</span></li> }
+        </ul>
+        <form id="schedule-class" class="row" (submit)="$event.preventDefault(); schedule($any($event.target))">
+          <div class="field"><label for="class-title">Title</label><input id="class-title" /></div>
+          <div class="field"><label for="class-starts">Starts</label><input id="class-starts" type="datetime-local" /></div>
+          <button type="submit" class="btn btn-secondary btn-sm" [disabled]="busy()">Schedule online class</button>
+        </form>
       </section>
     }
     <section class="card stack section">
@@ -80,7 +94,35 @@ export class ClassTools {
   protected assessments(): AssessmentT[] {
     return this.marking.value() ?? [];
   }
+  private readonly auth = inject(AuthStore);
+  protected comms(): boolean {
+    return this.auth.user()?.membership?.modules_enabled?.includes('communication') ?? false;
+  }
+  private readonly sessions = load(() =>
+    this.comms() ? this.api.get<ClassSessionT[]>('communication/classes').pipe(catchError(() => of([]))) : of([] as ClassSessionT[]),
+  );
+  protected online(): ClassSessionT[] {
+    return (this.sessions.value() ?? []).filter((s) => s.target.id === this.target());
+  }
   protected readonly busy = signal(false);
+
+  protected schedule(form: HTMLFormElement): void {
+    const title = form.querySelector<HTMLInputElement>('#class-title')!.value.trim();
+    const starts = form.querySelector<HTMLInputElement>('#class-starts')!.value;
+    this.busy.set(true);
+    this.api
+      .post<ClassSessionT>('communication/classes', { [this.kind()]: this.target(), title, starts_at: starts ? new Date(starts).toISOString() : '' })
+      .subscribe({
+        next: (made) => {
+          this.busy.set(false);
+          this.router.navigate(['/app/classes', made.id]);
+        },
+        error: (err) => {
+          this.busy.set(false);
+          this.toasts.show(apiErrorMessage(err), 'danger');
+        },
+      });
+  }
 
   protected take(form: HTMLFormElement): void {
     const day = form.querySelector<HTMLInputElement>('#attendance-date')!.value;

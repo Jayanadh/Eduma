@@ -67,9 +67,9 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     from configuration.registry import setting
 
     assert setting(aster_inst, "modules.enabled") == [
-        "academics", "admissions", "attendance", "exams", "fees", "report_cards", "students"
+        "academics", "admissions", "attendance", "communication", "exams", "fees", "report_cards", "students"
     ]  # fmt: skip
-    assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 4
+    assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 5
     assert setting(aster_inst, "access.role_approval") is False
     deputy = User.objects.get(username="aster.deputy")
     assert deputy.full_name == "Aster Deputy Admin" and deputy.check_password("Demo-pass-2026")
@@ -117,6 +117,9 @@ def test_seed_runs_twice_without_duplicates(db, settings):
 
     arjun_fees = fees.statement(aster_inst.students.get(application__learner_name="Arjun Demo"))
     assert (arjun_fees["outstanding"], len(arjun_fees["payments"])) == ("3000.00", 1)
+    from communication.models import Conversation
+
+    assert Conversation.objects.get(institution=aster_inst).messages.count() == 1
     batch = SubmissionBatch.objects.get(grant__university__slug="summit")
     assert (batch.status, [r.number for r in batch.rows.all()]) == ("submitted", [ananya.number])
 

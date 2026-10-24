@@ -240,3 +240,20 @@ Full table: `docs/superpowers/specs/2026-10-24-slice8-fees-design.md`.
 | S8-08 | Settlements move clearing to bank and record provider fees; mismatches open cases. |
 | S8-09 | Staff with `fees.read`, the student, and guardians of shared records see statements. |
 | S8-10 | App and module `fees`; permissions `fees.read/manage/collect/approve/reconcile`; only a test-mode sandbox provider until D-12. |
+
+## Slice 9 (communication and teacher-led classes)
+
+Full table: `docs/superpowers/specs/2026-10-24-slice9-communication-design.md`.
+
+| ID | Decision |
+|---|---|
+| S9-01 | A communication policy per institution: guardians may start, calls, classes, default quiet hours. |
+| S9-02 | Family conversations (assigned teachers or communication managers with guardians whose link allows messages) and staff conversations; newcomers see history from joining. |
+| S9-03 | Messages are stored first, numbered, idempotent per sender and client id; reading is a separate marker. |
+| S9-04 | Relationships are rechecked on every read and write; students don't message or call in this slice. |
+| S9-05 | In-app notifications respect each recipient's quiet hours. |
+| S9-06 | Calls ring for 45 s, need the media provider to connect, and can't be answered again once over. |
+| S9-07 | Classes are hosted by the class's own teacher, with a waiting room; without the host they pause, then close after 60 s. |
+| S9-08 | Media tokens are signed, role-bound, 5-minute, and revoked by bumping a version. |
+| S9-09 | Join/leave times are evidence only; reconnects aren't double-counted. |
+| S9-10 | App and module `communication`; permission `communication.manage`; only a test-mode sandbox until D-12; recording off (D-13). |

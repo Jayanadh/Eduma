@@ -3,7 +3,28 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (24 October 2026, slice 8 — BUILD-08)
+## Where things stand (24 October 2026, slice 9 — BUILD-09)
+
+**Slice 9 (communication and teacher-led classes) is built and tested** in fast mode. Spec:
+`docs/superpowers/specs/2026-10-24-slice9-communication-design.md`. Branch `slice-9-communication`, cut from
+`slice-8-fees`. Next: BUILD-10 (operational modules).
+
+| Built in slice 9 | Where |
+|---|---|
+| Communication policy (guardians may start, calls, classes) and a test-mode media sandbox | `backend/communication/`, `features/communication/communication-settings.ts` |
+| Family conversations between a student's teachers and guardians whose link allows messages, and staff conversations; relationships rechecked on every read and write (a lost link closes the thread) | `communication/services.py`, `features/communication/messages-page.ts`, `thread-page.ts` (workspace and family portal) |
+| Numbered messages, idempotent per client id (a retried send never posts twice), read markers separate from delivery | `communication/services.py` |
+| In-app notifications delayed by each person's quiet hours | `communication/services.py` |
+| Calls: ringing → connected / declined / canceled / missed / ended; unavailable in quiet hours; no provider → 409 `integration_not_configured`; a stale answer fails | `communication/services.py`, `features/communication/call-page.ts` |
+| Teacher-led classes: the class's teacher hosts; waiting room, admit, remove (old tokens stop working), end; without the teacher the class pauses and closes after 60 s; recording off; time in class as evidence only | `communication/services.py`, `features/communication/class-page.ts`, class tools, student portal **Online classes** |
+| Family fees now follow the link's own fees permission (was: record sharing) | `students/family.py`, `fees/views.py` |
+| Demo: Arjun's teacher has written to his parent; no media provider (calls and classes say so) | `seed_demo.py` |
+
+Checks on 24 Oct 2026: backend `pytest` 581 passed; ruff and `makemigrations --check` clean; frontend `ng test` 231
+passed; `ng build` clean. Not built: push notifications and devices (no provider, D-12), real audio/video (sandbox
+tokens only), file attachments (needs malware scanning), recording (off by policy, D-13), student messaging.
+
+## Slice 8 (24 October 2026) — BUILD-08
 
 **Slice 8 (fees, payments and reconciliation) is built and tested** in fast mode. Spec:
 `docs/superpowers/specs/2026-10-24-slice8-fees-design.md`. Branch `slice-8-fees`, cut from `slice-7-results`. Next:

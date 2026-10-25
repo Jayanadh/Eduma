@@ -482,6 +482,40 @@ export const routes: Routes = [
         loadComponent: () => import('./features/campus/hostel-page').then((m) => m.HostelPage),
       },
       {
+        path: 'leave',
+        title: 'Leave',
+        loadComponent: () => import('./features/office/leave-page').then((m) => m.LeavePage),
+      },
+      {
+        path: 'staff-office',
+        title: 'Staff office',
+        canActivate: [requires('hr.manage')],
+        loadComponent: () => import('./features/office/staff-office-page').then((m) => m.StaffOfficePage),
+      },
+      {
+        path: 'payroll',
+        title: 'Payroll',
+        canActivate: [requires(['payroll.manage', 'payroll.approve'])],
+        loadComponent: () => import('./features/office/payroll-page').then((m) => m.PayrollPage),
+      },
+      {
+        path: 'purchasing',
+        title: 'Purchasing',
+        canActivate: [requires(['procurement.manage', 'procurement.approve'])],
+        loadComponent: () => import('./features/office/purchasing-page').then((m) => m.PurchasingPage),
+      },
+      {
+        path: 'assets',
+        title: 'Assets',
+        canActivate: [requires('assets.manage')],
+        loadComponent: () => import('./features/office/assets-page').then((m) => m.AssetsPage),
+      },
+      {
+        path: 'bookings',
+        title: 'Lab booking',
+        loadComponent: () => import('./features/office/bookings-page').then((m) => m.BookingsPage),
+      },
+      {
         path: 'attendance/corrections',
         title: 'Attendance corrections',
         canActivate: [requires('attendance.manage')],

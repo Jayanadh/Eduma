@@ -3,7 +3,28 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (24 October 2026, slice 10a — BUILD-10 part 1)
+## Where things stand (25 October 2026, slice 10b — BUILD-10 part 2)
+
+**Slice 10b (HR leave, the payroll boundary, procurement, stock, assets and lab booking) is built and tested** in fast
+mode. Spec: `docs/superpowers/specs/2026-10-24-slice10b-hr-stores-design.md`. Branch `slice-10b-hr-stores`, cut from
+`slice-10a-library-transport-hostel`. Next: 10c (student services and grievances, placements, research and quality).
+
+| Built in slice 10b | Where |
+|---|---|
+| Leave types; leave requests with balance and overlap checks, never approved by the person themself, cancel gives the days back once; everyone sees only their own leave (TST-029) | `backend/hr/services.py`, `features/office/leave-page.ts` |
+| Staff attendance by day; approved leave shows as on leave | `hr/services.py`, `features/office/staff-office-page.ts` |
+| Pay seen and changed only with `payroll.manage`; payroll by month: prepared (leave without pay pro rata) → validated → approved by someone other than who prepared it → exported, then frozen; the CSV is the adapter boundary, not proof of payment (D-11) | `hr/services.py`, `features/office/payroll-page.ts` |
+| Procurement rule revisions; a requisition keeps the revision it was raised under; above the single-approval limit two different approvers (TST-030); goods received never exceed the order; stock never below zero | `backend/stores/services.py`, `features/office/purchasing-page.ts` |
+| Asset register: hand-over, maintenance, disposal with its reason, every event kept | `stores/services.py`, `features/office/assets-page.ts` |
+| Lab booking: no overlaps (the asset row is locked), nothing in maintenance or disposed, nothing in the past; own bookings cancelled by their owner | `stores/services.py`, `features/office/bookings-page.ts` |
+| Roles HR Officer, Payroll Officer, Store Keeper; modules `hr_payroll` and `assets` available | `accounts/roles.py`, `institutions/modules.py` |
+| Demo: Aster's leave types, the teacher's leave waiting, last month's payroll waiting for the principal, a two-approver requisition with one approval, beakers in stock, two labs and a booking | `seed_demo.py` |
+
+Checks on 25 Oct 2026: backend `pytest` 598 passed; ruff clean; frontend `ng test` 239 passed; `ng
+build` clean. Not selected: adjustment payroll cycles (an exported month can't be redone in Eduma yet), statutory
+calculations, purchase orders as separate documents, depreciation.
+
+## Slice 10a (24 October 2026) — BUILD-10 part 1
 
 **Slice 10a (library, transport, hostel) is built and tested** in fast mode. Spec:
 `docs/superpowers/specs/2026-10-24-slice10a-library-transport-hostel-design.md`. Branch

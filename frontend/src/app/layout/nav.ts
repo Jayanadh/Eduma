@@ -15,6 +15,8 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string; higher
   { label: 'Staff', icon: 'users', link: '/app/staff', group: 'People', needs: 'membership.read' },
   { label: 'Messages', icon: 'message', link: '/app/messages', group: 'People', module: 'communication' },
   { label: 'Roles', icon: 'key', link: '/app/roles', group: 'People', needs: 'role.manage' },
+  { label: 'Leave', icon: 'calendar', link: '/app/leave', group: 'People', module: 'hr_payroll' },
+  { label: 'Staff office', icon: 'clipboard', link: '/app/staff-office', group: 'People', needs: 'hr.manage', module: 'hr_payroll' },
   {
     label: 'Cycles',
     icon: 'calendar',
@@ -135,6 +137,24 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string; higher
   { label: 'Library', icon: 'book-open', link: '/app/campus/library', group: 'Campus', needs: 'library.manage', module: 'library' },
   { label: 'Transport', icon: 'map', link: '/app/campus/transport', group: 'Campus', needs: 'transport.manage', module: 'transport' },
   { label: 'Hostel', icon: 'home', link: '/app/campus/hostel', group: 'Campus', needs: 'hostel.manage', module: 'hostel' },
+  {
+    label: 'Purchasing',
+    icon: 'layers',
+    link: '/app/purchasing',
+    group: 'Campus',
+    needs: ['procurement.manage', 'procurement.approve'],
+    module: 'assets',
+  },
+  { label: 'Assets', icon: 'grid', link: '/app/assets', group: 'Campus', needs: 'assets.manage', module: 'assets' },
+  { label: 'Lab booking', icon: 'clock', link: '/app/bookings', group: 'Campus', module: 'assets' },
+  {
+    label: 'Payroll',
+    icon: 'file-text',
+    link: '/app/payroll',
+    group: 'Administration',
+    needs: ['payroll.manage', 'payroll.approve'],
+    module: 'hr_payroll',
+  },
   {
     label: 'Organization',
     icon: 'building',

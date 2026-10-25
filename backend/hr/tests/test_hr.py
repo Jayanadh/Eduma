@@ -136,14 +136,18 @@ def test_tst029_payroll_needs_another_approver_and_freezes_on_export(h):
     assert h.admin.post(f"{step}/approve", {}, format="json").status_code == 403  # prepared it
     assert h.payroll.post(f"{step}/approve", {}, format="json").status_code == 403
     assert h.principal.post(f"{step}/approve", {}, format="json").json()["state"] == "approved"
-    exported = h.payroll.post(f"{step}/export", {}, format="json")
+    assert h.payroll.get(f"{step}/export").status_code == 409  # not exported yet
+    assert h.payroll.post(f"{step}/export", {}, format="json").json()["state"] == "exported"
+    exported = h.payroll.get(f"{step}/export")
     assert exported.status_code == 200 and exported["Content-Type"].startswith("text/csv")
     assert exported.content.decode().splitlines() == [
         "employee_number,name,gross,unpaid_days,unpaid_deduction,deductions,net",
         "AST-101,Kavya Nair,62000.00,3,6000.00,1800.00,54200.00",
     ]
     assert h.payroll.post(f"{step}/validate", {}, format="json").status_code == 409
-    assert h.payroll.post(f"{step}/export", {}, format="json").content == exported.content  # the same file again
+    assert h.payroll.post(f"{step}/export", {}, format="json").status_code == 409  # frozen
+    assert h.payroll.get(f"{step}/export").content == exported.content  # the same file again
+    assert h.principal.get(f"{step}/export").status_code == 403
 
 
 def test_staff_attendance_shows_approved_leave(h):

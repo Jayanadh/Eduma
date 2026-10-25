@@ -328,12 +328,19 @@ def approve(actor, institution, cycle: PayrollCycle) -> PayrollCycle:
     return done
 
 
-def export(actor, institution, cycle: PayrollCycle) -> str:
-    """The file for the payroll or bank system. Exporting again gives the same file; an exported cycle never changes."""
+def export(actor, institution, cycle: PayrollCycle) -> PayrollCycle:
+    """Hands the approved cycle to the payroll or bank system; from here it never changes."""
     require(actor, institution, "payroll.manage", "Only payroll exports payroll.")
+    done = _step(cycle, PayrollCycle.State.APPROVED, PayrollCycle.State.EXPORTED, exported_at=timezone.now())
+    audit.log(actor, "payroll.exported", done, "Exported payroll", institution=institution)
+    return done
+
+
+def export_file(actor, institution, cycle: PayrollCycle) -> str:
+    """The exported cycle's file: the same every time it is downloaded."""
+    require(actor, institution, "payroll.manage", "Only payroll downloads payroll.")
     if cycle.state != PayrollCycle.State.EXPORTED:
-        cycle = _step(cycle, PayrollCycle.State.APPROVED, PayrollCycle.State.EXPORTED, exported_at=timezone.now())
-        audit.log(actor, "payroll.exported", cycle, "Exported payroll", institution=institution)
+        raise Problem(409, "invalid_transition", "Export the payroll first.")
     out = io.StringIO()
     writer = csv.writer(out, lineterminator="\n")
     writer.writerow(COLUMNS)

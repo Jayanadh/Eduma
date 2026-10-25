@@ -265,3 +265,12 @@ copies; S10A-02 locked issue, limits, overdue block, renewals; S10A-03 reservati
 through fees, waivers kept, lost distinct; S10A-05 route capacity over overlapping dates; S10A-06 trips, one boarding,
 approved pickup at drop-off; S10A-07 guardians see only their child's route and trip state; S10A-08 beds never
 doubled, transfers atomic; S10A-09 out-passes; S10A-10 app `campus`, modules available.
+
+## Slice 10b (HR, payroll boundary, procurement, assets, labs)
+
+Full table: `docs/superpowers/specs/2026-10-24-slice10b-hr-stores-design.md`. S10B-01 leave with balance, overlap and
+no self-approval (requests start submitted: no drafts, my call); S10B-02 staff attendance; S10B-03 own leave only;
+S10B-04 pay only with `payroll.manage`; S10B-05 payroll prepared → validated → approved by another → exported and
+frozen, one cycle per month (adjustment cycles not built); S10B-06 rule revisions kept on requisitions, two approvers
+above the limit; S10B-07 receipts capped at the order, stock never negative; S10B-08 assets; S10B-09 lab booking
+without overlap; S10B-10 apps `hr` and `stores`. Asset hand-over is by username, since a store keeper can't list staff.

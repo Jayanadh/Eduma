@@ -4,6 +4,7 @@ and the demo passwords are put back. Refuses to run with DEBUG off."""
 
 import datetime as dt
 import uuid
+from decimal import Decimal
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -86,6 +87,7 @@ class Command(BaseCommand):
         self._fees(platform_admin)
         self._communication()
         self._campus(platform_admin)
+        self._staff_services(platform_admin)
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -715,6 +717,90 @@ class Command(BaseCommand):
             {"student": arjun.id, "with": User.objects.get(username="aster.parent").id, "subject": "Settling in",
              "body": "Arjun has settled in well. He asked good questions in Science today.", "client_id": "seed-1"},
         )  # fmt: skip
+
+    def _staff_services(self, actor) -> None:
+        """HR, payroll and stores at Aster (`aster.hr`, `aster.payroll`, `aster.stores`): leave types, the teacher's
+        casual leave waiting for a decision, last month's payroll validated and waiting for the principal, a
+        requisition over the single-approval limit with one of its two approvals, a stocked item, two bookable labs
+        and a booking next week."""
+        from hr import services as hr
+        from hr.models import LeaveType
+        from stores import services as stores
+        from stores.models import Asset, Item, Supplier
+
+        aster = Institution.objects.get(slug="aster")
+        aster.modules = sorted({*aster.modules, "hr_payroll", "assets"})
+        aster.save(update_fields=["modules"])
+        admin = User.objects.get(username="aster.admin")
+        self._switch_on(aster, admin, "hr_payroll", "assets")
+        officer = self._member(aster, actor, "aster.hr", "Aster HR Officer", "hr_officer", None).user
+        payroll = self._member(aster, actor, "aster.payroll", "Aster Payroll Officer", "payroll_officer", None).user
+        keeper = self._member(aster, actor, "aster.stores", "Aster Store Keeper", "store_keeper", None).user
+        self._aster_employees()
+        if LeaveType.objects.filter(institution=aster).exists():
+            return
+        principal, teacher = (User.objects.get(username=f"aster.{name}") for name in ("principal", "teacher"))
+        today = today_for(aster)
+        casual, sick, unpaid = (
+            hr.add_type(officer, aster, {"code": code, "name": name, "days_per_year": days, "paid": paid})
+            for code, name, days, paid in (
+                ("CL", "Casual leave", 12, True),
+                ("SL", "Sick leave", 10, True),
+                ("LWP", "Leave without pay", 30, False),
+            )
+        )
+        soon = today + dt.timedelta(days=10)
+        hr.request_leave(teacher, aster, casual, soon, soon + dt.timedelta(days=1), "Cousin's wedding")
+        last_month = (today.replace(day=1) - dt.timedelta(days=1)).replace(day=1)
+        unpaid_day = last_month.replace(day=12)
+        away = hr.request_leave(teacher, aster, unpaid, unpaid_day, unpaid_day, "Personal work")
+        hr.decide(officer, aster, away, approve=True)
+        sickness = hr.request_leave(officer, aster, sick, last_month.replace(day=5), last_month.replace(day=6), "Fever")
+        hr.decide(principal, aster, sickness, approve=True)
+        for username, gross, pf in (("teacher", "62000.00", "1800.00"), ("registrar", "54000.00", "1800.00")):
+            employee = Membership.objects.get(institution=aster, user__username=f"aster.{username}").employee
+            hr.set_pay(
+                payroll,
+                aster,
+                employee,
+                {"monthly_gross": gross, "deductions": {"pf": pf}, "effective_from": dt.date(2024, 6, 1)},
+            )
+        cycle = hr.prepare(payroll, aster, last_month)
+        hr.validate(payroll, aster, cycle)
+        stores.publish_rule(admin, aster, Decimal("50000.00"))
+        microscope = Item.objects.create(institution=aster, code="MIC-01", name="Compound microscope")
+        beakers = Item.objects.create(institution=aster, code="GLS-250", name="Beaker 250 ml", unit="box")
+        supplier = Supplier.objects.create(institution=aster, name="Vijaya Lab Supplies", contact="040 2765 1100")
+        big = stores.raise_requisition(
+            keeper,
+            aster,
+            "Microscopes for the biology lab",
+            [{"item": microscope.id, "quantity": "4", "unit_cost": "18500.00"}],
+        )
+        stores.decide(principal, aster, big, approve=True)
+        small = stores.raise_requisition(
+            keeper, aster, "Beakers for term 2", [{"item": beakers.id, "quantity": "6", "unit_cost": "450.00"}]
+        )
+        stores.decide(principal, aster, small, approve=True)
+        stores.order(keeper, aster, small, supplier)
+        stores.receive(keeper, aster, small, [{"line": small.lines.get().id, "quantity": "6"}])
+        stores.move(keeper, aster, beakers, "issue", Decimal("2"), "Chemistry practical")
+        for tag, name in (("LAB-PHY-1", "Physics lab"), ("LAB-CHE-1", "Chemistry lab")):
+            stores.add_asset(
+                keeper,
+                aster,
+                {"tag": tag, "name": name, "category": "Laboratory", "location": "Main block", "bookable": True},
+            )
+        projector = stores.add_asset(keeper, aster, {"tag": "PRJ-07", "name": "Epson projector", "category": "AV"})
+        stores.maintenance(keeper, projector, "Lamp flickers")
+        start = timezone.make_aware(dt.datetime.combine(today + dt.timedelta(days=7), dt.time(10, 0)))
+        stores.book(
+            teacher,
+            Asset.objects.get(institution=aster, tag="LAB-PHY-1"),
+            start,
+            start + dt.timedelta(hours=2),
+            "Class 9 optics practical",
+        )
 
     def _campus(self, actor) -> None:
         """Library and transport at Aster (`aster.librarian`, `aster.transport`): two copies of a title, one lent to

@@ -284,7 +284,7 @@ def cancel_booking(actor, booking: Booking) -> Booking:
     return booking
 
 
-def booking_item(b: Booking) -> dict:
+def booking_item(b: Booking, viewer) -> dict:
     return {
         "id": str(b.id),
         "asset": {"id": str(b.asset_id), "tag": b.asset.tag, "name": b.asset.name},
@@ -293,4 +293,5 @@ def booking_item(b: Booking) -> dict:
         "purpose": b.purpose,
         "booked_by": b.booked_by.full_name,
         "canceled": b.canceled,
+        "mine": b.booked_by_id == viewer.id,
     }

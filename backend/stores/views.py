@@ -198,10 +198,14 @@ class AssetAction(StoresView):
         asset = self.mine(Asset, pk)
         note = str(request.data.get("note", "")).strip()[:150]
         if self.action == "transfer":
-            custodian = _found(
-                Membership.objects.filter(institution=request.institution, kind=Membership.Kind.STAFF),
-                request.data.get("custodian"),
-            )
+            custodian = Membership.objects.filter(
+                institution=request.institution,
+                kind=Membership.Kind.STAFF,
+                status=Membership.Status.ACTIVE,
+                user__username=str(request.data.get("username", "")).strip().lower(),
+            ).first()
+            if custodian is None:
+                raise serializers.ValidationError({"username": ["No active staff member has that username."]})
             done = services.transfer(request.user, asset, custodian, note)
         elif self.action == "maintenance":
             if not note:
@@ -229,13 +233,13 @@ class Bookings(StoresView):
         if asset := request.query_params.get("asset"):
             rows = rows.filter(asset=self.mine(Asset, asset))
         rows = rows.filter(ends_at__gte=timezone.now())
-        return Response([services.booking_item(b) for b in rows[:300]])
+        return Response([services.booking_item(b, request.user) for b in rows[:300]])
 
     def post(self, request):
         data = valid(BookingInput, request.data)
         asset = self.mine(Asset, data["asset"])
         made = services.book(request.user, asset, data["starts_at"], data["ends_at"], data["purpose"])
-        return Response(services.booking_item(made), status=status.HTTP_201_CREATED)
+        return Response(services.booking_item(made, request.user), status=status.HTTP_201_CREATED)
 
 
 class CancelBooking(StoresView):
@@ -243,4 +247,4 @@ class CancelBooking(StoresView):
         booking = _found(
             Booking.objects.filter(asset__institution=request.institution).select_related("asset", "booked_by"), pk
         )
-        return Response(services.booking_item(services.cancel_booking(request.user, booking)))
+        return Response(services.booking_item(services.cancel_booking(request.user, booking), request.user))

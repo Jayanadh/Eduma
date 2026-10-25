@@ -92,6 +92,7 @@ def test_tst030_no_double_booking_and_maintenance_blocks_booking(s):
 
     first = book(s.teacher, 0, 2)
     assert first.status_code == 201, first.json()
+    assert [b["mine"] for b in s.teacher.get(f"{S}/bookings").json()] == [True]
     clash = book(s.keeper, 1.5, 1)
     assert clash.status_code == 409 and clash.json()["code"] == "booking_conflict"
     assert book(s.keeper, 2, 1).status_code == 201  # back to back is fine
@@ -109,7 +110,8 @@ def test_asset_custody_and_disposal(s):
     asset = post(s.keeper, f"{S}/assets", {"tag": "PRJ-7", "name": "Projector"}).json()
     url = f"{S}/assets/{asset['id']}"
     custodian = Membership.objects.get(user__username="lab.teacher")
-    moved = post(s.keeper, f"{url}/transfer", {"custodian": str(custodian.id), "note": "Physics lab"}).json()
+    assert post(s.keeper, f"{url}/transfer", {"username": "nobody"}).status_code == 422
+    moved = post(s.keeper, f"{url}/transfer", {"username": "Lab.Teacher", "note": "Physics lab"}).json()
     assert moved["custodian"] == {"id": str(custodian.id), "name": "Kavya Nair"}
     assert post(s.keeper, f"{url}/dispose").status_code == 422  # needs the reason
     gone = post(s.keeper, f"{url}/dispose", {"reason": "Beyond repair, committee minute 3/2026"}).json()

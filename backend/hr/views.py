@@ -191,14 +191,18 @@ class PayrollDetail(PayrollView):
 class PayrollAction(PayrollView):
     action = "validate"
 
+    def get(self, request, pk):
+        """The exported file, at payroll/<id>/export."""
+        if self.action != "export":
+            raise NotFound()
+        cycle = _found(self.cycles(), pk)
+        response = HttpResponse(services.export_file(request.user, request.institution, cycle), content_type="text/csv")
+        response["Content-Disposition"] = f'attachment; filename="payroll-{cycle.month:%Y-%m}.csv"'
+        return response
+
     def post(self, request, pk):
         cycle = _found(self.cycles(), pk)
-        if self.action == "export":
-            body = services.export(request.user, request.institution, cycle)
-            response = HttpResponse(body, content_type="text/csv")
-            response["Content-Disposition"] = f'attachment; filename="payroll-{cycle.month:%Y-%m}.csv"'
-            return response
-        done = {"validate": services.validate, "approve": services.approve}[self.action](
+        done = {"validate": services.validate, "approve": services.approve, "export": services.export}[self.action](
             request.user, request.institution, cycle
         )
         return Response(services.cycle_item(done, lines=True))

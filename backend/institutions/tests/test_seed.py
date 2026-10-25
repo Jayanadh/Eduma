@@ -14,8 +14,8 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     call_command("seed_demo")
     assert Institution.objects.count() == 4
     assert (
-        User.objects.count() == 23
-    )  # + aster.grandparent/accountant/librarian/transport; meridian.faculty/adviser/exams/warden; Ananya
+        User.objects.count() == 26
+    )  # + aster.grandparent/accountant/librarian/transport/hr/payroll/stores; 4 at Meridian; Ananya
     assert SiteRevision.objects.filter(status="published").count() == 3
     states = dict(Institution.objects.values_list("slug", "lifecycle_status"))
     assert states == {"aster": "active", "meridian": "active", "vector": "setup", "summit": "active"}
@@ -69,10 +69,10 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     from configuration.registry import setting
 
     assert setting(aster_inst, "modules.enabled") == [
-        "academics", "admissions", "attendance", "communication", "exams", "fees", "library", "report_cards",
-        "students", "transport",
+        "academics", "admissions", "assets", "attendance", "communication", "exams", "fees", "hr_payroll",
+        "library", "report_cards", "students", "transport",
     ]  # fmt: skip
-    assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 6
+    assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 7
     assert setting(aster_inst, "access.role_approval") is False
     deputy = User.objects.get(username="aster.deputy")
     assert deputy.full_name == "Aster Deputy Admin" and deputy.check_password("Demo-pass-2026")

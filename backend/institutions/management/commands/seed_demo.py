@@ -739,7 +739,7 @@ class Command(BaseCommand):
             Supervision,
         )
 
-        plans = (("aster", ("services",)), ("meridian", ("placements", "quality")))
+        plans = (("aster", ("services", "reports")), ("meridian", ("placements", "quality", "reports")))
         for slug, extra in plans:
             institution = Institution.objects.get(slug=slug)
             institution.modules = sorted({*institution.modules, *extra})

@@ -74,6 +74,17 @@ npm start
 The frontend forwards every `/api` request to the backend, keeping the address you typed, so the backend knows which
 site you are on (see `frontend/proxy.conf.json`).
 
+**Terminal 3 (optional): the worker**, which builds report exports, sends overdue-case reminders and keeps the
+console's **Health** page current:
+
+```bash
+cd backend
+source .venv/bin/activate
+python manage.py run_jobs --loop
+```
+
+Backups and restore drills: `ops/backup.sh` and `ops/restore-drill.sh`. See [docs/operations.md](docs/operations.md).
+
 ## Addresses
 
 | Address | What it is |
@@ -94,9 +105,9 @@ Every demo login uses the password **`Demo-pass-2026`**.
 
 | Login ID | Sign in at | Things to try |
 |---|---|---|
-| `eduma.admin` | http://localhost:4201/login | Overview; **Affiliations** (propose a college–university grant); Institutions (search as you type); **Add institution**, which gives the new institution its address, its modules and its admin's first password; an institution's page, where you can edit its details, own domain and modules, activate, restrict, suspend, archive and reset its admin's password; Audit log. Branding and staff are left to each institution's own admin. |
+| `eduma.admin` | http://localhost:4201/login | **Health** (each service with its reading, threshold and age; unknown stays grey until the worker runs; alerts to acknowledge; backups and restore drills), **Usage** per institution; Overview; **Affiliations** (propose a college–university grant); Institutions (search as you type); **Add institution**, which gives the new institution its address, its modules and its admin's first password; an institution's page, where you can edit its details, own domain and modules, activate, restrict, suspend, archive and reset its admin's password; Audit log. Branding and staff are left to each institution's own admin. |
 | `aster.admin` | http://aster.localhost:4201/login | Home checklist and modules; **Staff** (add people with a first password, give and end roles for the whole school, a campus or a department); **Roles** (built-in roles and your own custom roles); **Organization** (campuses and departments); **Settings** (modules switched on, approval for powerful roles, academic year: drafted, previewed, published from a chosen day, with history and restore); **Public site**; **Data transfer** (import students from a spreadsheet: try `backend/imports/fixtures/aster-students-sample.csv` — a dry run, then Import; download the errors; undo a fresh import); Profile. |
-| `aster.principal` | http://aster.localhost:4201/login | A Principal for the whole school: sees all staff and their roles, changes nothing. |
+| `aster.principal` | http://aster.localhost:4201/login | A Principal for the whole school: sees all staff and their roles, changes nothing. **Reports** (students by class, fees outstanding, and more) and **Export CSV**; the export is ready after the worker's next pass. |
 | `aster.campus` | http://aster.localhost:4201/login | Campus Admin for City campus: sees and adds staff at City only; cannot make anyone an Institution Admin. |
 | `aster.teacher`, `aster.office` | http://aster.localhost:4201/login | A Science teacher: **My classes** with today's timetabled lessons and **Take attendance** (mark, save, submit; ask for a correction after), each class list with its attendance and assignments (post one, read answers, give feedback) — 6A this year as class teacher and Science; 6A next year with Arjun. A custom "Front office" role at City (sees City staff). |
 | `aster.deputy` | http://aster.localhost:4201/login | A second Institution Admin. With two admins, try **Settings → Approval for powerful roles**: one admin sends it, the other approves it from Home. Then a Campus Admin's request to give a powerful role waits for an admin's approval. |

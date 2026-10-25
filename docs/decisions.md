@@ -284,3 +284,13 @@ shows); S10C-03 note audiences, excerpt-free notifications, no export; S10C-04 o
 S10C-05 consented, eligibility-checked placement applications; S10C-06 internships; S10C-07 consented alumni; S10C-08
 research with ethics validity and supervisor-only decisions; S10C-09 versioned evidence and frozen snapshots; S10C-10
 apps `cases` and `development`. Supervisors and evidence owners are given by username (offices can't list staff).
+
+## BUILD-11 (operations)
+
+Full table: `docs/superpowers/specs/2026-10-25-build11-operations-design.md`. S11-01 code-defined, scope-respecting
+reports with provenance; S11-02 small confidential groups suppressed; S11-03 exports as jobs with rechecked download
+and expiry; S11-04 `run_jobs` worker with heartbeat and scheduled tasks; S11-05 health tiles with unknown kept
+unknown; S11-06 alerts that resolve on recovery; S11-07 read-only usage; S11-08 backup and restore drill scripts with a
+recorded, measured drill; S11-09 app `operations`, permission `report.export`. The separate `course_registration` and
+`affiliations` module switches stay unavailable: those features are built and run under Academics, and a switch that
+did nothing would mislead (recorded for BUILD-12).

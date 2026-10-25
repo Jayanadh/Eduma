@@ -35,7 +35,7 @@ describe('navFor', () => {
   });
 
   it('keeps the console pages for the platform', () => {
-    expect(navFor('platform', holding()).map((item) => item.label)).toEqual(['Overview', 'Institutions', 'Affiliations', 'Audit log']);
+    expect(navFor('platform', holding()).map((item) => item.label)).toEqual(['Overview', 'Institutions', 'Affiliations', 'Health', 'Usage', 'Audit log']);
   });
 
   it('opens Settings to someone who only approves setting changes', () => {

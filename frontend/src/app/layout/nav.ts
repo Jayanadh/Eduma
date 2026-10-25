@@ -197,6 +197,7 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string | strin
     needs: 'communication.manage',
     module: 'communication',
   },
+  { label: 'Reports', icon: 'list', link: '/app/reports', group: 'Administration', module: 'reports' },
   { label: 'Public site', icon: 'globe', link: '/app/site', group: 'Administration', needs: 'institution_brand.update' },
   { label: 'Profile', icon: 'user', link: '/app/profile', group: 'Administration' },
 ];
@@ -216,6 +217,8 @@ export function navFor(
         { label: 'Overview', icon: 'grid', link: '/console' },
         { label: 'Institutions', icon: 'institution', link: '/console/institutions' },
         { label: 'Affiliations', icon: 'external', link: '/console/affiliations' },
+        { label: 'Health', icon: 'activity', link: '/console/health' },
+        { label: 'Usage', icon: 'trending-up', link: '/console/usage' },
         { label: 'Audit log', icon: 'list', link: '/console/audit' },
       ]
     : WORKSPACE.filter(

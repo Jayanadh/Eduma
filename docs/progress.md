@@ -3,7 +3,31 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (25 October 2026, slice 10c — BUILD-10 part 3, BUILD-10 complete)
+## Where things stand (25 October 2026, BUILD-11)
+
+**BUILD-11 (reports, exports, jobs, health, alerts, usage, backup and restore) is built and tested** in fast mode.
+Spec: `docs/superpowers/specs/2026-10-25-build11-operations-design.md`. Branch `build-11-operations`, cut from
+`slice-10c-services`. Runbook: `docs/operations.md`. Next: BUILD-12 (quality, rehearsal, pilot readiness).
+
+| Built in BUILD-11 | Where |
+|---|---|
+| Eight code-defined reports, each listed only to those who may run it; rows only from records the viewer may read (campus-scoped readers see their campuses); provenance on every result; confidential case counts under 5 suppressed | `backend/operations/reports.py`, `features/reports/reports-page.ts` |
+| Exports as jobs: requester-only download with both permissions rechecked, formula cells neutralised, 7-day expiry (410), hourly clean-up | `operations/services.py` |
+| Worker `run_jobs`: heartbeat, exports, scheduled tasks (expire exports, overdue-case reminders), alert evaluation; every run recorded | `operations/management/commands/run_jobs.py` |
+| Platform health: database, worker, export queue, storage, backup age, restore drill, media and payment providers, with status, reading, threshold, source, age and runbook; unknown never shown as healthy | `operations/services.py`, `features/console/health-page.ts` |
+| Alerts from failing or warning checks, resolved automatically on recovery, acknowledged with an owner; open alerts on the console overview | `operations/services.py`, console **Health**, **Overview** |
+| Usage per institution (members by kind, students, exports, messages, open cases, private storage) | console **Usage** |
+| Backup (`ops/backup.sh`: pg_dump plus private media, with a SHA-256 manifest) and restore drill (`ops/restore-drill.sh` into a scratch database, `restore_check` comparing every table's rows and fee trial balances) | `ops/`, `operations/management/commands/` |
+
+**Measured recovery evidence (25 Oct 2026, development machine, demo data):** backup then drill passed; 150 tables and
+1,472 rows matched; 5 trial-balance lines matched; restore 1.0 s. This is demo scale, unencrypted local storage, and
+there is no point-in-time recovery; see `docs/operations.md` for what production needs.
+
+Checks on 25 Oct 2026: backend `pytest` 618 passed; ruff clean; frontend `ng test` 247 passed; `ng build`
+clean. Not selected: plans, quotas and billing; support sessions (SCR-010 beyond the audit log); email or SMS alert
+delivery (alerts show in the console); an institution-facing service-status banner.
+
+## Slice 10c (25 October 2026) — BUILD-10 part 3, BUILD-10 complete
 
 **Slice 10c (student services and grievances, placements, internships, alumni, research and quality evidence) is built
 and tested** in fast mode. Spec: `docs/superpowers/specs/2026-10-25-slice10c-services-development-design.md`. Branch

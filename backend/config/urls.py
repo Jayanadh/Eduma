@@ -11,6 +11,7 @@ from common.views import AuditEventList, health
 from fees.views import Webhook as FeeWebhook
 from institutions.urls import platform_patterns
 from institutions.views import OwnInstitutionView, module_catalogue, platform_overview
+from operations.urls import platform_patterns as operations_platform
 from results.views import Verify
 from sites.public import PublicSiteView, public_asset
 from sites.urls import site_patterns
@@ -46,6 +47,7 @@ urlpatterns = [
     path("api/v1/institution/stores/", include("stores.urls")),
     path("api/v1/service-cases/", include("cases.urls")),
     path("api/v1/development/", include("development.urls")),
+    path("api/v1/institution/reports/", include("operations.urls")),
     path("api/v1/webhooks/payments/<str:provider>/<uuid:institution>", FeeWebhook.as_view(), name="payment-webhook"),
     path("api/v1/public/verify/<str:token>", Verify.as_view(), name="public-verify"),
     path("api/v1/teaching/", include("academics.teaching_urls")),
@@ -58,6 +60,7 @@ urlpatterns = [
     path("api/v1/platform/audit", AuditEventList.as_view(), name="platform-audit"),
     path("api/v1/platform/affiliations", ConsoleGrants.as_view(), name="platform-affiliations"),
     path("api/v1/platform/institutions/<uuid:institution_id>/audit", AuditEventList.as_view()),
+    path("api/v1/platform/", include(operations_platform)),
     path("api/v1/platform/", include(platform_patterns)),
 ]
 

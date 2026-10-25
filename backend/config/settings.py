@@ -91,6 +91,7 @@ LOCAL_APPS = [
     "stores",
     "cases",
     "development",
+    "operations",
     "imports",
     "sites",
 ]

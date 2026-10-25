@@ -145,6 +145,7 @@ PERMISSIONS: dict[str, Permission] = {
         Permission(
             "quality_evidence.manage", "Student services", "Run quality review cycles and accept evidence", False
         ),
+        Permission("report.export", "Reports", "Export the reports you can see as files", False),
         Permission("student.read", "Students", "See student records", False),
         Permission("student.update", "Students", "Correct student details", False),
         Permission(
@@ -201,6 +202,7 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "hr.leave_approve",
             "payroll.approve",
             "procurement.approve",
+            "report.export",
         ),
         _role(
             "head_of_department",
@@ -311,6 +313,7 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "fees.manage",
             "fees.collect",
             "fees.reconcile",
+            "report.export",
         ),
         _role(
             "exam_officer",

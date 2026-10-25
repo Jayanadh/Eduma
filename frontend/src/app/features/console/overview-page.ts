@@ -26,6 +26,12 @@ const STATES: { code: LifecycleStatus; label: string }[] = [
         <a class="btn btn-primary" routerLink="/console/institutions/new">Add institution</a>
       </app-page-header>
       <app-load-error [message]="data.error()" (retry)="data.reload()" />
+      @if (openAlerts().length) {
+        <a class="card section alerts" routerLink="/console/health" role="alert">
+          <strong>{{ openAlerts().length }} open alert{{ openAlerts().length === 1 ? '' : 's' }}</strong>
+          <span class="muted small">{{ openAlerts()[0].summary }}</span>
+        </a>
+      }
       @if (data.value(); as overview) {
         <div class="tiles section">
           @for (state of states; track state.code) {
@@ -72,6 +78,15 @@ const STATES: { code: LifecycleStatus; label: string }[] = [
       text-decoration: none;
     }
 
+    .alerts {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      color: inherit;
+      text-decoration: none;
+      border-left: 4px solid var(--danger, #b42318);
+    }
+
     .missing {
       display: block;
       margin-top: 2px;
@@ -83,6 +98,8 @@ export class OverviewPage {
   protected readonly states = STATES;
   protected readonly data = load(() => this.api.get<Overview>('platform/overview'));
   protected readonly page = signal(1);
+  private readonly alerts = load(() => this.api.get<{ summary: string; state: string }[]>('platform/alerts'));
+  protected readonly openAlerts = computed(() => (this.alerts.value() ?? []).filter((a) => a.state !== 'resolved'));
   /** Few institutions are ever being set up at once, so they come in one answer and are paged here. */
   protected readonly needsAction = computed(() =>
     (this.data.value()?.needs_action ?? []).slice((this.page() - 1) * PAGE_SIZE, this.page() * PAGE_SIZE),

@@ -70,7 +70,7 @@ def test_seed_runs_twice_without_duplicates(db, settings):
 
     assert setting(aster_inst, "modules.enabled") == [
         "academics", "admissions", "assets", "attendance", "communication", "exams", "fees", "hr_payroll",
-        "library", "report_cards", "services", "students", "transport",
+        "library", "report_cards", "reports", "services", "students", "transport",
     ]  # fmt: skip
     assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 8
     assert setting(aster_inst, "access.role_approval") is False
@@ -97,6 +97,7 @@ def test_seed_runs_twice_without_duplicates(db, settings):
         "hostel",
         "placements",
         "quality",
+        "reports",
         "students",
     ]
     regulation = CurriculumVersion.objects.get(program__institution=meridian)

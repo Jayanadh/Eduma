@@ -122,6 +122,7 @@ def test_registry_and_who_may_read(world, admin, client_for):
         "Campus services",
         "Staff services",
         "Student services",
+        "Reports",
         "Students",
     ]
     assert groups[2]["permissions"][0] == {

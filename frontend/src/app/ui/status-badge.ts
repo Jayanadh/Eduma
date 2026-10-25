@@ -12,11 +12,23 @@ const TONES: Readonly<Record<string, BadgeTone>> = {
   restricted: 'warning',
   archived: 'muted',
   superseded: 'muted',
+  ok: 'success',
+  warning: 'warning',
+  failing: 'danger',
+  unknown: 'muted',
+  not_configured: 'muted',
+  open: 'danger',
+  acknowledged: 'warning',
+  resolved: 'muted',
 };
 
 const LABELS: Readonly<Record<string, string>> = {
   setup: 'Setting up',
   superseded: 'Earlier version',
+  ok: 'OK',
+  failing: 'Failing',
+  unknown: 'Unknown',
+  not_configured: 'Not configured',
 };
 
 @Component({

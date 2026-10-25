@@ -67,6 +67,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/console/audit-page').then((m) => m.AuditPage),
       },
       {
+        path: 'health',
+        title: 'Health',
+        loadComponent: () => import('./features/console/health-page').then((m) => m.HealthPage),
+      },
+      {
+        path: 'usage',
+        title: 'Usage',
+        loadComponent: () => import('./features/console/usage-page').then((m) => m.UsagePage),
+      },
+      {
         path: 'affiliations',
         title: 'Affiliations',
         loadComponent: () => import('./features/console/affiliations-page').then((m) => m.AffiliationsPage),
@@ -501,6 +511,11 @@ export const routes: Routes = [
         title: 'Hostel',
         canActivate: [requires('hostel.manage')],
         loadComponent: () => import('./features/campus/hostel-page').then((m) => m.HostelPage),
+      },
+      {
+        path: 'reports',
+        title: 'Reports',
+        loadComponent: () => import('./features/reports/reports-page').then((m) => m.ReportsPage),
       },
       {
         path: 'cases',

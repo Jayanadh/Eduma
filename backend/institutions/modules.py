@@ -58,7 +58,7 @@ MODULES: dict[str, Module] = {
         ),
         _core("fees", "Fees", "students", available=True),
         _core("communication", "Messages, calls and online classes", "students", available=True),
-        _core("reports", "Reports"),
+        _core("reports", "Reports and exports", available=True),
         _operations("library", "Library", available=True),
         _operations("transport", "Transport", available=True),
         _operations("hostel", "Hostel and mess", available=True),

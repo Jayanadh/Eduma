@@ -12,6 +12,7 @@ from fees.views import Webhook as FeeWebhook
 from institutions.urls import platform_patterns
 from institutions.views import OwnInstitutionView, module_catalogue, platform_overview
 from operations.urls import platform_patterns as operations_platform
+from operations.views import Ready as OperationsReady
 from results.views import Verify
 from sites.public import PublicSiteView, public_asset
 from sites.urls import site_patterns
@@ -19,6 +20,7 @@ from students.views import OwnRecord
 
 urlpatterns = [
     path("api/v1/health", health, name="health"),
+    path("api/v1/health/ready", OperationsReady.as_view(), name="health-ready"),
     path("api/v1/session", SessionView.as_view(), name="session"),
     path("api/v1/session/login", LoginView.as_view(), name="session-login"),
     path("api/v1/session/logout", LogoutView.as_view(), name="session-logout"),

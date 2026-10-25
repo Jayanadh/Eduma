@@ -26,7 +26,7 @@ type BackupsT = { backups: { taken_at: string; size_bytes: number }[]; drills: {
       @if (health.value(); as h) {
         @for (a of h.alerts; track a.id) {
           <div class="card stack section alert" role="alert">
-            <span><app-status-badge [status]="a.state" /> <strong>{{ a.summary }}</strong></span>
+            <span class="headline"><app-status-badge [status]="a.state" /><strong>{{ a.summary }}</strong></span>
             <span class="muted small">{{ a.severity }} · since {{ dateTime(a.opened_at) }} · last seen {{ dateTime(a.last_seen_at) }}{{ a.owner ? ' · owner ' + a.owner : '' }} · runbook {{ a.runbook }}</span>
             @if (a.state === 'open') { <div><button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Acknowledge ' + a.summary" (click)="acknowledge(a)">Acknowledge</button></div> }
           </div>
@@ -75,6 +75,13 @@ type BackupsT = { backups: { taken_at: string; size_bytes: number }[]; drills: {
       padding: 8px;
       border-bottom: 1px solid var(--border);
       text-align: left;
+    }
+
+    .headline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
     }
 
     .alert {

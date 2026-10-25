@@ -40,7 +40,7 @@ type ExportT = { id: string; report: string; title: string; state: string; rows:
             <h2 class="card-title">{{ r.title }}</h2>
             @if (canExport(r.key)) { <button type="button" id="export" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="export(r.key)">Export CSV</button> }
           </div>
-          <p class="muted small">{{ r.provenance.source }} · {{ r.provenance.scope }} · {{ r.provenance.row_count }} rows · as of {{ dateTime(r.provenance.generated_at) }}</p>
+          <p class="muted small">{{ r.provenance.source }} · {{ r.provenance.scope }} · {{ r.provenance.row_count }} {{ r.provenance.row_count === 1 ? 'row' : 'rows' }} · as of {{ dateTime(r.provenance.generated_at) }}</p>
           <div class="table-wrap">
             <table>
               <thead><tr>@for (c of r.columns; track c) { <th scope="col">{{ c }}</th> }</tr></thead>
@@ -58,7 +58,7 @@ type ExportT = { id: string; report: string; title: string; state: string; rows:
           <ul class="rows">
             @for (e of exports.value() ?? []; track e.id) {
               <li>
-                <span>{{ e.title }} <span class="muted small">· {{ dateTime(e.created_at) }} · {{ e.state }}{{ e.rows !== null ? ' · ' + e.rows + ' rows' : '' }}{{ e.error ? ' · ' + e.error : '' }}</span></span>
+                <span>{{ e.title }} <span class="muted small">· {{ dateTime(e.created_at) }} · {{ e.state }}{{ e.rows !== null ? ' · ' + e.rows + (e.rows === 1 ? ' row' : ' rows') : '' }}{{ e.error ? ' · ' + e.error : '' }}</span></span>
                 @if (e.state === 'done') { <a class="btn btn-secondary btn-sm" [href]="'/api/v1/institution/reports/exports/' + e.id + '/file'" download>Download</a> }
               </li>
             }

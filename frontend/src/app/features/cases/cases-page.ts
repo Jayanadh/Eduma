@@ -22,6 +22,7 @@ import { CASE_TYPES, CaseT } from './case-types';
   template: `
     <ng-template #body>
       <p class="muted small">Cases are read during working hours. If someone is in danger now, call the emergency number or your institution's urgent contact.</p>
+      @if (portal()) {
       <form id="open-case" class="card stack section" (submit)="$event.preventDefault(); open($any($event.target))">
         <h2 class="card-title">Raise a case</h2>
         <div class="field"><label for="case-type">Kind</label>
@@ -44,6 +45,30 @@ import { CASE_TYPES, CaseT } from './case-types';
           }
         </ul>
       </section>
+      } @else {
+      <section class="card stack section">
+        <app-search-box id="case-search" label="Search cases" (search)="query.set($event)" />
+        <app-load-error [message]="list.error()" (retry)="list.reload()" />
+        <ul class="rows">
+          @for (c of list.value() ?? []; track c.id) {
+            <li>
+              <a [routerLink]="[base(), c.id]"><strong>{{ c.number }}</strong> {{ c.subject ?? c.type_label }}</a>
+              <span class="muted small">{{ c.type_label }} · {{ c.state_label }}{{ c.assignee ? ' · ' + c.assignee : '' }}{{ c.due_at ? ' · due ' + dateTime(c.due_at) : '' }}@if (c.overdue) { · <strong>overdue</strong> }</span>
+            </li>
+          } @empty {
+            <li class="muted small">No cases.</li>
+          }
+        </ul>
+      </section>
+      <form id="open-case" class="card stack section" (submit)="$event.preventDefault(); open($any($event.target))">
+        <h2 class="card-title">Raise a case</h2>
+        <div class="field"><label for="case-type">Kind</label>
+          <select id="case-type">@for (t of types; track t[0]) { <option [value]="t[0]">{{ t[1] }}</option> }</select></div>
+        <div class="field"><label for="case-subject">Subject</label><input id="case-subject" maxlength="150" required /></div>
+        <div class="field"><label for="case-description">What happened, and what would help</label><textarea id="case-description" rows="4" maxlength="4000" required></textarea></div>
+        <div><button type="submit" class="btn btn-primary btn-sm" [disabled]="busy()">Send</button></div>
+      </form>
+      }
     </ng-template>
     @if (portal()) {
       <app-portal-frame heading="Cases"><ng-container [ngTemplateOutlet]="body" /></app-portal-frame>

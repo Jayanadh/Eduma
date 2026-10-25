@@ -41,7 +41,8 @@ class Cases(CaseView):
         rows = services.visible(user, institution, request.query_params.get("search", "").strip())
         if state := request.query_params.get("state"):
             rows = rows.filter(state=state)
-        return Response([services.item(c, services.access(user, institution, c)) for c in rows[:200]])
+        triage = has_perm(user, institution, services.ASSIGN)
+        return Response([services.item(c, services.access(user, institution, c, triage)) for c in rows[:200]])
 
     def post(self, request):
         data = valid(OpenInput, request.data)  # anything else sent (assignee, state, notes) is ignored

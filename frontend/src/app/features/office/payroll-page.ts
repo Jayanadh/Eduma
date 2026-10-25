@@ -61,7 +61,7 @@ type Cycle = {
           <h3 class="card-title">{{ monthName(d.month) }}</h3>
           <ul class="rows">
             @for (x of d.lines ?? []; track x.employee.id) {
-              <li><span>{{ x.employee.name }} <span class="muted small">{{ x.employee.number }}</span></span><span class="small">gross {{ x.gross }}{{ x.unpaid_days ? ' − ' + x.unpaid_deduction + ' for ' + x.unpaid_days + ' unpaid days' : '' }} − {{ x.deductions }} deductions = <strong>{{ x.net }}</strong></span></li>
+              <li><span>{{ x.employee.name }} <span class="muted small">{{ x.employee.number }}</span></span><span class="small">gross {{ x.gross }}{{ x.unpaid_days ? ' − ' + x.unpaid_deduction + ' for ' + x.unpaid_days + (x.unpaid_days === 1 ? ' unpaid day' : ' unpaid days') : '' }} − {{ x.deductions }} deductions = <strong>{{ x.net }}</strong></span></li>
             }
           </ul>
         }

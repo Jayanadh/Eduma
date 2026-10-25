@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "check:a11y": "node scripts/a11y-check.mjs"
   },
   "private": true,
   "packageManager": "npm@11.6.2",

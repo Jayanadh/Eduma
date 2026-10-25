@@ -5,11 +5,12 @@ from django.http import FileResponse
 from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.permissions import has_perm
 from accounts.role_views import holds_any
+from admissions.public import PublicThrottle
 from configuration.gates import require_module
 from institutions.models import Institution
 from operations import reports, services
@@ -54,6 +55,8 @@ class Exports(ReportView):
         rows = ExportJob.objects.filter(institution=request.institution, requester=request.user)[:50]
         return Response([services.export_item(j) for j in rows])
 
+
+class RequestExport(ReportView):
     def post(self, request, key):
         job = services.request_export(request.user, request.institution, self.report(key))
         return Response(services.export_item(job), status=status.HTTP_202_ACCEPTED)
@@ -75,11 +78,32 @@ class PlatformView(GenericAPIView):
 class Health(PlatformView):
     def get(self, request):
         tiles = services.health()
+        services.evaluate_alerts(tiles)  # looking also raises alerts, so a stopped worker can't hide its own
         return Response(
             {
                 "tiles": tiles,
                 "alerts": [services.alert_item(a) for a in Alert.objects.exclude(state=Alert.State.RESOLVED)],
             }
+        )
+
+
+READY_CHECKS = ("database", "worker", "storage")
+
+
+class Ready(GenericAPIView):
+    """For an outside uptime monitor: 200 when the database, worker and storage are healthy, else 503 with the names of
+    what isn't (no readings, hosts or data). Each probe also evaluates alerts, so a dead worker is still noticed."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [PublicThrottle]
+
+    def get(self, request):
+        tiles = services.health()
+        services.evaluate_alerts(tiles)
+        failing = [t["key"] for t in tiles if t["key"] in READY_CHECKS and t["status"] != "ok"]
+        return Response(
+            {"status": "degraded" if failing else "ready", "failing": failing},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE if failing else status.HTTP_200_OK,
         )
 
 

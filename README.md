@@ -138,11 +138,18 @@ cd backend
 source .venv/bin/activate
 pytest
 
+# Before a release: the cross-tenant sweep and the no-5xx sweep (about 10 minutes)
+pytest -m adversarial
+
 # Frontend
 cd frontend
 npx ng test --watch=false
 npx ng build
+npm run check:a11y
 ```
+
+What the release does not do yet, what it waits on and who supports what: [docs/limitations.md](docs/limitations.md).
+How to run, watch and recover it: [docs/operations.md](docs/operations.md).
 
 The backend tests cover:
 - host routing;
@@ -158,6 +165,15 @@ The backend tests cover:
 - admissions: cycles, applying, documents, review, seats, offers, enrollment and who may see what;
 - student records and the student's own record;
 - academics: years, sections, placement, move-up, programs, regulations, courses, offerings, batches and pinning.
+- registration, progress, timetable, attendance, results and documents;
+- fees and payments;
+- communication;
+- library, transport and hostel;
+- HR, payroll, purchasing, assets and labs;
+- cases;
+- placements, research and quality evidence;
+- reports, exports, the worker, health and alerts;
+- the cutover rehearsal.
 
 ## Settings
 

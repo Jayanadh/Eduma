@@ -270,7 +270,7 @@ doubled, transfers atomic; S10A-09 out-passes; S10A-10 app `campus`, modules ava
 
 Full table: `docs/superpowers/specs/2026-10-24-slice10b-hr-stores-design.md`. S10B-01 leave with balance, overlap and
 no self-approval (requests start submitted: no drafts, my call); S10B-02 staff attendance; S10B-03 own leave only;
-S10B-04 pay only with `payroll.manage`; S10B-05 payroll prepared → validated → approved by another → exported and
+S10B-04 pay settings only with `payroll.manage` (approvers see the lines of the cycle they approve); S10B-05 payroll prepared → validated → approved by another → exported and
 frozen, one cycle per month (adjustment cycles not built); S10B-06 rule revisions kept on requisitions, two approvers
 above the limit; S10B-07 receipts capped at the order, stock never negative; S10B-08 assets; S10B-09 lab booking
 without overlap; S10B-10 apps `hr` and `stores`. Asset hand-over is by username, since a store keeper can't list staff.

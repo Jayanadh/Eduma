@@ -42,6 +42,18 @@ def test_a_stopped_worker_raises_an_alert_that_clears_on_recovery(db):
     assert alert.state == "resolved" and alert.resolved_at
 
 
+def test_an_outside_monitor_sees_a_dead_worker_and_raises_the_alert(world, client_for):
+    probe = client_for(None)
+    assert probe.get("/api/v1/health/ready").json() == {"status": "degraded", "failing": ["worker"]}  # never seen
+    services.run_jobs()
+    assert probe.get("/api/v1/health/ready").status_code == 200
+    JobRun.objects.update(started_at=timezone.now() - dt.timedelta(minutes=12))
+    Alert.objects.all().delete()
+    stale = probe.get("/api/v1/health/ready")
+    assert stale.status_code == 503 and stale.json()["failing"] == ["worker"]
+    assert Alert.objects.get(key="worker").state == "open"  # raised without the worker
+
+
 def test_platform_pages_are_for_platform_admins(world, client_for):
     services.run_jobs()
     JobRun.objects.filter(task="heartbeat").update(started_at=timezone.now() - dt.timedelta(minutes=12))
@@ -70,3 +82,12 @@ def test_restore_check_compares_counts_and_balances(world, capsys):
     drill = RestoreDrill.objects.get()
     assert drill.passed and str(drill.seconds) == "12.3"
     assert tile("restore")["status"] == "ok"
+
+
+@pytest.mark.django_db(transaction=True)  # the workload's threads read through their own connections
+def test_the_workload_runs_every_persona_without_errors(settings, capsys):
+    settings.DEBUG = True
+    call_command("seed_demo", stdout=open("/dev/null", "w"))
+    call_command("measure_workload", clients=1, rounds=1)
+    out = capsys.readouterr().out
+    assert "Worst p95" in out and out.count("errors 0") == out.count(" ms  p95 ")

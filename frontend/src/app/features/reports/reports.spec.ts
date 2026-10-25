@@ -29,7 +29,7 @@ describe('Reports and health', () => {
     }); // prettier-ignore
     await fixture.whenStable();
     expect(root.querySelector('tbody')!.textContent).toContain('Class 6');
-    expect(root.textContent).toContain('Only records you may read · 1 rows');
+    expect(root.textContent).toContain('Only records you may read · 1 row');
     root.querySelector<HTMLButtonElement>('#export')!.click();
     expect(http.expectOne('/api/v1/institution/reports/students_by_class/exports').request.method).toBe('POST');
   });

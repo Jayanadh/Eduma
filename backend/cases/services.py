@@ -22,13 +22,13 @@ RESPONSE_DAYS = {Type.SERVICE: 7, Type.GRIEVANCE: 15, Type.COUNSELLING: 3, Type.
 APPEAL_DAYS = 15
 
 
-def access(user, institution, case: ServiceCase) -> str | None:
-    """'officer' (the current assignee), 'requester', 'triage', or None."""
+def access(user, institution, case: ServiceCase, triage: bool | None = None) -> str | None:
+    """'officer' (the current assignee), 'requester', 'triage', or None. Pass `triage` when listing many cases."""
     if case.assignee_id and case.assignee.user_id == user.id:
         return "officer"
     if case.requester_id == user.id:
         return "requester"
-    if has_perm(user, institution, ASSIGN):
+    if triage if triage is not None else has_perm(user, institution, ASSIGN):
         return "triage"
     return None
 

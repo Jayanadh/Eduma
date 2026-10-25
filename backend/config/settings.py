@@ -62,7 +62,9 @@ if PROXY_COUNT:
 SECURE_SSL_REDIRECT = not DEBUG and env("DJANGO_SSL_REDIRECT", "1") == "1"
 SECURE_HSTS_SECONDS = 0 if DEBUG else int(env("DJANGO_HSTS_SECONDS", str(60 * 60 * 24 * 365)))
 # HSTS stays on each host only; preloading cannot be undone quickly. `check --deploy` would otherwise flag both.
-SILENCED_SYSTEM_CHECKS = ["security.W005", "security.W021"]
+# urls.W002: imports and affiliations keep their list at /imports (no trailing slash) and their items at /imports/<id>,
+# so the included patterns start with "/" on purpose.
+SILENCED_SYSTEM_CHECKS = ["security.W005", "security.W021", "urls.W002"]
 
 # The Django admin is a second way in with full powers: off in production unless DJANGO_ADMIN=1.
 ADMIN_ENABLED = env("DJANGO_ADMIN", "1" if DEBUG else "0") == "1"
@@ -172,6 +174,17 @@ MEDIA_ROOT = Path(env("DJANGO_MEDIA_ROOT", str(BASE_DIR / "media")))
 # Applicants' documents: never under MEDIA_ROOT or any public URL; served only through checked views.
 PRIVATE_MEDIA_ROOT = Path(env("DJANGO_PRIVATE_MEDIA_ROOT", str(BASE_DIR / "private_media")))
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {"redact": {"()": "common.logging.RedactTokens"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "filters": ["redact"]}},
+    "loggers": {
+        "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        "django.server": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
+}
 
 # Session-cookie login. Cookies are host-only (no SESSION_COOKIE_DOMAIN), so every institution's subdomain has its own
 # session. The CSRF cookie and header names match Angular HttpClient's defaults, so the frontend sends the token

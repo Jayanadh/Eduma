@@ -75,12 +75,14 @@ import { Icon } from '../../ui/icon';
 
     .portal-nav {
       display: flex;
-      gap: 16px;
+      flex-wrap: wrap;
+      gap: 8px 16px;
 
       a {
         color: var(--muted);
         font-weight: 700;
         text-decoration: none;
+        white-space: nowrap;
       }
 
       a.active {

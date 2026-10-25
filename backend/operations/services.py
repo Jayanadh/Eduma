@@ -250,13 +250,12 @@ def health() -> list[dict]:
         root.mkdir(parents=True, exist_ok=True)
         with tempfile.NamedTemporaryFile(dir=root):
             pass
-        size = sum(f.stat().st_size for f in root.rglob("*") if f.is_file())
         tiles.append(
             _tile(
                 "storage",
                 "Private storage",
                 "ok",
-                f"writable, {size / 1_048_576:.1f} MB",
+                "writable",  # sizes are per institution on Usage; this check stays cheap enough to probe often
                 "writable",
                 "private media",
                 "docs/operations.md#storage",

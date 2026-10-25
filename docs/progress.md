@@ -3,7 +3,66 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (25 October 2026, BUILD-11)
+## Where things stand (25 October 2026, BUILD-12 — the web build is complete)
+
+**BUILD-12 (quality, migration rehearsal and pilot readiness) is done** in fast mode. Spec:
+`docs/superpowers/specs/2026-10-25-build12-quality-design.md`. Branch `build-12-quality`, cut from
+`build-11-operations`. **BUILD-01 to BUILD-12 are built.** BUILD-13 (native mobile, international) is outside web
+completion. What is left is recorded in `docs/limitations.md`: real-rule UAT for the four categories, a human
+accessibility review, external security review, real-scale workload and recovery, and provider contracts.
+
+| Done in BUILD-12 | Where | Evidence |
+|---|---|---|
+| Cross-tenant sweep: 235 id-taking routes × one id of every institution-owned record type, GET and POST, as another institution's admin and as a student | `backend/testing/tests/test_cross_tenant.py` (`pytest -m adversarial`) | No leaks and no audit change at the victim; the owner's positive control finds 23 records through the same paths |
+| Static accessibility check over every template, with a self-check | `frontend/scripts/a11y-check.mjs` (`npm run check:a11y`) | First run found 11 candidates; all were checker gaps (bound aria-labels, hidden inputs, child components), which were fixed in the checker; it now passes |
+| Security: deploy checks, token redaction in logs, risky-pattern review | `config/settings.py`, `common/logging.py` | `check --deploy` clean; test proves tokens are redacted |
+| Workload measurement | `operations/management/commands/measure_workload.py` | 2,080 reads, 8 clients: worst p95 148.5 ms, zero errors |
+| Cutover reconciliation and rehearsal | `operations/reconcile.py`, `manage.py cutover_report`, `imports/tests/test_cutover.py` | A retried import changes no number; the trial balance nets to 0.00 |
+| Limitations, provider dependencies, support ownership | `docs/limitations.md` | — |
+
+### The final combined check (browser walkthrough and review), 25 Oct 2026
+
+Fast mode deferred browser checks and per-slice reviews to one pass at the end.
+
+**Browser walkthrough** (real sign-ins, real API):
+
+- **Console:** Health, alerts and Acknowledge; Usage.
+- **Aster principal:** Reports, Export CSV through the worker to the downloaded file; payroll approval.
+- **Aster grievance officer:** the case queue, internal and visible notes, resolve.
+- **Arjun's portal:** the case shows only the visible note, and the appeal is offered.
+- **Meridian placement office:** the offer, with her real CGPA.
+- **Ananya's Careers page:** she accepts the offer.
+- **Phone width:** the student portal.
+
+There were no console or server errors.
+
+**Found and fixed:**
+
+| # | Found by | Problem | Fix |
+|---|---|---|---|
+| 1 | Browser | A stopped worker could never raise its own alert: only the worker evaluated alerts | Viewing Health evaluates alerts. A public, throttled readiness probe (`/api/v1/health/ready`: 200, or 503 naming what isn't ready) lets an outside monitor catch it; tested. |
+| 2 | Browser | The student portal nav was cut off at phone width (eight links) | The nav wraps |
+| 3 | Browser | The alert badge ran into its text; "1 rows"; "1 unpaid days" | Spacing and plurals |
+| 4 | Browser | Staff had to scroll past the case form to reach their queue | The workspace shows the queue first; portals show the form first |
+| 5 | Browser | Decision S10B-04 said no other screen shows pay, but approvers see a cycle's lines | Wording corrected: approvers see the lines they approve |
+| 6 | Review | `POST /institution/reports/exports` (no report key) answered 500 | Separate list and request views; tested (405) |
+| 7 | Review | The case list checked triage permission once per row | Checked once per list |
+| 8 | Review | No test would catch any route crashing on an empty request | New release gate: every route, GET and POST with an empty body, as three personas, never 5xx |
+
+Checks after the fixes, 25 Oct 2026:
+
+- Backend `pytest`: 622 passed.
+- `pytest -m adversarial`: 6 passed.
+  - Cross-tenant sweep: positive control, plus another institution's admin and a student.
+  - No-5xx sweep: three personas.
+  - 9 min 18 s.
+- Frontend `ng test`: 247 passed.
+- `ng build`: clean.
+- `npm run check:a11y`: clean.
+- ruff: clean.
+- `check --deploy` (production settings): clean.
+
+## BUILD-11 (25 October 2026)
 
 **BUILD-11 (reports, exports, jobs, health, alerts, usage, backup and restore) is built and tested** in fast mode.
 Spec: `docs/superpowers/specs/2026-10-25-build11-operations-design.md`. Branch `build-11-operations`, cut from

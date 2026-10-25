@@ -9,7 +9,7 @@ urlpatterns = [
     path("exports", views.Exports.as_view()),
     path("exports/<uuid:pk>/file", views.ExportFile.as_view()),
     path("<slug:key>", views.RunReport.as_view()),
-    path("<slug:key>/exports", views.Exports.as_view()),
+    path("<slug:key>/exports", views.RequestExport.as_view()),
 ]
 
 platform_patterns = [

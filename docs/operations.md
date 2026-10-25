@@ -34,7 +34,9 @@ The API couldn't run `SELECT 1`, or the round trip took over 200 ms.
 
 ### worker
 
-No heartbeat for 5 minutes: the worker isn't running.
+No heartbeat for 5 minutes: the worker isn't running. A stopped worker can't raise its own alert, so point an outside
+uptime monitor at `/api/v1/health/ready`. It answers 200 when the database, worker and storage are healthy, and 503
+naming what isn't. Each probe, and each view of the console's Health page, also opens or resolves alerts.
 
 1. Check the cron entry or systemd timer.
 2. Run `manage.py run_jobs` by hand and read its output.
@@ -103,8 +105,46 @@ A failed drill lists the tables that differ.
 Calls and classes run only on the test-mode sandbox (D-12). Payments run only on the sandbox. Both tiles say so; they
 never report a live connection that isn't there.
 
+## Cutover
+
+The spec pack's sequence:
+
+1. Source-owner sign-off.
+2. Mapping and a dry run (**Data transfer**, then Check).
+3. Resolve the flagged rows.
+4. Freeze the source.
+5. `ops/backup.sh`.
+6. Commit.
+7. Reconcile.
+8. Verify users and roles.
+9. Institution acceptance.
+
+`manage.py cutover_report <slug>` prints what to compare with the source system's own totals:
+
+- students by status, active enrollments and guardian links;
+- imported records by type;
+- fees: charged, credit notes, received, refunded, and the trial balance net, which must be 0.00;
+- courses and attempts by outcome;
+- issued documents with a checksum;
+- anything unresolved: import rows with errors, imports not committed, open reconciliation cases.
+
+Go live only with zero unexplained differences in counts and money. Importing the same file again creates nobody (TST-025), so a retried import doesn't move the numbers.
+
+## Release gates
+
+Run these before a release:
+
+- `pytest` (the everyday suite);
+- `pytest -m adversarial`: the cross-tenant sweep, and every route answering an empty request without a 5xx (about 10 minutes);
+- `npm test` and `npm run check:a11y`;
+- `ng build`;
+- `manage.py check --deploy` with production settings;
+- `ops/backup.sh` and `ops/restore-drill.sh`.
+
 ## Measured evidence
 
 | Date | What | Result |
 |---|---|---|
 | 25 Oct 2026 | `ops/backup.sh` then `ops/restore-drill.sh` on the development machine (PostgreSQL 17 in Docker, demo data) | Passed: 150 tables and 1,472 rows matched; 5 trial-balance lines matched; restore 1.0 s. This is demo scale only; repeat with production-sized data before agreeing an RTO. |
+| 25 Oct 2026 | `manage.py measure_workload --clients 8 --rounds 20` on demo data | 2,080 reads in 16.9 s, zero errors, worst p95 148.5 ms (report "students by class"); the planning target is 800 ms. In-process, demo scale. |
+| 25 Oct 2026 | `manage.py cutover_report aster` on demo data | 8 active students; 6 imported; fees charged 10,000.00, credit notes 1,000.00, received 6,000.00; trial balance net 0.00; 1 import still uncommitted, with 1 row in error (shown as unresolved). |

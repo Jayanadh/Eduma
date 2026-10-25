@@ -65,6 +65,7 @@ def test_small_confidential_groups_are_suppressed(world, r):
 
 def test_exports_are_the_requesters_and_recheck_permission(world, r):
     assert r.teacher.post(f"{R}/students_by_class/exports").status_code == 403
+    assert r.principal.post(f"{R}/exports").status_code == 405  # the list isn't a way to ask for one
     made = r.principal.post(f"{R}/students_by_class/exports")
     assert made.status_code == 202 and made.json()["state"] == "queued"
     job = made.json()["id"]

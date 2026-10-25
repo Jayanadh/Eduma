@@ -98,6 +98,14 @@ def assign(actor, institution, case: ServiceCase, assignee: Membership) -> Servi
     return case
 
 
+def _requester_link(case: ServiceCase) -> str:
+    """Staff open their own cases in the workspace; students and guardians in their portal."""
+    staff = Membership.objects.filter(
+        institution_id=case.institution_id, user_id=case.requester_id, kind=Membership.Kind.STAFF
+    ).exists()
+    return f"/app/cases/{case.id}" if staff else f"/cases/{case.id}"
+
+
 def add_note(actor, institution, case: ServiceCase, text: str, internal: bool) -> CaseNote:
     seen = access(actor, institution, case)
     if seen not in ("officer", "requester") or (internal and seen != "officer"):
@@ -108,7 +116,7 @@ def add_note(actor, institution, case: ServiceCase, text: str, internal: bool) -
         case=case, author=actor, text=text.strip(), visibility=Visibility.INTERNAL if internal else Visibility.REQUESTER
     )
     if seen == "officer" and not internal:
-        notify(case.requester, institution, f"There's an update on {case.number}.", f"/cases/{case.id}")
+        notify(case.requester, institution, f"There's an update on {case.number}.", _requester_link(case))
     elif seen == "requester" and case.assignee_id:
         notify(case.assignee.user, institution, f"The requester replied on {case.number}.", f"/app/cases/{case.id}")
     return note
@@ -125,7 +133,7 @@ def resolve(actor, institution, case: ServiceCase, text: str) -> ServiceCase:
         Resolution.objects.create(case=case, stage=stage, text=text.strip(), by=actor)
         case.state = State.RESOLVED
         case.save(update_fields=["state"])
-    notify(case.requester, institution, f"{case.number} is resolved.", f"/cases/{case.id}")
+    notify(case.requester, institution, f"{case.number} is resolved.", _requester_link(case))
     audit.log(actor, "service_case.resolved", case, f"Resolved {case.number} ({stage})")
     return case
 

@@ -3,7 +3,31 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
-## Where things stand (25 October 2026, slice 10b — BUILD-10 part 2)
+## Where things stand (25 October 2026, slice 10c — BUILD-10 part 3, BUILD-10 complete)
+
+**Slice 10c (student services and grievances, placements, internships, alumni, research and quality evidence) is built
+and tested** in fast mode. Spec: `docs/superpowers/specs/2026-10-25-slice10c-services-development-design.md`. Branch
+`slice-10c-services`, cut from `slice-10b-hr-stores`. Next: BUILD-11 (reports, exports and jobs; metrics and alerts;
+backup and restore).
+
+| Built in slice 10c | Where |
+|---|---|
+| Service cases for any member (staff, students, guardians): service requests and confidential grievance, counselling and safeguarding cases; numbered, due dates by type; the requester can't set assignee, classification or state | `backend/cases/`, `features/cases/` (workspace **Cases**, portal **Cases**) |
+| Per-viewer projections (TST-034): requester (own, visible notes only), current assignee (everything), triage (queue; confidential cases as a shell, not searchable); everyone else 404; reassignment removes access; confidential cases only to holders of `service_case.confidential`; notifications carry no excerpt; no case export | `cases/services.py` |
+| Resolution and one appeal within 15 days, decided by someone other than the first resolver; both resolutions kept | `cases/services.py`, `features/cases/case-page.ts` |
+| Placements: employers, opportunities with program and CGPA eligibility; students apply with consent, eligibility snapshotted; one application each; the office shortlists/offers, the student accepts/declines; offers and accepted placements reported apart | `backend/development/`, `features/development/placements-page.ts`, student **Careers** |
+| Internships from accepted internship offers; supervisor-only evaluation | `development/services.py`, `features/development/supervision-page.ts` |
+| Alumni listed only while they consent; leaving the list clears the contact details | `development/services.py`, student **Careers** |
+| Research: scholars, supervisors (access ends with the supervision), ethics approvals with dates (a milestone that needs one is refused without a valid approval), supervisor-only milestone decisions | `development/services.py`, `features/development/research-page.ts` |
+| Quality evidence: review cycles, evidence requests per criterion, uploads checked by content and kept as hashed versions, review by someone other than the owner, freeze only when all accepted, JSON export with the snapshot hash | `development/services.py`, `features/development/quality-page.ts` |
+| Roles Student Services Officer, Grievance Officer, Placement Officer, Research Coordinator, IQAC Coordinator; modules services, placements, quality available | `accounts/roles.py`, `institutions/modules.py` |
+| Demo: Arjun's grievance with the grievance officer; the teacher's certificate request waiting; Meridian's internship (Ananya shortlisted), Ananya as a research scholar, a NAAC cycle | `seed_demo.py` |
+
+Checks on 25 Oct 2026: backend `pytest` 609 passed; ruff clean; frontend `ng test` 245 passed; `ng
+build` clean. Not selected: employer or recruiter logins, escalation rules beyond overdue flags, grants and
+disbursements, publication lists, accreditation-specific report formats.
+
+## Slice 10b (25 October 2026) — BUILD-10 part 2
 
 **Slice 10b (HR leave, the payroll boundary, procurement, stock, assets and lab booking) is built and tested** in fast
 mode. Spec: `docs/superpowers/specs/2026-10-24-slice10b-hr-stores-design.md`. Branch `slice-10b-hr-stores`, cut from

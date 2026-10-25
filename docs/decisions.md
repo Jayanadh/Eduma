@@ -274,3 +274,13 @@ S10B-04 pay only with `payroll.manage`; S10B-05 payroll prepared â†’ validated â
 frozen, one cycle per month (adjustment cycles not built); S10B-06 rule revisions kept on requisitions, two approvers
 above the limit; S10B-07 receipts capped at the order, stock never negative; S10B-08 assets; S10B-09 lab booking
 without overlap; S10B-10 apps `hr` and `stores`. Asset hand-over is by username, since a store keeper can't list staff.
+
+## Slice 10c (services and grievances, placements, research, quality)
+
+Full table: `docs/superpowers/specs/2026-10-25-slice10c-services-development-design.md`. S10C-01 one case aggregate,
+confidential by type; S10C-02 per-viewer projections (requester / current assignee / triage shell), explicit audited
+assignment (an admin role alone discloses nothing; an admin can still assign a case to themself, which the audit log
+shows); S10C-03 note audiences, excerpt-free notifications, no export; S10C-04 one appeal in 15 days, another reviewer;
+S10C-05 consented, eligibility-checked placement applications; S10C-06 internships; S10C-07 consented alumni; S10C-08
+research with ethics validity and supervisor-only decisions; S10C-09 versioned evidence and frozen snapshots; S10C-10
+apps `cases` and `development`. Supervisors and evidence owners are given by username (offices can't list staff).

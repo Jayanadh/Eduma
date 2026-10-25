@@ -14,8 +14,8 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     call_command("seed_demo")
     assert Institution.objects.count() == 4
     assert (
-        User.objects.count() == 26
-    )  # + aster.grandparent/accountant/librarian/transport/hr/payroll/stores; 4 at Meridian; Ananya
+        User.objects.count() == 31
+    )  # + aster.grandparent/accountant/librarian/transport/hr/payroll/stores/services/grievance; 7 at Meridian; Ananya
     assert SiteRevision.objects.filter(status="published").count() == 3
     states = dict(Institution.objects.values_list("slug", "lifecycle_status"))
     assert states == {"aster": "active", "meridian": "active", "vector": "setup", "summit": "active"}
@@ -70,9 +70,9 @@ def test_seed_runs_twice_without_duplicates(db, settings):
 
     assert setting(aster_inst, "modules.enabled") == [
         "academics", "admissions", "assets", "attendance", "communication", "exams", "fees", "hr_payroll",
-        "library", "report_cards", "students", "transport",
+        "library", "report_cards", "services", "students", "transport",
     ]  # fmt: skip
-    assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 7
+    assert SettingRevision.objects.filter(institution=aster_inst, key="modules.enabled").count() == 8
     assert setting(aster_inst, "access.role_approval") is False
     deputy = User.objects.get(username="aster.deputy")
     assert deputy.full_name == "Aster Deputy Admin" and deputy.check_password("Demo-pass-2026")
@@ -90,7 +90,15 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     from academics.models import CourseOffering, CurriculumVersion
 
     meridian = Institution.objects.get(slug="meridian")
-    assert setting(meridian, "modules.enabled") == ["academics", "admissions", "exams", "hostel", "students"]
+    assert setting(meridian, "modules.enabled") == [
+        "academics",
+        "admissions",
+        "exams",
+        "hostel",
+        "placements",
+        "quality",
+        "students",
+    ]
     regulation = CurriculumVersion.objects.get(program__institution=meridian)
     assert (str(regulation), regulation.status, regulation.courses.count()) == ("R2026 rev 1", "published", 4)
     lab = CourseOffering.objects.get(institution=meridian, code="A1")

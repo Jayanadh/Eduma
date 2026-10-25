@@ -37,9 +37,15 @@ def d(world, client_for):
     ns.asha_student = setup.student(c, "2026-0001", name="Asha Rao")
     ns.ravi_student = setup.student(c, "2026-0002", name="Ravi Kumar")
     CourseAttempt.objects.create(
-        institution=world.a, enrollment=ns.asha_student.enrollments.get(), course=c.courses["MAT101"], attempt_no=1,
-        term=c.term, credits=3, outcome="passed", grade_point=8,
-    )  # fmt: skip
+        institution=world.a,
+        enrollment=ns.asha_student.enrollments.get(),
+        course=c.courses["MAT101"],
+        attempt_no=1,
+        term=c.term,
+        credits=3,
+        outcome="passed",
+        grade_point=8,
+    )
     ns.asha, ns.ravi = login(world, client_for, ns.asha_student), login(world, client_for, ns.ravi_student)
     member = lambda role, username, name="": client_for(  # noqa: E731
         world.a.slug, factories.member(world.a, role=role, username=username, full_name=name or username)
@@ -60,8 +66,14 @@ def post(client, url, body=None):
 def opportunities(d):
     employer = post(d.office, f"{D}/employers", {"name": "Infosys"}).json()
     soon = (d.today + dt.timedelta(days=10)).isoformat()
-    intern = {"employer": employer["id"], "kind": "internship", "title": "Summer analyst", "programs": [str(d.c.program.id)],
-              "min_cgpa": "7.50", "closes_on": soon}  # fmt: skip
+    intern = {
+        "employer": employer["id"],
+        "kind": "internship",
+        "title": "Summer analyst",
+        "programs": [str(d.c.program.id)],
+        "min_cgpa": "7.50",
+        "closes_on": soon,
+    }
     job = {"employer": employer["id"], "kind": "job", "title": "Graduate engineer", "closes_on": soon}
     return post(d.office, f"{D}/opportunities", intern).json(), post(d.office, f"{D}/opportunities", job).json()
 
@@ -135,12 +147,20 @@ def test_research_ethics_and_supervision(d):
     refused = post(d.asha, submit, {"summary": "Survey of 120 households"})
     assert refused.status_code == 409 and refused.json()["code"] == "ethics_required"
     year_ago = d.today - dt.timedelta(days=400)
-    expired = {"reference": "IEC/2025/7", "committee": "Ethics committee", "valid_from": year_ago.isoformat(),
-               "valid_to": (year_ago + dt.timedelta(days=30)).isoformat()}  # fmt: skip
+    expired = {
+        "reference": "IEC/2025/7",
+        "committee": "Ethics committee",
+        "valid_from": year_ago.isoformat(),
+        "valid_to": (year_ago + dt.timedelta(days=30)).isoformat(),
+    }
     post(d.research, f"{url}/ethics", expired)
     assert post(d.asha, submit, {"summary": "Survey"}).status_code == 409
-    current = {**expired, "reference": "IEC/2026/3", "valid_from": d.today.isoformat(),
-               "valid_to": (d.today + dt.timedelta(days=365)).isoformat()}  # fmt: skip
+    current = {
+        **expired,
+        "reference": "IEC/2026/3",
+        "valid_from": d.today.isoformat(),
+        "valid_to": (d.today + dt.timedelta(days=365)).isoformat(),
+    }
     post(d.research, f"{url}/ethics", current)
     assert post(d.asha, submit, {"summary": "Survey"}).json()["milestones"][0]["state"] == "submitted"
     assert post(d.asha, f"{D}/milestones/{survey}/approve").status_code == 403  # the scholar is not staff
@@ -160,7 +180,9 @@ def test_quality_evidence_versions_and_freeze(d):
     assert post(d.iqac, f"{url}/freeze").status_code == 422
     [request] = d.owner.get(f"{D}/evidence").json()
     upload = f"{D}/evidence/{request['id']}/upload"
-    bad = d.owner.post(upload, {"file": SimpleUploadedFile("list.pdf", b"just text", "application/pdf")}, format="multipart")
+    bad = d.owner.post(
+        upload, {"file": SimpleUploadedFile("list.pdf", b"just text", "application/pdf")}, format="multipart"
+    )
     assert bad.status_code == 422
     assert d.owner.get(f"{D}/evidence").json()[0]["versions"] == []  # a failed upload records nothing
     first = d.owner.post(upload, {"file": SimpleUploadedFile("papers.pdf", PDF, "application/pdf")}, format="multipart")
@@ -169,14 +191,23 @@ def test_quality_evidence_versions_and_freeze(d):
     assert (first["state"], len(first["versions"][0]["sha256"])) == ("submitted", 64)
     assert post(d.owner, f"{D}/evidence/{request['id']}/accept").status_code == 403
     post(d.iqac, f"{D}/evidence/{request['id']}/return", {"note": "Add the 2025 papers"})
-    d.owner.post(upload, {"file": SimpleUploadedFile("papers-2.pdf", PDF + b"2025", "application/pdf")}, format="multipart")
+    d.owner.post(
+        upload, {"file": SimpleUploadedFile("papers-2.pdf", PDF + b"2025", "application/pdf")}, format="multipart"
+    )
     assert post(d.iqac, f"{D}/evidence/{request['id']}/accept").json()["state"] == "accepted"
     frozen = post(d.iqac, f"{url}/freeze").json()
     assert frozen["frozen_at"] and len(frozen["snapshot_hash"]) == 64
     exported = d.iqac.get(f"{url}/export").json()
     versions = d.iqac.get(url).json()["requests"][0]["versions"]
-    assert exported["evidence"] == [{"criterion": "3.2.1", "title": "Papers per teacher", "owner": "Head of CS",
-                                     "version": 2, "sha256": versions[1]["sha256"]}]  # fmt: skip
+    assert exported["evidence"] == [
+        {
+            "criterion": "3.2.1",
+            "title": "Papers per teacher",
+            "owner": "Head of CS",
+            "version": 2,
+            "sha256": versions[1]["sha256"],
+        }
+    ]
     assert exported["snapshot_sha256"] == frozen["snapshot_hash"]
     late = d.owner.post(upload, {"file": SimpleUploadedFile("late.pdf", PDF, "application/pdf")}, format="multipart")
     assert late.status_code == 409

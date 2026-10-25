@@ -86,6 +86,7 @@ def test_tst034_each_person_sees_only_what_they_may(g):
     assert "exam cell" not in g.asha.get(f"{C}/").content.decode()
     update = Notification.objects.get(user=g.asha_user)
     assert update.text == "There's an update on SC-0001."  # never an excerpt
+    assert update.link == f"/cases/{case['id']}"
     assert post(g.asha, f"{url}/notes", {"text": "x", "visibility": "internal"}).status_code == 403
     assert post(g.triage, f"{url}/notes", {"text": "x"}).status_code == 403
     post(g.triage, f"{url}/assign", {"assignee": membership(g.second_user)})

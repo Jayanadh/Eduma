@@ -47,6 +47,7 @@ export function kindOnly(...kinds: Kind[]): boolean | ReturnType<Router['parseUr
 export const applicantOnly: CanActivateFn = () => kindOnly('applicant', 'guardian');
 export const studentOnly: CanActivateFn = () => kindOnly('student');
 export const guardianOnly: CanActivateFn = () => kindOnly('guardian');
+export const portalMember: CanActivateFn = () => kindOnly('student', 'guardian');
 
 /** A workspace page that needs a permission (or any one of several): anyone without it goes to the workspace home. */
 export function requires(perm: string | string[]): CanActivateFn {

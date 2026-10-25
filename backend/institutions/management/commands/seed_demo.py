@@ -88,6 +88,7 @@ class Command(BaseCommand):
         self._communication()
         self._campus(platform_admin)
         self._staff_services(platform_admin)
+        self._development(platform_admin)
         # One institution on a domain of its own; browsers send any *.localhost name to this machine.
         Institution.objects.filter(slug="meridian", custom_domain="").update(custom_domain=DEMO_DOMAIN)
         self.stdout.write(self.style.SUCCESS(f"Demo data ready. Every demo login uses the password {PASSWORD}."))
@@ -717,6 +718,108 @@ class Command(BaseCommand):
             {"student": arjun.id, "with": User.objects.get(username="aster.parent").id, "subject": "Settling in",
              "body": "Arjun has settled in well. He asked good questions in Science today.", "client_id": "seed-1"},
         )  # fmt: skip
+
+    def _development(self, actor) -> None:
+        """Cases at Aster (`aster.services` triage, `aster.grievance` officer): Arjun's confidential grievance, assigned
+        with an internal and a visible note, and the teacher's certificate request waiting. At Meridian
+        (`meridian.placement`, `meridian.research`, `meridian.iqac`): an internship Ananya is shortlisted for, Ananya
+        as a research scholar under the physics faculty with a valid ethics approval, and a NAAC cycle asking the
+        faculty for evidence."""
+        from cases import services as cases
+        from cases.models import ServiceCase
+        from development import services as development
+        from development.models import (
+            Employer,
+            EthicsApproval,
+            EvidenceRequest,
+            Milestone,
+            Opportunity,
+            ReviewCycle,
+            Scholar,
+            Supervision,
+        )
+
+        plans = (("aster", ("services",)), ("meridian", ("placements", "quality")))
+        for slug, extra in plans:
+            institution = Institution.objects.get(slug=slug)
+            institution.modules = sorted({*institution.modules, *extra})
+            institution.save(update_fields=["modules"])
+            self._switch_on(institution, User.objects.get(username=f"{slug}.admin"), *extra)
+        aster, meridian = Institution.objects.get(slug="aster"), Institution.objects.get(slug="meridian")
+        desk = self._member(aster, actor, "aster.services", "Aster Student Services", "student_services", None).user
+        officer = self._member(aster, actor, "aster.grievance", "Aster Grievance Officer", "grievance_officer", None)
+        placement = self._member(
+            meridian, actor, "meridian.placement", "Meridian Placement Officer", "placement_officer", None
+        )
+        self._member(
+            meridian, actor, "meridian.research", "Meridian Research Coordinator", "research_coordinator", None
+        )
+        self._member(meridian, actor, "meridian.iqac", "Meridian IQAC Coordinator", "iqac_coordinator", None)
+        self._aster_employees()
+        if not ServiceCase.objects.filter(institution=aster).exists():
+            arjun = User.objects.get(username="aster.2027-0001")
+            grievance = cases.open_case(
+                arjun,
+                aster,
+                "grievance",
+                "Science internal marks",
+                "My science internal was entered as 12 out of 40; my answer sheet shows 22.",
+            )
+            grievance = cases.assign(desk, aster, grievance, officer)
+            cases.add_note(officer.user, aster, grievance, "Asked the science department for the answer sheet.", True)
+            cases.add_note(
+                officer.user, aster, grievance, "We have asked for your answer sheet and will reply this week.", False
+            )
+            cases.open_case(
+                User.objects.get(username="aster.teacher"),
+                aster,
+                "service_request",
+                "Experience certificate",
+                "Needed for a scholarship application by 15 November.",
+            )
+        if Employer.objects.filter(institution=meridian).exists():
+            return
+        ananya = meridian.students.get(person__full_name="Ananya Demo")
+        employer = Employer.objects.create(
+            institution=meridian, name="Tata Consultancy Services", contact="campus@tcs.example"
+        )
+        today = today_for(meridian)
+        internship = Opportunity.objects.create(
+            institution=meridian,
+            employer=employer,
+            kind="internship",
+            title="Summer research intern",
+            description="Eight weeks with the analytics team.",
+            closes_on=today + dt.timedelta(days=21),
+        )
+        enrollment = ananya.enrollments.filter(status="active").first()
+        if enrollment and enrollment.program_id:
+            internship.programs.set([enrollment.program_id])
+        applied = development.apply(ananya, internship, consent=True)
+        development.office_move(placement.user, meridian, applied, "shortlisted")
+        faculty = Membership.objects.get(institution=meridian, user__username="meridian.faculty")
+        scholar = Scholar.objects.create(
+            institution=meridian,
+            student=ananya,
+            topic="Thin-film solar cells from local materials",
+            started_on=dt.date(2026, 7, 1),
+        )
+        Supervision.objects.create(scholar=scholar, supervisor=faculty, role="main", starts_on=dt.date(2026, 7, 1))
+        EthicsApproval.objects.create(
+            scholar=scholar,
+            reference="MC/IEC/2026/04",
+            committee="Meridian institutional ethics committee",
+            valid_from=dt.date(2026, 7, 1),
+            valid_to=dt.date(2027, 6, 30),
+        )
+        Milestone.objects.create(scholar=scholar, title="Literature review", due_on=today + dt.timedelta(days=30))
+        Milestone.objects.create(
+            scholar=scholar, title="Field measurements", due_on=today + dt.timedelta(days=120), needs_ethics=True
+        )
+        cycle = ReviewCycle.objects.create(institution=meridian, framework="NAAC", period="2025-26")
+        EvidenceRequest.objects.create(
+            cycle=cycle, criterion="3.2.1", title="Research papers per teacher, 2025-26", owner=faculty
+        )
 
     def _staff_services(self, actor) -> None:
         """HR, payroll and stores at Aster (`aster.hr`, `aster.payroll`, `aster.stores`): leave types, the teacher's

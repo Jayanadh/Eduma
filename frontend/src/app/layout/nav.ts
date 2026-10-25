@@ -9,13 +9,14 @@ export type NavItem = {
  * `needs`: the permission, or any one of several, that opens the page; `module`: shown only while it is on;
  * `higher`: only for colleges and universities (programs and courses), not schools.
  */
-const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string; higher?: boolean })[] = [
+const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string | string[]; higher?: boolean })[] = [
   { label: 'Home', icon: 'home', link: '/app' },
   { label: 'Students', icon: 'graduation', link: '/app/students', group: 'People', needs: 'student.read', module: 'students' },
   { label: 'Staff', icon: 'users', link: '/app/staff', group: 'People', needs: 'membership.read' },
   { label: 'Messages', icon: 'message', link: '/app/messages', group: 'People', module: 'communication' },
   { label: 'Roles', icon: 'key', link: '/app/roles', group: 'People', needs: 'role.manage' },
   { label: 'Leave', icon: 'calendar', link: '/app/leave', group: 'People', module: 'hr_payroll' },
+  { label: 'Cases', icon: 'shield', link: '/app/cases', group: 'People', module: 'services' },
   { label: 'Staff office', icon: 'clipboard', link: '/app/staff-office', group: 'People', needs: 'hr.manage', module: 'hr_payroll' },
   {
     label: 'Cycles',
@@ -126,6 +127,17 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string; higher
     higher: true,
   },
   { label: 'My classes', icon: 'book', link: '/app/teaching', group: 'Academics', module: 'academics' },
+  { label: 'Placements', icon: 'trending-up', link: '/app/placements', group: 'Academics', needs: 'placement.manage', module: 'placements' },
+  { label: 'Research', icon: 'search', link: '/app/research', group: 'Academics', needs: 'research.manage', module: 'quality' },
+  {
+    label: 'Quality evidence',
+    icon: 'check-square',
+    link: '/app/quality',
+    group: 'Academics',
+    needs: 'quality_evidence.manage',
+    module: 'quality',
+  },
+  { label: 'Supervision and evidence', icon: 'clipboard', link: '/app/supervision', group: 'Academics', module: ['placements', 'quality'] },
   {
     label: 'Fees office',
     icon: 'file-text',
@@ -208,6 +220,6 @@ export function navFor(
       ]
     : WORKSPACE.filter(
         (item) =>
-          (!item.needs || [item.needs].flat().some(can)) && (!item.module || on(item.module)) && (!item.higher || higher),
+          (!item.needs || [item.needs].flat().some(can)) && (!item.module || [item.module].flat().some(on)) && (!item.higher || higher),
       ).map(({ needs, module, higher, ...item }) => item);
 }

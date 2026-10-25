@@ -5,15 +5,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('institutions', '0002_custom_domain'),
+        ("institutions", "0002_custom_domain"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='institution',
-            name='modules',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=40), blank=True, default=list),
+            model_name="institution",
+            name="modules",
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=40), blank=True, default=list
+            ),
         ),
     ]

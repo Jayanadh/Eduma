@@ -8,7 +8,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -17,35 +16,78 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Institution',
+            name="Institution",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('version', models.PositiveIntegerField(default=1)),
-                ('slug', models.CharField(max_length=40, unique=True, validators=[institutions.models.validate_slug])),
-                ('legal_name', models.CharField(max_length=200)),
-                ('display_name', models.CharField(max_length=120)),
-                ('category', models.CharField(choices=[('school', 'School'), ('college', 'College'), ('engineering_college', 'Engineering college'), ('university', 'University')], max_length=30)),
-                ('country_code', models.CharField(default='IN', max_length=2)),
-                ('timezone', models.CharField(default='Asia/Kolkata', max_length=60)),
-                ('base_currency', models.CharField(default='INR', max_length=3)),
-                ('contact_email', models.EmailField(blank=True, max_length=254)),
-                ('contact_phone', models.CharField(blank=True, max_length=30)),
-                ('address', models.TextField(blank=True)),
-                ('board_affiliation_code', models.CharField(blank=True, max_length=40)),
-                ('udise_code', models.CharField(blank=True, max_length=20, verbose_name='UDISE+ code')),
-                ('aishe_code', models.CharField(blank=True, max_length=20, verbose_name='AISHE code')),
-                ('lifecycle_status', models.CharField(choices=[('setup', 'Setting up'), ('active', 'Active'), ('suspended', 'Suspended'), ('archived', 'Archived')], default='setup', max_length=20)),
-                ('status_reason', models.CharField(blank=True, max_length=500)),
-                ('activated_at', models.DateTimeField(blank=True, null=True)),
-                ('creation_key', models.UUIDField(blank=True, null=True, unique=True)),
-                ('creation_hash', models.CharField(blank=True, max_length=64)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to=settings.AUTH_USER_MODEL)),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("version", models.PositiveIntegerField(default=1)),
+                ("slug", models.CharField(max_length=40, unique=True, validators=[institutions.models.validate_slug])),
+                ("legal_name", models.CharField(max_length=200)),
+                ("display_name", models.CharField(max_length=120)),
+                (
+                    "category",
+                    models.CharField(
+                        choices=[
+                            ("school", "School"),
+                            ("college", "College"),
+                            ("engineering_college", "Engineering college"),
+                            ("university", "University"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("country_code", models.CharField(default="IN", max_length=2)),
+                ("timezone", models.CharField(default="Asia/Kolkata", max_length=60)),
+                ("base_currency", models.CharField(default="INR", max_length=3)),
+                ("contact_email", models.EmailField(blank=True, max_length=254)),
+                ("contact_phone", models.CharField(blank=True, max_length=30)),
+                ("address", models.TextField(blank=True)),
+                ("board_affiliation_code", models.CharField(blank=True, max_length=40)),
+                ("udise_code", models.CharField(blank=True, max_length=20, verbose_name="UDISE+ code")),
+                ("aishe_code", models.CharField(blank=True, max_length=20, verbose_name="AISHE code")),
+                (
+                    "lifecycle_status",
+                    models.CharField(
+                        choices=[
+                            ("setup", "Setting up"),
+                            ("active", "Active"),
+                            ("suspended", "Suspended"),
+                            ("archived", "Archived"),
+                        ],
+                        default="setup",
+                        max_length=20,
+                    ),
+                ),
+                ("status_reason", models.CharField(blank=True, max_length=500)),
+                ("activated_at", models.DateTimeField(blank=True, null=True)),
+                ("creation_key", models.UUIDField(blank=True, null=True, unique=True)),
+                ("creation_hash", models.CharField(blank=True, max_length=64)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['display_name'],
-                'constraints': [models.UniqueConstraint(condition=models.Q(('udise_code', ''), _negated=True), fields=('udise_code',), name='unique_udise_when_set'), models.UniqueConstraint(condition=models.Q(('aishe_code', ''), _negated=True), fields=('aishe_code',), name='unique_aishe_when_set')],
+                "ordering": ["display_name"],
+                "constraints": [
+                    models.UniqueConstraint(
+                        condition=models.Q(("udise_code", ""), _negated=True),
+                        fields=("udise_code",),
+                        name="unique_udise_when_set",
+                    ),
+                    models.UniqueConstraint(
+                        condition=models.Q(("aishe_code", ""), _negated=True),
+                        fields=("aishe_code",),
+                        name="unique_aishe_when_set",
+                    ),
+                ],
             },
         ),
     ]

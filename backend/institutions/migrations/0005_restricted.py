@@ -4,15 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('institutions', '0004_default_modules'),
+        ("institutions", "0004_default_modules"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='institution',
-            name='lifecycle_status',
-            field=models.CharField(choices=[('setup', 'Setting up'), ('active', 'Active'), ('restricted', 'Restricted'), ('suspended', 'Suspended'), ('archived', 'Archived')], default='setup', max_length=20),
+            model_name="institution",
+            name="lifecycle_status",
+            field=models.CharField(
+                choices=[
+                    ("setup", "Setting up"),
+                    ("active", "Active"),
+                    ("restricted", "Restricted"),
+                    ("suspended", "Suspended"),
+                    ("archived", "Archived"),
+                ],
+                default="setup",
+                max_length=20,
+            ),
         ),
     ]

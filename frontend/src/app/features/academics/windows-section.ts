@@ -15,7 +15,7 @@ import { ToastService } from '../../ui/toast';
       <ul class="rows">
         @for (w of windows.value() ?? []; track w.id) {
           <li>
-            <span><strong>{{ w.year }} {{ w.term }}</strong> <span class="muted small">· {{ date(w.opens_on) }} to {{ date(w.closes_on) }} · drop until {{ date(w.drop_until) }} · {{ w.max_credits }} credits{{ w.needs_approval ? ' · adviser approval' : '' }}</span></span>
+            <span><strong>{{ w.year }} {{ w.term }}</strong> <span class="muted small meta">{{ date(w.opens_on) }} to {{ date(w.closes_on) }} · drop until {{ date(w.drop_until) }} · {{ w.max_credits }} credits{{ w.needs_approval ? ' · adviser approval' : '' }}</span></span>
             <span class="badge" [class.badge-success]="w.open">{{ w.open ? 'Open' : 'Closed' }}</span>
           </li>
         } @empty {
@@ -47,22 +47,6 @@ import { ToastService } from '../../ui/toast';
     </section>
   `,
   styles: `
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 8px;
-      }
-    }
-
     .add {
       display: grid;
       gap: 12px;

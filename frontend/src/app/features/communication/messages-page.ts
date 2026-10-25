@@ -24,7 +24,7 @@ import { PortalFrame } from '../apply/portal-frame';
       @if (notices.value()?.length) {
         <section class="card stack section">
           <h2 class="card-title">Notifications</h2>
-          <ul class="rows">@for (n of notices.value() ?? []; track n.id) { <li><a [routerLink]="route(n.link)">{{ n.text }}</a> <span class="muted small">{{ dateTime(n.at) }}</span></li> }</ul>
+          <ul class="bullets">@for (n of notices.value() ?? []; track n.id) { <li><a [routerLink]="route(n.link)">{{ n.text }}</a><span class="muted small meta">{{ dateTime(n.at) }}</span></li> }</ul>
         </section>
       }
       <div class="card list-card section">
@@ -69,7 +69,7 @@ import { PortalFrame } from '../apply/portal-frame';
     }
   `,
   styles: `
-    .rows {
+    .bullets {
       margin: 0;
       padding-left: 18px;
     }

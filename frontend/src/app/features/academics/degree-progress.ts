@@ -31,7 +31,7 @@ const STATUS: Record<string, string> = {
     <ul class="rows">
       @for (c of p.courses; track c.code) {
         <li>
-          <span><strong>{{ c.code }}</strong> {{ c.title }} <span class="muted small">· term {{ c.term }} · {{ c.credits }} credits · {{ c.category }}{{ c.prerequisites_met ? '' : ' · prerequisites not met' }}</span></span>
+          <span><strong>{{ c.code }}</strong> {{ c.title }} <span class="muted small meta">term {{ c.term }} · {{ c.credits }} credits · {{ c.category }}{{ c.prerequisites_met ? '' : ' · prerequisites not met' }}</span></span>
           <span class="badge" [class.badge-success]="c.status === 'completed'" [class.badge-info]="c.status === 'in_progress'" [class.badge-warning]="c.status === 'failed'">{{ status[c.status] }}</span>
         </li>
       }
@@ -41,7 +41,7 @@ const STATUS: Record<string, string> = {
       <ul class="rows">
         @for (a of p.attempts; track a.id) {
           <li>
-            <span>{{ a.course }} · attempt {{ a.attempt_no }} <span class="muted small">· {{ a.year }} {{ a.term }}</span></span>
+            <span>{{ a.course }} · attempt {{ a.attempt_no }} <span class="muted small meta">{{ a.year }} {{ a.term }}</span></span>
             <span class="small">{{ a.outcome_label }}{{ a.grade_point ? ' · ' + a.grade_point : '' }}</span>
           </li>
         }
@@ -69,22 +69,6 @@ const STATUS: Record<string, string> = {
       content: ' · ';
     }
 
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-    }
   `,
 })
 export class DegreeProgressView {

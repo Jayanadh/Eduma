@@ -14,9 +14,9 @@ import { PortalFrame } from '../apply/portal-frame';
   template: `
     <app-portal-frame heading="Online classes">
       <app-load-error [message]="data.error()" (retry)="data.reload()" />
-      <ul class="rows">
+      <ul class="bullets">
         @for (s of data.value() ?? []; track s.id) {
-          <li><a [routerLink]="['/student/classes', s.id]">{{ s.title }}</a> <span class="muted small">· {{ s.target.label }} · {{ dateTime(s.starts_at) }} · {{ s.state_label }}</span></li>
+          <li><a [routerLink]="['/student/classes', s.id]">{{ s.title }}</a> <span class="muted small meta">{{ s.target.label }} · {{ dateTime(s.starts_at) }} · {{ s.state_label }}</span></li>
         } @empty {
           <li class="muted small">No online classes.</li>
         }
@@ -24,7 +24,7 @@ import { PortalFrame } from '../apply/portal-frame';
     </app-portal-frame>
   `,
   styles: `
-    .rows {
+    .bullets {
       padding-left: 18px;
     }
   `,

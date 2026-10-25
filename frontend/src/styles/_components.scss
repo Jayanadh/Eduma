@@ -624,3 +624,125 @@ a.list-row:hover .list-title {
     height: 20px;
   }
 }
+
+// ---------------------------------------------------------------- rows
+// A list of records: <ul class="rows"><li><span><strong>Title</strong><span class="muted small meta">details</span>
+// </span><span class="actions">buttons</span></li></ul>. ".meta" draws its own " · " (Angular drops the space between
+// two tags), and on phones the details drop under the title and the buttons share the row.
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  > li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  > li:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  > li:last-child {
+    padding-bottom: 0;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.meta::before {
+  content: ' · ';
+}
+
+@media (max-width: 599px) {
+  .rows > li {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .rows .meta {
+    display: block;
+    margin-top: 2px;
+  }
+
+  .rows .meta::before {
+    content: none;
+  }
+
+  .rows .actions > .btn,
+  .row > .btn,
+  .row > button {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+
+  .row > .field {
+    flex: 1 1 100%;
+  }
+}
+
+// A state badge after a record's title: the details that follow need no separator.
+.rows app-status-badge {
+  margin: 0 8px;
+  vertical-align: 2px;
+}
+
+.rows app-status-badge:first-child {
+  margin-left: 0;
+}
+
+app-status-badge + .meta::before {
+  content: none;
+}
+
+// ---------------------------------------------------------------- stacked tables
+// <table class="stack-table"> with data-label on each cell: a table on wide screens; on phones each row becomes a small
+// card of "label  value" lines, so nothing is clipped or needs sideways scrolling.
+@media (max-width: 599px) {
+  .stack-table {
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+
+    tr {
+      display: block;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 3px 0;
+      border: 0;
+      text-align: right;
+    }
+
+    td::before {
+      content: attr(data-label);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: left;
+    }
+  }
+}

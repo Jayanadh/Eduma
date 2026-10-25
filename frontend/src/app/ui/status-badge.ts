@@ -20,6 +20,38 @@ const TONES: Readonly<Record<string, BadgeTone>> = {
   open: 'danger',
   acknowledged: 'warning',
   resolved: 'muted',
+  // Requests, cases, payroll, purchasing and placements: waiting is info, done is success, stopped is muted.
+  submitted: 'info',
+  requested: 'info',
+  assigned: 'info',
+  shortlisted: 'info',
+  prepared: 'info',
+  validated: 'info',
+  ordered: 'info',
+  pending: 'warning',
+  appealed: 'warning',
+  offered: 'warning',
+  returned: 'warning',
+  maintenance: 'warning',
+  partially_received: 'warning',
+  approved: 'success',
+  accepted: 'success',
+  received: 'success',
+  exported: 'success',
+  in_use: 'success',
+  rejected: 'muted',
+  declined: 'muted',
+  withdrawn: 'muted',
+  canceled: 'muted',
+  disposed: 'muted',
+  // Fees: invoices and payments.
+  issued: 'warning',
+  partially_paid: 'warning',
+  paid: 'success',
+  succeeded: 'success',
+  failed: 'danger',
+  expired: 'muted',
+  cancelled: 'muted',
 };
 
 const LABELS: Readonly<Record<string, string>> = {
@@ -29,6 +61,8 @@ const LABELS: Readonly<Record<string, string>> = {
   failing: 'Failing',
   unknown: 'Unknown',
   not_configured: 'Not configured',
+  partially_received: 'Part received',
+  in_use: 'In use',
 };
 
 @Component({

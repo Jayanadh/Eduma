@@ -23,14 +23,20 @@ type UsageT = {
       <app-page-header eyebrow="Eduma platform" title="Usage" subtitle="Counts as of now. Plans, quotas and billing are not part of this release." />
       <app-load-error [message]="usage.error()" (retry)="usage.reload()" />
       <div class="card section table-wrap">
-        <table>
+        <table class="stack-table">
           <thead><tr><th scope="col">Institution</th><th scope="col">Staff</th><th scope="col">Students</th><th scope="col">Guardians</th><th scope="col">Applicants</th><th scope="col">Exports this month</th><th scope="col">Messages this month</th><th scope="col">Open cases</th><th scope="col">Private storage</th></tr></thead>
           <tbody>
             @for (u of usage.value() ?? []; track u.institution.id) {
               <tr>
-                <td>{{ u.institution.name }}</td><td>{{ u.members['staff'] ?? 0 }}</td><td>{{ u.active_students }}</td>
-                <td>{{ u.members['guardian'] ?? 0 }}</td><td>{{ u.members['applicant'] ?? 0 }}</td><td>{{ u.exports_this_month }}</td>
-                <td>{{ u.messages_this_month }}</td><td>{{ u.open_cases }}</td><td>{{ (u.storage_bytes / 1048576).toFixed(1) }} MB</td>
+                <td data-label="Institution"><strong>{{ u.institution.name }}</strong></td>
+                <td data-label="Staff">{{ u.members['staff'] ?? 0 }}</td>
+                <td data-label="Students">{{ u.active_students }}</td>
+                <td data-label="Guardians">{{ u.members['guardian'] ?? 0 }}</td>
+                <td data-label="Applicants">{{ u.members['applicant'] ?? 0 }}</td>
+                <td data-label="Exports this month">{{ u.exports_this_month }}</td>
+                <td data-label="Messages this month">{{ u.messages_this_month }}</td>
+                <td data-label="Open cases">{{ u.open_cases }}</td>
+                <td data-label="Private storage">{{ (u.storage_bytes / 1048576).toFixed(1) }} MB</td>
               </tr>
             }
           </tbody>
@@ -54,6 +60,13 @@ type UsageT = {
       border-bottom: 1px solid var(--border);
       text-align: left;
       white-space: nowrap;
+    }
+
+    @media (max-width: 599px) {
+      .stack-table td {
+        border-bottom: 0;
+        white-space: normal;
+      }
     }
   `,
 })

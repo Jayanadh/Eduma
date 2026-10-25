@@ -23,7 +23,8 @@ import { Reveal } from '../../ui/reveal';
         <div class="brand">
           @if (site.logoUrl(); as logo) {
             <img [src]="logo" alt="" />
-          } @else {
+          } @else if (!institution()) {
+            <!-- An institution's name is already in the heading; the wordmark is for Eduma's own sign-in. -->
             <span class="wordmark">{{ site.institutionName() }}</span>
           }
         </div>

@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { money } from '../../core/format';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
 import { FeeHeadT, FeePlanT } from '../../core/api/types';
@@ -23,13 +24,13 @@ type Case = { id: string; source: string; expected: string | null; observed: str
         <section class="card stack section">
           <h2 class="card-title">Waiting for your approval</h2>
           @for (n of credits.value() ?? []; track n.id) {
-            <p class="small">Credit note ₹{{ n.amount }} on {{ n.invoice }} ({{ n.kind }}): {{ n.reason }}
+            <p class="small">Credit note {{ money(n.amount) }} on {{ n.invoice }} ({{ n.kind }}): {{ n.reason }}
               <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Approve credit note on ' + n.invoice" (click)="act('credit-notes/' + n.id + '/approve', 'Credit note posted.')">Approve</button>
               <button type="button" class="btn btn-secondary btn-sm" (click)="act('credit-notes/' + n.id + '/reject', 'Rejected.')">Reject</button></p>
           }
           @for (r of refunds.value() ?? []; track r.id) {
             @if (r.state === 'requested') {
-              <p class="small">Refund ₹{{ r.amount }}: {{ r.reason }} @if (r.impact?.outstanding_after) { <span class="muted">· leaves ₹{{ r.impact?.outstanding_after }} owed</span> }
+              <p class="small">Refund {{ money(r.amount) }}: {{ r.reason }} @if (r.impact?.outstanding_after) { <span class="muted">· leaves {{ money(r.impact?.outstanding_after) }} owed</span> }
                 <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Approve refund ' + r.amount" (click)="act('refunds/' + r.id + '/approve', 'Refund approved.')">Approve</button>
                 <button type="button" class="btn btn-secondary btn-sm" (click)="act('refunds/' + r.id + '/reject', 'Rejected.')">Reject</button></p>
             }
@@ -48,7 +49,7 @@ type Case = { id: string; source: string; expected: string | null; observed: str
           </form>
           <ul class="rows">
             @for (p of plans.value() ?? []; track p.id) {
-              <li><span>{{ p.name }} <span class="muted small">rev {{ p.revision }} · {{ p.status }} · @for (l of p.lines; track $index) { ₹{{ l.amount }} by {{ l.due_on }} }</span></span>
+              <li><span>{{ p.name }} <span class="muted small">rev {{ p.revision }} · {{ p.status }} · @for (l of p.lines; track $index) { {{ money(l.amount) }} by {{ l.due_on }} }</span></span>
                 @if (p.status === 'draft') { <button type="button" class="btn btn-primary btn-sm" (click)="act('plans/' + p.id + '/publish', 'Plan published.', { version: p.version })">Publish</button> }
                 @if (p.status === 'published') { <button type="button" class="btn btn-secondary btn-sm" (click)="act('plans/' + p.id + '/revise', 'Revision drafted.')">New revision</button> }
               </li>
@@ -81,7 +82,7 @@ type Case = { id: string; source: string; expected: string | null; observed: str
           <h2 class="card-title">Reconciliation</h2>
           @for (c of cases.value() ?? []; track c.id) {
             <form class="row" [id]="'case-' + c.id" (submit)="$event.preventDefault(); resolve(c.id, $any($event.target))">
-              <span class="small grow">{{ c.source }}: {{ c.discrepancy }}{{ c.expected ? ' (expected ₹' + c.expected + ', saw ₹' + (c.observed ?? '—') + ')' : '' }}</span>
+              <span class="small grow">{{ c.source }}: {{ c.discrepancy }}{{ c.expected ? ' (expected ' + money(c.expected) + ', saw ' + money(c.observed) + ')' : '' }}</span>
               <label class="sr-only" [for]="'case-res-' + c.id">Resolution</label><input [id]="'case-res-' + c.id" placeholder="How it was resolved" />
               <button type="submit" class="btn btn-secondary btn-sm">Resolve</button>
             </form>
@@ -107,28 +108,13 @@ type Case = { id: string; source: string; expected: string | null; observed: str
       flex: 1 1 200px;
     }
 
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 8px;
-      }
-    }
-
     .part + .part::before {
       content: ' · ';
     }
   `,
 })
 export class FeesPage {
+  protected readonly money = money;
   private readonly api = inject(Api);
   private readonly auth = inject(AuthStore);
   private readonly toasts = inject(ToastService);

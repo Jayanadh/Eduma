@@ -22,7 +22,7 @@ import { PortalFrame } from '../apply/portal-frame';
         <p class="muted small section">{{ c.student ? 'About ' + c.student.full_name + ' · ' : '' }}with {{ others(c) }}</p>
         <ol class="messages section">
           @for (m of c.messages ?? []; track m.sequence) {
-            <li [class.mine]="m.mine"><span class="small"><strong>{{ m.sender }}</strong> <span class="muted">{{ dateTime(m.at) }}</span></span><p>{{ m.body }}</p></li>
+            <li [class.mine]="m.mine"><span class="small"><strong>{{ m.sender }}</strong><span class="muted meta">{{ dateTime(m.at) }}</span></span><p>{{ m.body }}</p></li>
           }
         </ol>
         <form id="reply" class="stack section" (submit)="$event.preventDefault(); reply(c, $any($event.target))">

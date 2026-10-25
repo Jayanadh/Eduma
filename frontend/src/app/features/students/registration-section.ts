@@ -22,7 +22,7 @@ const OVERRIDABLE = ['prerequisite', 'not_in_regulation', 'already_passed', 'cre
       <ul class="rows">
         @for (r of registrations.value()?.results ?? []; track r.id) {
           <li>
-            <span><strong>{{ r.offering.label }}</strong> <span class="muted small">· {{ r.offering.term }} · {{ r.state_label }}{{ r.reason_code ? ' (' + (rules[r.reason_code] ?? r.reason_code) + ')' : '' }}</span></span>
+            <span><strong>{{ r.offering.label }}</strong> <span class="muted small meta">{{ r.offering.term }} · {{ r.state_label }}{{ r.reason_code ? ' (' + (rules[r.reason_code] ?? r.reason_code) + ')' : '' }}</span></span>
             @if (manage() && (r.state === 'registered' || r.state === 'waitlisted' || r.state === 'pending_approval')) {
               <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Drop ' + r.offering.label" [disabled]="busy()" (click)="drop(r)">Drop</button>
             }
@@ -48,7 +48,7 @@ const OVERRIDABLE = ['prerequisite', 'not_in_regulation', 'already_passed', 'cre
       <ul class="rows">
         @for (h of holds.value() ?? []; track h.id) {
           <li>
-            <span>{{ h.kind_label }}: {{ h.reason }} <span class="muted small">· {{ date(h.placed_on) }} by {{ h.placed_by }}{{ h.lifted_on ? ' · lifted ' + date(h.lifted_on) : '' }}</span></span>
+            <span>{{ h.kind_label }}: {{ h.reason }} <span class="muted small meta">{{ date(h.placed_on) }} by {{ h.placed_by }}{{ h.lifted_on ? ' · lifted ' + date(h.lifted_on) : '' }}</span></span>
             @if (manage() && !h.lifted_on) {
               <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="lift(h)">Lift</button>
             }
@@ -70,7 +70,7 @@ const OVERRIDABLE = ['prerequisite', 'not_in_regulation', 'already_passed', 'cre
       <h3 class="card-title">Overrides</h3>
       <ul class="rows">
         @for (o of overrides.value() ?? []; track o.id) {
-          <li><span>{{ o.offering }}: past {{ rules[o.rule] ?? o.rule }} <span class="muted small">· {{ o.reason }} · {{ o.granted_by }} · until {{ date(o.expires_on) }}{{ o.used ? ' · used' : '' }}</span></span></li>
+          <li><span>{{ o.offering }}: past {{ rules[o.rule] ?? o.rule }} <span class="muted small meta">{{ o.reason }} · {{ o.granted_by }} · until {{ date(o.expires_on) }}{{ o.used ? ' · used' : '' }}</span></span></li>
         } @empty {
           <li class="muted small">None.</li>
         }
@@ -97,23 +97,6 @@ const OVERRIDABLE = ['prerequisite', 'not_in_regulation', 'already_passed', 'cre
     </section>
   `,
   styles: `
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-    }
-
     .row {
       display: flex;
       flex-wrap: wrap;

@@ -42,10 +42,10 @@ type ExportT = { id: string; report: string; title: string; state: string; rows:
           </div>
           <p class="muted small">{{ r.provenance.source }} · {{ r.provenance.scope }} · {{ r.provenance.row_count }} {{ r.provenance.row_count === 1 ? 'row' : 'rows' }} · as of {{ dateTime(r.provenance.generated_at) }}</p>
           <div class="table-wrap">
-            <table>
+            <table class="stack-table">
               <thead><tr>@for (c of r.columns; track c) { <th scope="col">{{ c }}</th> }</tr></thead>
               <tbody>
-                @for (row of r.rows; track $index) { <tr>@for (cell of row; track $index) { <td>{{ cell }}</td> }</tr> }
+                @for (row of r.rows; track $index) { <tr>@for (cell of row; track $index) { <td [attr.data-label]="r.columns[$index]">{{ cell }}</td> }</tr> }
                 @empty { <tr><td [attr.colspan]="r.columns.length" class="muted">Nothing to report.</td></tr> }
               </tbody>
             </table>
@@ -58,7 +58,7 @@ type ExportT = { id: string; report: string; title: string; state: string; rows:
           <ul class="rows">
             @for (e of exports.value() ?? []; track e.id) {
               <li>
-                <span>{{ e.title }} <span class="muted small">· {{ dateTime(e.created_at) }} · {{ e.state }}{{ e.rows !== null ? ' · ' + e.rows + (e.rows === 1 ? ' row' : ' rows') : '' }}{{ e.error ? ' · ' + e.error : '' }}</span></span>
+                <span>{{ e.title }} <span class="muted small meta">{{ dateTime(e.created_at) }} · {{ e.state }}{{ e.rows !== null ? ' · ' + e.rows + (e.rows === 1 ? ' row' : ' rows') : '' }}{{ e.error ? ' · ' + e.error : '' }}</span></span>
                 @if (e.state === 'done') { <a class="btn btn-secondary btn-sm" [href]="'/api/v1/institution/reports/exports/' + e.id + '/file'" download>Download</a> }
               </li>
             }
@@ -98,19 +98,10 @@ type ExportT = { id: string; report: string; title: string; state: string; rows:
       text-align: left;
     }
 
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
 
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 8px;
+    @media (max-width: 599px) {
+      .stack-table td {
+        border-bottom: 0;
       }
     }
   `,

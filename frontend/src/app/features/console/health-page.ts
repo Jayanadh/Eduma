@@ -32,11 +32,17 @@ type BackupsT = { backups: { taken_at: string; size_bytes: number }[]; drills: {
           </div>
         }
         <div class="card section">
-          <table>
+          <table class="stack-table">
             <thead><tr><th scope="col">Service</th><th scope="col">Status</th><th scope="col">Reading</th><th scope="col">Expected</th><th scope="col">Observed</th></tr></thead>
             <tbody>
               @for (t of h.tiles; track t.key) {
-                <tr><td>{{ t.label }}</td><td><app-status-badge [status]="t.status" /></td><td>{{ t.value }}</td><td class="muted">{{ t.threshold }}</td><td class="muted small">{{ dateTime(t.observed_at) }}</td></tr>
+                <tr>
+                  <td data-label="Service"><strong>{{ t.label }}</strong></td>
+                  <td data-label="Status"><app-status-badge [status]="t.status" /></td>
+                  <td data-label="Reading">{{ t.value }}</td>
+                  <td data-label="Expected" class="muted">{{ t.threshold }}</td>
+                  <td data-label="Observed" class="muted small">{{ dateTime(t.observed_at) }}</td>
+                </tr>
               }
             </tbody>
           </table>
@@ -88,13 +94,11 @@ type BackupsT = { backups: { taken_at: string; size_bytes: number }[]; drills: {
       border-left: 4px solid var(--danger, #b42318);
     }
 
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
+
+    @media (max-width: 599px) {
+      .stack-table td {
+        border-bottom: 0;
+      }
     }
   `,
 })

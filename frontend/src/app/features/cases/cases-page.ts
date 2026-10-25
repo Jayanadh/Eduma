@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { StatusBadge } from '../../ui/status-badge';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
 import { dateTime } from '../../core/format';
@@ -18,45 +19,21 @@ import { CASE_TYPES, CaseT } from './case-types';
  */
 @Component({
   selector: 'app-cases-page',
-  imports: [LoadError, NgTemplateOutlet, PageHeader, PortalFrame, RouterLink, SearchBox],
+  imports: [LoadError, NgTemplateOutlet, PageHeader, PortalFrame, RouterLink, SearchBox, StatusBadge],
   template: `
     <ng-template #body>
       <p class="muted small">Cases are read during working hours. If someone is in danger now, call the emergency number or your institution's urgent contact.</p>
-      @if (portal()) {
-      <form id="open-case" class="card stack section" (submit)="$event.preventDefault(); open($any($event.target))">
-        <h2 class="card-title">Raise a case</h2>
-        <div class="field"><label for="case-type">Kind</label>
-          <select id="case-type">@for (t of types; track t[0]) { <option [value]="t[0]">{{ t[1] }}</option> }</select></div>
-        <div class="field"><label for="case-subject">Subject</label><input id="case-subject" maxlength="150" required /></div>
-        <div class="field"><label for="case-description">What happened, and what would help</label><textarea id="case-description" rows="4" maxlength="4000" required></textarea></div>
-        <div><button type="submit" class="btn btn-primary btn-sm" [disabled]="busy()">Send</button></div>
-      </form>
       <section class="card stack section">
         <app-search-box id="case-search" label="Search cases" (search)="query.set($event)" />
         <app-load-error [message]="list.error()" (retry)="list.reload()" />
         <ul class="rows">
           @for (c of list.value() ?? []; track c.id) {
             <li>
-              <a [routerLink]="[base(), c.id]"><strong>{{ c.number }}</strong> {{ c.subject ?? c.type_label }}</a>
-              <span class="muted small">{{ c.type_label }} · {{ c.state_label }}{{ c.assignee ? ' · ' + c.assignee : '' }}{{ c.due_at ? ' · due ' + dateTime(c.due_at) : '' }}@if (c.overdue) { · <strong>overdue</strong> }</span>
+              <span><a [routerLink]="[base(), c.id]"><strong>{{ c.number }}</strong> {{ c.subject ?? c.type_label }}</a><app-status-badge [status]="c.state" [label]="c.state_label" /></span>
+              <span class="muted small">{{ c.type_label }}{{ c.assignee ? ' · ' + c.assignee : '' }}{{ c.due_at ? ' · due ' + dateTime(c.due_at) : '' }}@if (c.overdue) { · <strong>overdue</strong> }</span>
             </li>
           } @empty {
-            <li class="muted small">No cases.</li>
-          }
-        </ul>
-      </section>
-      } @else {
-      <section class="card stack section">
-        <app-search-box id="case-search" label="Search cases" (search)="query.set($event)" />
-        <app-load-error [message]="list.error()" (retry)="list.reload()" />
-        <ul class="rows">
-          @for (c of list.value() ?? []; track c.id) {
-            <li>
-              <a [routerLink]="[base(), c.id]"><strong>{{ c.number }}</strong> {{ c.subject ?? c.type_label }}</a>
-              <span class="muted small">{{ c.type_label }} · {{ c.state_label }}{{ c.assignee ? ' · ' + c.assignee : '' }}{{ c.due_at ? ' · due ' + dateTime(c.due_at) : '' }}@if (c.overdue) { · <strong>overdue</strong> }</span>
-            </li>
-          } @empty {
-            <li class="muted small">No cases.</li>
+            <li class="muted small">No cases yet.</li>
           }
         </ul>
       </section>
@@ -68,7 +45,6 @@ import { CASE_TYPES, CaseT } from './case-types';
         <div class="field"><label for="case-description">What happened, and what would help</label><textarea id="case-description" rows="4" maxlength="4000" required></textarea></div>
         <div><button type="submit" class="btn btn-primary btn-sm" [disabled]="busy()">Send</button></div>
       </form>
-      }
     </ng-template>
     @if (portal()) {
       <app-portal-frame heading="Cases"><ng-container [ngTemplateOutlet]="body" /></app-portal-frame>
@@ -77,23 +53,6 @@ import { CASE_TYPES, CaseT } from './case-types';
         <app-page-header eyebrow="People" title="Cases" subtitle="Service requests and grievances. Confidential cases are seen only by the person handling them." />
         <ng-container [ngTemplateOutlet]="body" />
       </div>
-    }
-  `,
-  styles: `
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 8px;
-      }
     }
   `,
 })

@@ -22,7 +22,7 @@ Student Connect.
 
 - **Docker** (runs the PostgreSQL 17 database)
 - **Python 3.12**
-- **Node 24 or newer** (comes with npm)
+- **Node 24 LTS (24.15 or later), or 22.22+, or 26+** (comes with npm). Angular 22 refuses other versions, including Node 25. With Homebrew: `brew install node@24`, then put `/opt/homebrew/opt/node@24/bin` first on your `PATH` (`frontend/.nvmrc` says 24 for nvm users).
 - **Chrome or Firefox** for local testing. They send `*.localhost` addresses to your own computer; Safari may not.
 
 ## First-time setup

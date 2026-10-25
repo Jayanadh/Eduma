@@ -1,9 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { StatusBadge } from '../../ui/status-badge';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
 import { AuthStore } from '../../core/auth-store';
-import { dateTime } from '../../core/format';
+import { dateTime, money } from '../../core/format';
 import { load } from '../../core/load';
 import { PageHeader } from '../../ui/page-header';
 import { ToastService } from '../../ui/toast';
@@ -29,7 +30,7 @@ type Cycle = {
  */
 @Component({
   selector: 'app-payroll-page',
-  imports: [PageHeader],
+  imports: [PageHeader, StatusBadge],
   template: `
     <div class="page">
       <app-page-header eyebrow="Administration" title="Payroll" subtitle="Prepare, check, approve and export. Deductions are what you enter; the file is not proof of payment." />
@@ -44,7 +45,7 @@ type Cycle = {
         <ul class="rows">
           @for (c of cycles.value() ?? []; track c.id) {
             <li>
-              <span><strong>{{ monthName(c.month) }}</strong> <span class="muted small">· {{ c.state }} · {{ c.people }} people · net {{ c.net }} · prepared by {{ c.prepared_by }}{{ c.approved_by ? ' · approved by ' + c.approved_by : '' }}{{ c.exported_at ? ' · exported ' + dateTime(c.exported_at) : '' }}</span></span>
+              <span><strong>{{ monthName(c.month) }}</strong><app-status-badge [status]="c.state" /><span class="muted small meta">{{ c.people }} {{ c.people === 1 ? 'person' : 'people' }} · net {{ money(c.net) }} · prepared by {{ c.prepared_by }}{{ c.approved_by ? ' · approved by ' + c.approved_by : '' }}{{ c.exported_at ? ' · exported ' + dateTime(c.exported_at) : '' }}</span></span>
               <span class="actions">
                 <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Lines for ' + monthName(c.month)" (click)="open.set(c.id)">Lines</button>
                 @if (manager && c.state === 'prepared') { <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Validate ' + monthName(c.month)" (click)="step(c, 'validate')">Validate</button> }
@@ -61,7 +62,7 @@ type Cycle = {
           <h3 class="card-title">{{ monthName(d.month) }}</h3>
           <ul class="rows">
             @for (x of d.lines ?? []; track x.employee.id) {
-              <li><span>{{ x.employee.name }} <span class="muted small">{{ x.employee.number }}</span></span><span class="small">gross {{ x.gross }}{{ x.unpaid_days ? ' − ' + x.unpaid_deduction + ' for ' + x.unpaid_days + (x.unpaid_days === 1 ? ' unpaid day' : ' unpaid days') : '' }} − {{ x.deductions }} deductions = <strong>{{ x.net }}</strong></span></li>
+              <li><span>{{ x.employee.name }} <span class="muted small">{{ x.employee.number }}</span></span><span class="small">gross {{ money(x.gross) }}{{ x.unpaid_days ? ' − ' + money(x.unpaid_deduction) + ' for ' + x.unpaid_days + (x.unpaid_days === 1 ? ' unpaid day' : ' unpaid days') : '' }} − {{ money(x.deductions) }} deductions = <strong>{{ money(x.net) }}</strong></span></li>
             }
           </ul>
         }
@@ -71,7 +72,7 @@ type Cycle = {
           <h2 class="card-title">Pay</h2>
           <ul class="rows">
             @for (p of staff.value() ?? []; track p.id) {
-              <li><span>{{ p.name }} <span class="muted small">{{ p.number }}</span></span><span class="small">{{ p.pay ? p.pay + ' a month' : 'not set' }}</span></li>
+              <li><span>{{ p.name }} <span class="muted small">{{ p.number }}</span></span><span class="small">{{ p.pay ? money(p.pay) + ' a month' : 'not set' }}</span></li>
             }
           </ul>
           <form id="set-pay" class="row" (submit)="$event.preventDefault(); setPay($any($event.target))">
@@ -90,6 +91,7 @@ type Cycle = {
   styles: [OFFICE_STYLES],
 })
 export class PayrollPage {
+  protected readonly money = money;
   private readonly api = inject(Api);
   private readonly toasts = inject(ToastService);
   private readonly auth = inject(AuthStore);

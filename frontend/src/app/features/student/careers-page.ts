@@ -1,9 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { StatusBadge } from '../../ui/status-badge';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
 import { AuthStore } from '../../core/auth-store';
-import { date, readable } from '../../core/format';
+import { date } from '../../core/format';
 import { load } from '../../core/load';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { LoadError } from '../../ui/load-error';
@@ -20,7 +21,7 @@ type OwnPlacements = {
 /** A student's placements, offers, alumni listing and research milestones (S10C-05, S10C-07, S10C-08). */
 @Component({
   selector: 'app-careers-page',
-  imports: [LoadError, PortalFrame],
+  imports: [LoadError, PortalFrame, StatusBadge],
   template: `
     <app-portal-frame heading="Careers and research">
       @if (placements()) {
@@ -31,7 +32,7 @@ type OwnPlacements = {
             <ul class="rows">
               @for (o of d.opportunities; track o.id) {
                 <li>
-                  <span><strong>{{ o.title }}</strong> {{ o.employer }} <span class="muted small">· {{ o.kind }} · closes {{ date(o.closes_on) }}</span>
+                  <span><strong>{{ o.title }}</strong> {{ o.employer }} <span class="muted small meta">{{ o.kind }} · closes {{ date(o.closes_on) }}</span>
                     @if (!o.eligibility.eligible) { <span class="muted small"> · {{ o.eligibility.reasons.join(' ') }}</span> }</span>
                   @if (o.eligibility.eligible && !applied(o.id)) {
                     <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Apply for ' + o.title" (click)="apply(o)">Apply</button>
@@ -47,7 +48,7 @@ type OwnPlacements = {
             <ul class="rows">
               @for (a of d.applications; track a.id) {
                 <li>
-                  <span>{{ a.opportunity.title }} <span class="muted small">· {{ a.opportunity.employer }} · {{ readable(a.state) }}</span></span>
+                  <span>{{ a.opportunity.title }} <app-status-badge [status]="a.state" /><span class="muted small meta">{{ a.opportunity.employer }}</span></span>
                   <span class="actions">
                     @if (a.state === 'offered') {
                       <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Accept ' + a.opportunity.title" (click)="decide(a, 'accept')">Accept</button>
@@ -83,7 +84,7 @@ type OwnPlacements = {
           <ul class="rows">
             @for (m of s.milestones; track m.id) {
               <li>
-                <span>{{ m.title }} <span class="muted small">· due {{ date(m.due_on) }} · {{ m.state }}{{ m.note ? ' · ' + m.note : '' }}</span></span>
+                <span>{{ m.title }} <app-status-badge [status]="m.state" /><span class="muted small meta">due {{ date(m.due_on) }}{{ m.note ? ' · ' + m.note : '' }}</span></span>
                 @if (m.state === 'pending' || m.state === 'returned') {
                   <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Submit ' + m.title" (click)="submit(m.id, m.title)">Submit</button>
                 }
@@ -101,21 +102,6 @@ type OwnPlacements = {
       gap: 8px;
     }
 
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 8px;
-      }
-    }
   `,
 })
 export class CareersPage {
@@ -124,7 +110,6 @@ export class CareersPage {
   private readonly auth = inject(AuthStore);
   private readonly dialog = inject(ConfirmDialog);
   protected readonly date = date;
-  protected readonly readable = readable;
   protected readonly placements = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('placements') ?? false);
   private readonly quality = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('quality') ?? false);
   protected readonly data = load(() => (this.placements() ? this.api.get<OwnPlacements>('student/placements') : of(null)));

@@ -38,7 +38,7 @@ type Joined = { admission: string; token: MediaToken | null; session: ClassSessi
             <ul class="rows">
               @for (p of s.participants ?? []; track p.id) {
                 <li>
-                  <span>{{ p.full_name }} <span class="muted small">· {{ p.role }} · {{ p.admission }}{{ p.present ? ' · here now' : '' }} · {{ minutes(p.seconds) }}</span></span>
+                  <span>{{ p.full_name }} <span class="muted small meta">{{ p.role }} · {{ p.admission }}{{ p.present ? ' · here now' : '' }} · {{ minutes(p.seconds) }}</span></span>
                   @if (p.role !== 'host') {
                     <span class="actions">
                       @if (p.admission === 'waiting') { <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Let ' + p.full_name + ' in'" (click)="act('participants/' + p.id + '/admit')">Let in</button> }
@@ -68,21 +68,6 @@ type Joined = { admission: string; token: MediaToken | null; session: ClassSessi
       gap: 8px;
     }
 
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 8px;
-      }
-    }
   `,
 })
 export class ClassPage {

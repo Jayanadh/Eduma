@@ -34,7 +34,7 @@ type TripT = {
           <ul class="rows">
             @for (r of t.riders; track r.student) {
               <li>
-                <span>{{ r.name }} <span class="muted small">· {{ r.stop }}{{ status(t, r.student) }}</span></span>
+                <span>{{ r.name }} <span class="muted small meta">{{ r.stop }}{{ status(t, r.student) }}</span></span>
                 <span class="actions">
                   @if (!boarded(t, r.student)) { <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Board ' + r.name" (click)="board(t, r.student)">On board</button> }
                   @else if (!dropped(t, r.student)) {
@@ -52,7 +52,7 @@ type TripT = {
       }
       <section class="card stack section">
         <h2 class="card-title">Routes</h2>
-        <ul class="rows">@for (r of routes.value() ?? []; track r.id) { <li><span>{{ r.name }} <span class="muted small">· {{ r.vehicle }} ({{ r.capacity }} seats) · @for (s of r.stops; track $index) { {{ s.name }} {{ s.time }} }</span></span></li> }</ul>
+        <ul class="rows">@for (r of routes.value() ?? []; track r.id) { <li><span>{{ r.name }} <span class="muted small meta">{{ r.vehicle }} ({{ r.capacity }} seats) · @for (s of r.stops; track $index) { {{ s.name }} {{ s.time }} }</span></span></li> }</ul>
         <form id="add-vehicle" class="row" (submit)="$event.preventDefault(); vehicle($any($event.target))">
           <div class="field"><label for="v-reg">Vehicle</label><input id="v-reg" /></div>
           <div class="field"><label for="v-cap">Seats</label><input id="v-cap" type="number" min="1" /></div>
@@ -78,21 +78,6 @@ type TripT = {
       align-items: end;
     }
 
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 8px;
-      }
-    }
   `,
 })
 export class TransportPage {

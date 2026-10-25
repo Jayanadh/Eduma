@@ -43,7 +43,7 @@ import { DegreeProgressView } from '../academics/degree-progress';
         <ul class="rows">
           @for (t of p.transfers; track t.id) {
             <li>
-              <span>{{ t.source_course }} <span class="muted small">· {{ t.source_institution }} · {{ t.source_credits }} credits · {{ t.decision_label }}{{ t.approved_credits ? ' · ' + t.approved_credits + ' accepted' : '' }}{{ t.course ? ' as ' + t.course : '' }}{{ t.awarding_authority ? ' · by ' + t.awarding_authority : '' }}</span></span>
+              <span>{{ t.source_course }} <span class="muted small meta">{{ t.source_institution }} · {{ t.source_credits }} credits · {{ t.decision_label }}{{ t.approved_credits ? ' · ' + t.approved_credits + ' accepted' : '' }}{{ t.course ? ' as ' + t.course : '' }}{{ t.awarding_authority ? ' · by ' + t.awarding_authority : '' }}</span></span>
               @if (canRecord() && t.decision === 'pending') {
                 <span class="actions">
                   <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Approve ' + t.source_course" [disabled]="busy()" (click)="decide(t, true)">Approve</button>
@@ -71,23 +71,6 @@ import { DegreeProgressView } from '../academics/degree-progress';
     </section>
   `,
   styles: `
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-    }
-
     .row {
       display: flex;
       flex-wrap: wrap;

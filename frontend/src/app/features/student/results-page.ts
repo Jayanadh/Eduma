@@ -17,7 +17,7 @@ import { PortalFrame } from '../apply/portal-frame';
         <h2 class="card-title">Published results</h2>
         <ul class="rows">
           @for (r of results.value() ?? []; track $index) {
-            <li><span>{{ r.assessment }} <span class="muted small">· {{ r.term }}</span></span>
+            <li><span>{{ r.assessment }} <span class="muted small meta">{{ r.term }}</span></span>
               <span class="small">{{ r.total ?? r.outcome }}{{ r.grade ? ' · ' + r.grade : '' }}{{ r.revision > 1 ? ' · revised' : '' }}</span></li>
           } @empty {
             <li class="muted small">No results published yet.</li>
@@ -28,7 +28,7 @@ import { PortalFrame } from '../apply/portal-frame';
         <h2 class="card-title">Documents</h2>
         <ul class="rows">
           @for (d of documents.value() ?? []; track d.id) {
-            <li><span>{{ d.title }} <span class="muted small">· {{ d.number }} · {{ dateTime(d.issued_at) }}{{ d.status === 'superseded' ? ' · replaced by a newer one' : '' }}</span></span>
+            <li><span>{{ d.title }} <span class="muted small meta">{{ d.number }} · {{ dateTime(d.issued_at) }}{{ d.status === 'superseded' ? ' · replaced by a newer one' : '' }}</span></span>
               <a class="small" [href]="'/verify/' + d.token" target="_blank" rel="noopener">Verification page</a></li>
           } @empty {
             <li class="muted small">Nothing issued yet.</li>
@@ -38,21 +38,6 @@ import { PortalFrame } from '../apply/portal-frame';
     </app-portal-frame>
   `,
   styles: `
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 8px;
-      }
-    }
   `,
 })
 export class StudentResultsPage {

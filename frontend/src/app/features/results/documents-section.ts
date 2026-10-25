@@ -17,7 +17,7 @@ import { ToastService } from '../../ui/toast';
       <ul class="rows">
         @for (d of docs.value() ?? []; track d.id) {
           <li>
-            <span><strong>{{ d.number }}</strong> {{ d.title }} <span class="muted small">· {{ dateTime(d.issued_at) }} · {{ d.status }}{{ d.reason ? ': ' + d.reason : '' }}</span>
+            <span><strong>{{ d.number }}</strong> {{ d.title }} <span class="muted small meta">{{ dateTime(d.issued_at) }} · {{ d.status }}{{ d.reason ? ': ' + d.reason : '' }}</span>
               <a class="small" [href]="'/verify/' + d.token" target="_blank" rel="noopener">verification page</a></span>
             @if (canIssue() && d.status === 'current') {
               <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Revoke ' + d.number" [disabled]="busy()" (click)="revoke(d)">Revoke</button>
@@ -59,23 +59,6 @@ import { ToastService } from '../../ui/toast';
     </section>
   `,
   styles: `
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-    }
-
     .row {
       display: flex;
       flex-wrap: wrap;

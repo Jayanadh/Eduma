@@ -29,7 +29,7 @@ type OutPassT = { id: string; student: string; leaves_at: string; returns_at: st
         <ul class="rows">
           @for (a of allocations.value() ?? []; track a.id) {
             <li>
-              <span>{{ a.student.full_name }} <span class="muted small">· {{ a.bed ? a.bed.hostel + ' ' + a.bed.room + ' ' + a.bed.label : 'no bed yet' }} · {{ date(a.starts_on) }}–{{ date(a.ends_on) }} · {{ a.state }}</span></span>
+              <span>{{ a.student.full_name }} <span class="muted small meta">{{ a.bed ? a.bed.hostel + ' ' + a.bed.room + ' ' + a.bed.label : 'no bed yet' }} · {{ date(a.starts_on) }}–{{ date(a.ends_on) }} · {{ a.state }}</span></span>
               <span class="actions">
                 @if (a.state === 'requested') {
                   <label class="sr-only" [for]="'bed-' + a.id">Bed</label>
@@ -48,7 +48,7 @@ type OutPassT = { id: string; student: string; leaves_at: string; returns_at: st
         <ul class="rows">
           @for (o of outs.value() ?? []; track o.id) {
             <li>
-              <span>{{ o.student }} <span class="muted small">· {{ dateTime(o.leaves_at) }} → {{ dateTime(o.returns_at) }} · {{ o.reason }} · {{ o.state }}</span></span>
+              <span>{{ o.student }} <span class="muted small meta">{{ dateTime(o.leaves_at) }} → {{ dateTime(o.returns_at) }} · {{ o.reason }} · {{ o.state }}</span></span>
               <span class="actions">
                 @if (o.state === 'requested') {
                   <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Approve out-pass for ' + o.student" (click)="out(o, 'approve')">Approve</button>
@@ -67,22 +67,6 @@ type OutPassT = { id: string; student: string; leaves_at: string; returns_at: st
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-    }
-
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 8px;
-      }
     }
 
     .part + .part::before {

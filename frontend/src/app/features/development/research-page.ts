@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
+import { StatusBadge } from '../../ui/status-badge';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
 import { date } from '../../core/format';
@@ -12,7 +13,7 @@ import { ROW_STYLES, ScholarT } from './types';
 /** The research office (S10C-08): scholars, supervisors, ethics approvals with their dates, and milestones. */
 @Component({
   selector: 'app-research-page',
-  imports: [PageHeader],
+  imports: [PageHeader, StatusBadge],
   template: `
     <div class="page">
       <app-page-header eyebrow="Academics" title="Research" subtitle="Supervisors approve milestones; work that needs ethics approval waits for a valid one." />
@@ -28,7 +29,7 @@ import { ROW_STYLES, ScholarT } from './types';
           <p class="small">@for (e of s.ethics; track e.reference) { <span class="part">{{ e.reference }} {{ date(e.valid_from) }}–{{ date(e.valid_to) }}{{ e.valid ? '' : ' (not valid today)' }}</span> } @empty { No ethics approval recorded. }</p>
           <ul class="rows">
             @for (m of s.milestones; track m.id) {
-              <li><span>{{ m.title }} <span class="muted small">· due {{ date(m.due_on) }} · {{ m.state }}{{ m.needs_ethics ? ' · needs ethics approval' : '' }}</span></span></li>
+              <li><span>{{ m.title }} <app-status-badge [status]="m.state" /><span class="muted small meta">due {{ date(m.due_on) }}{{ m.needs_ethics ? ' · needs ethics approval' : '' }}</span></span></li>
             }
           </ul>
           <span class="actions">

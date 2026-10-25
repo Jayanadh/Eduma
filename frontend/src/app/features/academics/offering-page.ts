@@ -46,7 +46,7 @@ import { OfferingRegistrations } from './offering-registrations';
           <ul class="rows">
             @for (t of o.teachers; track t.id) {
               <li>
-                <span>{{ t.membership.full_name }} <span class="muted small">· from {{ date(t.starts_on) }}{{ t.ends_on ? ' to ' + date(t.ends_on) : '' }}</span></span>
+                <span>{{ t.membership.full_name }} <span class="muted small meta">from {{ date(t.starts_on) }}{{ t.ends_on ? ' to ' + date(t.ends_on) : '' }}</span></span>
                 @if (o.can_manage && t.in_effect) {
                   <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'End ' + t.membership.full_name" [disabled]="busy()" (click)="end(t)">End</button>
                 }
@@ -71,23 +71,6 @@ import { OfferingRegistrations } from './offering-registrations';
     </div>
   `,
   styles: `
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-    }
-
     .row {
       display: flex;
       flex-wrap: wrap;

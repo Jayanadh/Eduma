@@ -73,7 +73,7 @@
       <ul class="names">
         @for (g of grades.value() ?? []; track g.id) {
           <li>
-            <span><strong>{{ g.name }}</strong> <span class="muted small">{{ g.code }}</span></span>
+            <span><strong>{{ g.name }}</strong><span class="muted small meta">{{ g.code }}</span></span>
             <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Rename ' + g.name" [disabled]="busy()" (click)="rename('grades', g)">Rename</button>
           </li>
         } @empty {
@@ -101,7 +101,7 @@
       <ul class="names">
         @for (s of subjects.value() ?? []; track s.id) {
           <li>
-            <span><strong>{{ s.name }}</strong> <span class="muted small">{{ s.code }}</span></span>
+            <span><strong>{{ s.name }}</strong><span class="muted small meta">{{ s.code }}</span></span>
             <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Rename ' + s.name" [disabled]="busy()" (click)="rename('subjects', s)">Rename</button>
           </li>
         } @empty {

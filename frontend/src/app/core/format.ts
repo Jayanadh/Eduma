@@ -3,6 +3,7 @@ const TIME_ZONE = 'Asia/Kolkata';
 const NO_VALUE = '—';
 
 const NUMBER = new Intl.NumberFormat(LOCALE);
+const MONEY = new Intl.NumberFormat(LOCALE, { style: 'currency', currency: 'INR' });
 const DATE = new Intl.DateTimeFormat(LOCALE, {
   day: '2-digit',
   month: 'short',
@@ -34,6 +35,17 @@ function tidy(text: string): string {
 
 export function number(value: number | null | undefined): string {
   return value === null || value === undefined ? NO_VALUE : NUMBER.format(value);
+}
+
+/** "₹74,000.00" (Indian grouping) from the API's decimal string or a number. */
+export function money(value: string | number | null | undefined): string {
+  const amount = value === null || value === undefined || value === '' ? NaN : Number(value);
+  return Number.isNaN(amount) ? (value ? String(value) : NO_VALUE) : MONEY.format(amount);
+}
+
+/** The parts that exist, joined with " · ": joined('Lab', '', 'bookable') is "Lab · bookable". */
+export function joined(...parts: unknown[]): string {
+  return parts.filter((part) => part).join(' · ');
 }
 
 /** "05 Oct 2026". */

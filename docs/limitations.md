@@ -56,7 +56,7 @@ hidden behind a working-looking screen: each item is either absent from the inte
 - **Human accessibility review** with a keyboard and screen readers. There is a static check (`npm run check:a11y`) and labelled controls throughout, but no claim of WCAG 2.2 AA is made.
 - **Workload at real scale.** `manage.py measure_workload` on demo data: 8 concurrent clients, 2,080 everyday reads, worst p95 148.5 ms (target 800 ms). It measured the application and database in-process, not the network or a production server.
 - **Writes under load.** Not measured.
-- **External security review and dependency audit.** The internal review found `check --deploy` clean and logs free of tokens. The cross-tenant sweep `pytest -m adversarial` calls every id-taking route with another institution's ids: no leaks, nothing changed. No penetration test, `pip-audit` or `npm audit` has been run.
+- **External security review.** The internal review found `check --deploy` clean and logs free of tokens. The cross-tenant sweep `pytest -m adversarial` calls every id-taking route with another institution's ids: no leaks, nothing changed. Dependency audits on 25 Oct 2026: `pip-audit` and `npm audit` both report 0 known vulnerabilities, after the fixes in progress.md. No penetration test has been done.
 - **Recovery at real scale.** The restore drill passed on demo data in 1.0 s. That is not an RTO.
 
 ## Support ownership

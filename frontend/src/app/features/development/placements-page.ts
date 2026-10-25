@@ -1,8 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { StatusBadge } from '../../ui/status-badge';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
-import { date, readable } from '../../core/format';
+import { date } from '../../core/format';
 import { load } from '../../core/load';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { PageHeader } from '../../ui/page-header';
@@ -15,7 +16,7 @@ type AlumnusT = { student: { number: string; name: string }; email: string; phon
 /** The placement office (S10C-05..07): opportunities, applications up to an offer, internships and consented alumni. */
 @Component({
   selector: 'app-placements-page',
-  imports: [PageHeader],
+  imports: [PageHeader, StatusBadge],
   template: `
     <div class="page">
       <app-page-header eyebrow="Academics" title="Placements" subtitle="Students apply with their consent; offers and accepted placements are counted apart." />
@@ -24,7 +25,7 @@ type AlumnusT = { student: { number: string; name: string }; email: string; phon
         <ul class="rows">
           @for (o of opportunities.value() ?? []; track o.id) {
             <li>
-              <span><strong>{{ o.title }}</strong> {{ o.employer }} <span class="muted small">· {{ o.kind }} · closes {{ date(o.closes_on) }}{{ o.min_cgpa ? ' · CGPA ' + o.min_cgpa + '+' : '' }}{{ o.programs.length ? ' · ' + o.programs.join(', ') : '' }}</span></span>
+              <span><strong>{{ o.title }}</strong> {{ o.employer }} <span class="muted small meta">{{ o.kind }} · closes {{ date(o.closes_on) }}{{ o.min_cgpa ? ' · CGPA ' + o.min_cgpa + '+' : '' }}{{ o.programs.length ? ' · ' + o.programs.join(', ') : '' }}</span></span>
               <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Applications for ' + o.title" (click)="open.set(o.id)">Applications</button>
             </li>
           } @empty {
@@ -36,7 +37,7 @@ type AlumnusT = { student: { number: string; name: string }; email: string; phon
           <ul class="rows">
             @for (a of applications.value() ?? []; track a.id) {
               <li>
-                <span>{{ a.student?.name }} <span class="muted small">{{ a.student?.number }} · {{ readable(a.state) }} · CGPA {{ a.eligibility?.cgpa ?? 'none yet' }}</span></span>
+                <span>{{ a.student?.name }} <app-status-badge [status]="a.state" /><span class="muted small meta">{{ a.student?.number }} · CGPA {{ a.eligibility?.cgpa ?? 'none yet' }}</span></span>
                 <span class="actions">
                   @if (a.state === 'applied') { <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Shortlist ' + a.student?.name" (click)="move(a, 'shortlisted')">Shortlist</button> }
                   @if (a.state === 'applied' || a.state === 'shortlisted') {
@@ -78,7 +79,7 @@ type AlumnusT = { student: { number: string; name: string }; email: string; phon
         <ul class="rows">
           @for (i of internships.value() ?? []; track i.id) {
             <li>
-              <span>{{ i.student.name }} <span class="muted small">· {{ i.opportunity }}, {{ i.employer }} · supervisor {{ i.supervisor ?? 'not assigned' }}{{ i.score ? ' · scored ' + i.score : '' }}</span></span>
+              <span>{{ i.student.name }} <span class="muted small meta">{{ i.opportunity }}, {{ i.employer }} · supervisor {{ i.supervisor ?? 'not assigned' }}{{ i.score ? ' · scored ' + i.score : '' }}</span></span>
               <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Supervisor for ' + i.student.name" (click)="supervise(i)">Supervisor</button>
             </li>
           } @empty {
@@ -105,7 +106,6 @@ export class PlacementsPage {
   private readonly toasts = inject(ToastService);
   private readonly dialog = inject(ConfirmDialog);
   protected readonly date = date;
-  protected readonly readable = readable;
   protected readonly open = signal('');
   protected readonly employers = load(() => this.api.get<{ id: string; name: string }[]>('development/employers'));
   protected readonly opportunities = load(() => this.api.get<OpportunityT[]>('development/opportunities'));

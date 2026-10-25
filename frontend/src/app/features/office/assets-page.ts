@@ -1,8 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
+import { StatusBadge } from '../../ui/status-badge';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
-import { readable } from '../../core/format';
+import { joined } from '../../core/format';
 import { load } from '../../core/load';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { PageHeader } from '../../ui/page-header';
@@ -25,7 +26,7 @@ export type AssetT = {
 /** The asset register (S10B-08): who holds what and where, maintenance, and disposal with its reason. */
 @Component({
   selector: 'app-assets-page',
-  imports: [PageHeader, SearchBox],
+  imports: [PageHeader, SearchBox, StatusBadge],
   template: `
     <div class="page">
       <app-page-header eyebrow="Campus" title="Assets" subtitle="Every change of hands, repair and disposal is kept." />
@@ -34,7 +35,7 @@ export type AssetT = {
         <ul class="rows">
           @for (a of assets.value() ?? []; track a.id) {
             <li>
-              <span><strong>{{ a.tag }}</strong> {{ a.name }} <span class="muted small">· {{ readable(a.status) }}{{ a.category ? ' · ' + a.category : '' }}{{ a.location ? ' · ' + a.location : '' }}{{ a.custodian ? ' · with ' + a.custodian.name : '' }}{{ a.bookable ? ' · bookable' : '' }}{{ a.disposal_reason ? ' · ' + a.disposal_reason : '' }}</span></span>
+              <span><strong>{{ a.tag }}</strong> {{ a.name }} <app-status-badge [status]="a.status" /><span class="muted small meta">{{ joined(a.category, a.location, a.custodian && 'with ' + a.custodian.name, a.bookable && 'bookable', a.disposal_reason) }}</span></span>
               @if (a.status !== 'disposed') {
                 <span class="actions">
                   <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Hand over ' + a.tag" (click)="transfer(a)">Hand over</button>
@@ -68,7 +69,7 @@ export class AssetsPage {
   private readonly api = inject(Api);
   private readonly toasts = inject(ToastService);
   private readonly dialog = inject(ConfirmDialog);
-  protected readonly readable = readable;
+  protected readonly joined = joined;
   protected readonly query = signal('');
   protected readonly assets = load(
     () => this.api.get<AssetT[]>('institution/stores/assets', this.query() ? { search: this.query() } : {}),

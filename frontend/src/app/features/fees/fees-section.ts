@@ -4,6 +4,7 @@ import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
 import { FeeHeadT, FeePlanT, FeeStatement, StudentRecord } from '../../core/api/types';
 import { AuthStore } from '../../core/auth-store';
+import { money } from '../../core/format';
 import { load } from '../../core/load';
 import { ToastService } from '../../ui/toast';
 import { StatementView } from './statement-view';
@@ -56,14 +57,14 @@ import { StatementView } from './statement-view';
           @for (p of s.payments; track p.id) {
             @if (p.state === 'succeeded') {
               <form class="row" [id]="'refund-' + p.id" (submit)="$event.preventDefault(); refund(p.id, $any($event.target))">
-                <span class="small">Refund from {{ p.receipt?.number }} (₹{{ p.amount }})</span>
+                <span class="small">Refund from {{ p.receipt?.number }} ({{ money(p.amount) }})</span>
                 <label class="sr-only" [for]="'refund-amount-' + p.id">Amount</label><input [id]="'refund-amount-' + p.id" type="number" min="0" step="0.01" placeholder="₹" />
                 <label class="sr-only" [for]="'refund-reason-' + p.id">Reason</label><input [id]="'refund-reason-' + p.id" placeholder="Reason" />
                 <button type="submit" class="btn btn-secondary btn-sm" [disabled]="busy()">Ask for refund</button>
               </form>
               @for (r of p.refunds; track r.id) {
                 @if (r.state === 'approved') {
-                  <p class="small">Refund ₹{{ r.amount }} approved — <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Mark refund ' + r.amount + ' returned'" (click)="complete(r.id)">Money returned</button></p>
+                  <p class="small">Refund {{ money(r.amount) }} approved — <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Mark refund ' + r.amount + ' returned'" (click)="complete(r.id)">Money returned</button></p>
                 }
               }
             }
@@ -87,6 +88,7 @@ import { StatementView } from './statement-view';
   `,
 })
 export class FeesSection {
+  protected readonly money = money;
   readonly student = input.required<StudentRecord>();
   private readonly api = inject(Api);
   private readonly auth = inject(AuthStore);

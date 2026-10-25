@@ -30,7 +30,7 @@ import { RULES } from '../academics/registration-rules';
                 <li>
                   <label class="choice">
                     <input type="checkbox" [id]="'choose-' + o.id" [checked]="chosen().has(o.id)" (change)="toggle(o.id, $any($event.target).checked)" />
-                    <span><strong>{{ o.label }}</strong> {{ o.title }} <span class="muted small">· {{ o.credits }} credits · {{ o.seats_left }} seats left{{ o.linked_to ? ' · lab' : '' }}</span></span>
+                    <span><strong>{{ o.label }}</strong> {{ o.title }} <span class="muted small meta">{{ o.credits }} credits · {{ o.seats_left }} seats left{{ o.linked_to ? ' · lab' : '' }}</span></span>
                   </label>
                   @if (o.problems.length) { <span class="small warn">{{ words(o.problems) }}</span> }
                 </li>
@@ -55,7 +55,7 @@ import { RULES } from '../academics/registration-rules';
           <ul class="rows">
             @for (r of d.registrations; track r.id) {
               <li>
-                <span><strong>{{ r.offering.label }}</strong> {{ r.offering.title }} <span class="muted small">· {{ r.offering.term }} · {{ r.state_label }}{{ r.reason_code ? ' (' + (rules[r.reason_code] ?? r.reason_code) + ')' : '' }}</span></span>
+                <span><strong>{{ r.offering.label }}</strong> {{ r.offering.title }} <span class="muted small meta">{{ r.offering.term }} · {{ r.state_label }}{{ r.reason_code ? ' (' + (rules[r.reason_code] ?? r.reason_code) + ')' : '' }}</span></span>
                 @if (r.state === 'registered' || r.state === 'waitlisted' || r.state === 'pending_approval') {
                   <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Drop ' + r.offering.label" [disabled]="busy()" (click)="drop(r)">Drop</button>
                 }
@@ -71,23 +71,6 @@ import { RULES } from '../academics/registration-rules';
     </app-portal-frame>
   `,
   styles: `
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 6px;
-      }
-    }
-
     .choice {
       display: flex;
       gap: 8px;

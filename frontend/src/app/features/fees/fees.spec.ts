@@ -53,7 +53,7 @@ describe('Fees pages', () => {
     respond('/api/v1/institution/fees/plans', []);
     await fixture.whenStable();
     const root = fixture.nativeElement as HTMLElement;
-    expect(root.textContent).toContain('₹3000.00 outstanding');
+    expect(root.querySelector('.owed .amount')!.textContent).toBe('₹3,000.00');
     fill(root, { 'pay-amount': '3000', 'pay-ref': 'Counter 1' });
     root.querySelector<HTMLFormElement>('#record-payment')!.dispatchEvent(new Event('submit'));
     expect(http.expectOne('/api/v1/institution/fees/payments').request.body).toEqual({ student: 's1', amount: '3000', channel: 'cash', reference: 'Counter 1' });

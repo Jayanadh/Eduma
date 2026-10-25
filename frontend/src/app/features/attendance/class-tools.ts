@@ -24,9 +24,9 @@ import { ToastService } from '../../ui/toast';
     @if (assessments().length) {
       <section class="card stack section">
         <h2 class="card-title">Assessments</h2>
-        <ul class="rows">
+        <ul class="bullets">
           @for (a of assessments(); track a.id) {
-            <li><a [routerLink]="['/app/results/assessments', a.id]">{{ a.title }}</a> <span class="muted small">· {{ a.state_label }}</span></li>
+            <li><a [routerLink]="['/app/results/assessments', a.id]">{{ a.title }}</a> <span class="muted small meta">{{ a.state_label }}</span></li>
           }
         </ul>
       </section>
@@ -34,8 +34,8 @@ import { ToastService } from '../../ui/toast';
     @if (comms()) {
       <section class="card stack section">
         <h2 class="card-title">Online classes</h2>
-        <ul class="rows">
-          @for (s of online(); track s.id) { <li><a [routerLink]="['/app/classes', s.id]">{{ s.title }}</a> <span class="muted small">· {{ date(s.starts_at) }} · {{ s.state_label }}</span></li> }
+        <ul class="bullets">
+          @for (s of online(); track s.id) { <li><a [routerLink]="['/app/classes', s.id]">{{ s.title }}</a> <span class="muted small meta">{{ date(s.starts_at) }} · {{ s.state_label }}</span></li> }
         </ul>
         <form id="schedule-class" class="row" (submit)="$event.preventDefault(); schedule($any($event.target))">
           <div class="field"><label for="class-title">Title</label><input id="class-title" /></div>
@@ -46,9 +46,9 @@ import { ToastService } from '../../ui/toast';
     }
     <section class="card stack section">
       <h2 class="card-title">Assignments</h2>
-      <ul class="rows">
+      <ul class="bullets">
         @for (a of mine(); track a.id) {
-          <li><a [routerLink]="['/app/teaching/assignments', a.id]">{{ a.title }}</a> <span class="muted small">· due {{ date(a.due_at) }}</span></li>
+          <li><a [routerLink]="['/app/teaching/assignments', a.id]">{{ a.title }}</a> <span class="muted small meta">due {{ date(a.due_at) }}</span></li>
         } @empty {
           <li class="muted small">None yet.</li>
         }
@@ -69,7 +69,7 @@ import { ToastService } from '../../ui/toast';
       align-items: end;
     }
 
-    .rows {
+    .bullets {
       margin: 0;
       padding-left: 18px;
     }

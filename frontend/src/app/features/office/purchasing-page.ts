@@ -1,9 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
+import { StatusBadge } from '../../ui/status-badge';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
 import { AuthStore } from '../../core/auth-store';
-import { readable } from '../../core/format';
+import { money } from '../../core/format';
 import { load } from '../../core/load';
 import { PageHeader } from '../../ui/page-header';
 import { ToastService } from '../../ui/toast';
@@ -32,14 +33,14 @@ type Req = {
  */
 @Component({
   selector: 'app-purchasing-page',
-  imports: [PageHeader],
+  imports: [PageHeader, StatusBadge],
   template: `
     <div class="page">
       <app-page-header eyebrow="Campus" title="Purchasing" subtitle="Requisitions, orders, goods received and stock." />
       <section class="card stack section">
         <h2 class="card-title">Approval rule</h2>
         @if (rules.value()?.[0]; as r) {
-          <p class="small">Revision {{ r.revision }}: one approver up to {{ r.single_approval_limit }}; above that, two different approvers.</p>
+          <p class="small">Revision {{ r.revision }}: one approver up to {{ money(r.single_approval_limit) }}; above that, two different approvers.</p>
         } @else {
           <p class="muted small">No rule yet. Requisitions start once an approver publishes one.</p>
         }
@@ -55,7 +56,7 @@ type Req = {
         <ul class="rows">
           @for (q of reqs.value() ?? []; track q.id) {
             <li>
-              <span><strong>{{ q.title }}</strong> <span class="muted small">· {{ q.total }} · {{ readable(q.state) }} · {{ q.approvals.length }} of {{ q.approvals_needed }} approvals (rule {{ q.rule_revision }}) · by {{ q.requested_by }}{{ q.supplier ? ' · ' + q.supplier : '' }}</span></span>
+              <span><strong>{{ q.title }}</strong><app-status-badge [status]="q.state" /><span class="muted small meta">{{ money(q.total) }} · {{ q.approvals.length }} of {{ q.approvals_needed }} approvals (rule {{ q.rule_revision }}) · by {{ q.requested_by }}{{ q.supplier ? ' · ' + q.supplier : '' }}</span></span>
               <span class="actions">
                 @if (approver && q.state === 'submitted') {
                   <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Approve ' + q.title" (click)="act(q, 'approve')">Approve</button>
@@ -123,10 +124,10 @@ type Req = {
   styles: [OFFICE_STYLES],
 })
 export class PurchasingPage {
+  protected readonly money = money;
   private readonly api = inject(Api);
   private readonly toasts = inject(ToastService);
   private readonly auth = inject(AuthStore);
-  protected readonly readable = readable;
   protected readonly manager = this.auth.can('procurement.manage');
   protected readonly approver = this.auth.can('procurement.approve');
   protected readonly rules = load(() => this.api.get<Rule[]>('institution/stores/rules'));

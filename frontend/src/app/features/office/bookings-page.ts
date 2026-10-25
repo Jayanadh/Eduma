@@ -42,7 +42,7 @@ type BookingT = {
         <ul class="rows">
           @for (b of bookings.value() ?? []; track b.id) {
             <li>
-              <span><strong>{{ b.asset.name }}</strong> <span class="muted small">· {{ dateTime(b.starts_at) }} → {{ dateTime(b.ends_at) }} · {{ b.purpose }} · {{ b.booked_by }}</span></span>
+              <span><strong>{{ b.asset.name }}</strong> <span class="muted small meta">{{ dateTime(b.starts_at) }} → {{ dateTime(b.ends_at) }} · {{ b.purpose }} · {{ b.booked_by }}</span></span>
               @if (b.mine) {
                 <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Cancel booking of ' + b.asset.name" (click)="cancel(b)">Cancel</button>
               }

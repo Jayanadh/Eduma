@@ -1,4 +1,4 @@
-import { date, dateTime, number, readable } from './format';
+import { date, dateTime, joined, money, number, readable } from './format';
 
 describe('format', () => {
   it('formats dates as a day in India', () => {
@@ -14,6 +14,18 @@ describe('format', () => {
   it('formats numbers the Indian way', () => {
     expect(number(123456)).toBe('1,23,456');
     expect(number(null)).toBe('—');
+  });
+
+  it('formats money in rupees with Indian grouping', () => {
+    expect(money('7400000.50')).toBe('₹74,00,000.50');
+    expect(money(3000)).toBe('₹3,000.00');
+    expect(money(null)).toBe('—');
+    expect(money('n/a')).toBe('n/a');
+  });
+
+  it('joins only the parts that exist', () => {
+    expect(joined('Laboratory', '', null, false, 'bookable')).toBe('Laboratory · bookable');
+    expect(joined()).toBe('');
   });
 
   it('makes codes readable', () => {

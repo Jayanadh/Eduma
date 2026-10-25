@@ -1,9 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { StatusBadge } from '../../ui/status-badge';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
 import { AuthStore } from '../../core/auth-store';
-import { date, readable } from '../../core/format';
+import { date } from '../../core/format';
 import { load } from '../../core/load';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { PageHeader } from '../../ui/page-header';
@@ -13,7 +14,7 @@ import { EvidenceT, InternshipT, ROW_STYLES, ScholarT } from './types';
 /** Any staff member's share of institutional development: interns and scholars they supervise, evidence they owe. */
 @Component({
   selector: 'app-supervision-page',
-  imports: [PageHeader],
+  imports: [PageHeader, StatusBadge],
   template: `
     <div class="page">
       <app-page-header eyebrow="Academics" title="Supervision and evidence" subtitle="Interns and scholars you supervise, and evidence asked of you." />
@@ -23,7 +24,7 @@ import { EvidenceT, InternshipT, ROW_STYLES, ScholarT } from './types';
           <ul class="rows">
             @for (i of interns.value() ?? []; track i.id) {
               <li>
-                <span>{{ i.student.name }} <span class="muted small">· {{ i.opportunity }}, {{ i.employer }}{{ i.score ? ' · scored ' + i.score : '' }}</span></span>
+                <span>{{ i.student.name }} <span class="muted small meta">{{ i.opportunity }}, {{ i.employer }}{{ i.score ? ' · scored ' + i.score : '' }}</span></span>
                 <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Evaluate ' + i.student.name" (click)="evaluate(i)">Evaluate</button>
               </li>
             } @empty {
@@ -40,7 +41,7 @@ import { EvidenceT, InternshipT, ROW_STYLES, ScholarT } from './types';
             <ul class="rows">
               @for (m of s.milestones; track m.id) {
                 <li>
-                  <span>{{ m.title }} <span class="muted small">· due {{ date(m.due_on) }} · {{ m.state }}{{ m.summary ? ' · ' + m.summary : '' }}</span></span>
+                  <span>{{ m.title }} <app-status-badge [status]="m.state" /><span class="muted small meta">due {{ date(m.due_on) }}{{ m.summary ? ' · ' + m.summary : '' }}</span></span>
                   @if (m.state === 'submitted') {
                     <span class="actions">
                       <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Approve ' + m.title" (click)="decide(m.id, 'approve')">Approve</button>
@@ -59,7 +60,7 @@ import { EvidenceT, InternshipT, ROW_STYLES, ScholarT } from './types';
           <ul class="rows">
             @for (r of evidence.value() ?? []; track r.id) {
               <li>
-                <span><strong>{{ r.criterion }}</strong> {{ r.title }} <span class="muted small">· {{ r.cycle.framework }} {{ r.cycle.period }} · {{ readable(r.state) }}{{ r.note ? ' · ' + r.note : '' }}</span></span>
+                <span><strong>{{ r.criterion }}</strong> {{ r.title }} <app-status-badge [status]="r.state" /><span class="muted small meta">{{ r.cycle.framework }} {{ r.cycle.period }}{{ r.note ? ' · ' + r.note : '' }}</span></span>
                 @if (r.state === 'requested' || r.state === 'returned') {
                   <label class="btn btn-secondary btn-sm">Upload (PDF, PNG or JPEG)
                     <input type="file" class="sr-only" [attr.data-request]="r.id" accept=".pdf,.png,.jpg,.jpeg" (change)="upload(r, $any($event.target))" />
@@ -82,7 +83,6 @@ export class SupervisionPage {
   private readonly dialog = inject(ConfirmDialog);
   private readonly auth = inject(AuthStore);
   protected readonly date = date;
-  protected readonly readable = readable;
   protected readonly placements = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('placements') ?? false);
   protected readonly quality = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('quality') ?? false);
   protected readonly interns = load(() => (this.placements() ? this.api.get<InternshipT[]>('development/internships') : of([])));

@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { StatusBadge } from '../../ui/status-badge';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
 import { AuthStore } from '../../core/auth-store';
@@ -24,12 +25,12 @@ type LeaveRequestT = {
 };
 type LeaveList = { requests: LeaveRequestT[]; balances: Balance[] };
 
-const STATES = { submitted: 'waiting for approval', approved: 'approved', rejected: 'rejected', canceled: 'canceled' };
+const STATES = { submitted: 'Waiting for approval', approved: 'Approved', rejected: 'Rejected', canceled: 'Canceled' };
 
 /** Every staff member's own leave and balances (S10B-01, S10B-03); approvers also decide other people's requests. */
 @Component({
   selector: 'app-leave-page',
-  imports: [PageHeader],
+  imports: [PageHeader, StatusBadge],
   template: `
     <div class="page">
       <app-page-header eyebrow="People" title="Leave" subtitle="Your leave and what is left this year. Someone else approves it." />
@@ -56,7 +57,7 @@ const STATES = { submitted: 'waiting for approval', approved: 'approved', reject
         <ul class="rows">
           @for (r of mine.value()?.requests ?? []; track r.id) {
             <li>
-              <span>{{ r.leave_type.name }} <span class="muted small">· {{ date(r.starts_on) }}–{{ date(r.ends_on) }} · {{ r.days }} days · {{ states[r.state] }}</span></span>
+              <span>{{ r.leave_type.name }} <app-status-badge [status]="r.state" [label]="states[r.state]" /><span class="muted small meta">{{ date(r.starts_on) }}–{{ date(r.ends_on) }} · {{ r.days }} {{ r.days === 1 ? 'day' : 'days' }}</span></span>
               @if (r.state === 'submitted' || r.state === 'approved') {
                 <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Cancel leave from ' + date(r.starts_on)" (click)="act(r, 'cancel')">Cancel</button>
               }
@@ -72,7 +73,7 @@ const STATES = { submitted: 'waiting for approval', approved: 'approved', reject
           <ul class="rows">
             @for (r of waiting.value()?.requests ?? []; track r.id) {
               <li>
-                <span><strong>{{ r.employee.name }}</strong> {{ r.leave_type.name }} <span class="muted small">· {{ date(r.starts_on) }}–{{ date(r.ends_on) }} · {{ r.days }} days · {{ r.reason }}</span></span>
+                <span><strong>{{ r.employee.name }}</strong> {{ r.leave_type.name }} <span class="muted small meta">{{ date(r.starts_on) }}–{{ date(r.ends_on) }} · {{ r.days }} days · {{ r.reason }}</span></span>
                 <span class="actions">
                   <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Approve leave for ' + r.employee.name" (click)="act(r, 'approve')">Approve</button>
                   <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Reject leave for ' + r.employee.name" (click)="act(r, 'reject')">Reject</button>

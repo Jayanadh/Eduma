@@ -15,7 +15,7 @@ import { RULES } from './registration-rules';
       <ul class="rows">
         @for (r of rows.value()?.results ?? []; track r.id) {
           <li>
-            <span><strong>{{ r.student.number }}</strong> {{ r.student.full_name }} <span class="muted small">· {{ r.state_label }}{{ r.reason_code ? ' (' + (rules[r.reason_code] ?? r.reason_code) + ')' : '' }}{{ r.overrides.length ? ' · with an override' : '' }}</span></span>
+            <span><strong>{{ r.student.number }}</strong> {{ r.student.full_name }} <span class="muted small meta">{{ r.state_label }}{{ r.reason_code ? ' (' + (rules[r.reason_code] ?? r.reason_code) + ')' : '' }}{{ r.overrides.length ? ' · with an override' : '' }}</span></span>
             <span class="actions">
               @if (r.state === 'pending_approval') {
                 <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Approve ' + r.student.number" [disabled]="busy()" (click)="act(r, 'approve')">Approve</button>
@@ -35,23 +35,6 @@ import { RULES } from './registration-rules';
     </section>
   `,
   styles: `
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-    }
-
     .actions {
       display: flex;
       gap: 8px;

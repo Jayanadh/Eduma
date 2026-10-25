@@ -26,7 +26,7 @@ import { ToastService } from '../../ui/toast';
         <ul class="rows">
           @for (l of loans.value() ?? []; track l.id) {
             <li>
-              <span><strong>{{ l.accession }}</strong> {{ l.title }} <span class="muted small">· {{ l.borrower }} · due {{ date(l.due_on) }}{{ l.renewals ? ' · renewed ' + l.renewals : '' }}</span></span>
+              <span><strong>{{ l.accession }}</strong> {{ l.title }} <span class="muted small meta">{{ l.borrower }} · due {{ date(l.due_on) }}{{ l.renewals ? ' · renewed ' + l.renewals : '' }}</span></span>
               <span class="actions">
                 <button type="button" class="btn btn-primary btn-sm" [attr.aria-label]="'Return ' + l.accession" (click)="act(l, 'return')">Return</button>
                 <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Renew ' + l.accession" (click)="act(l, 'renew')">Renew</button>
@@ -43,7 +43,7 @@ import { ToastService } from '../../ui/toast';
         <app-search-box id="title-search" label="Search titles" (search)="query.set($event)" />
         <ul class="rows">
           @for (t of titles.value() ?? []; track t.id) {
-            <li><span><strong>{{ t.title }}</strong> <span class="muted small">{{ t.author }} · {{ t.available }} of {{ t.copies.length }} available{{ t.waiting ? ' · ' + t.waiting + ' waiting' : '' }}</span></span></li>
+            <li><span><strong>{{ t.title }}</strong><span class="muted small meta">{{ t.author }} · {{ t.available }} of {{ t.copies.length }} available{{ t.waiting ? ' · ' + t.waiting + ' waiting' : '' }}</span></span></li>
           }
         </ul>
         <form id="add-title" class="row" (submit)="$event.preventDefault(); add($any($event.target))">
@@ -68,21 +68,6 @@ import { ToastService } from '../../ui/toast';
       flex: 1 1 200px;
     }
 
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-
-      li {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 8px;
-      }
-    }
   `,
 })
 export class LibraryPage {

@@ -1,4 +1,5 @@
 import { Component, inject, input, output, signal } from '@angular/core';
+import { money } from '../../core/format';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
 import { FeePayment, FeeStatement } from '../../core/api/types';
@@ -16,7 +17,7 @@ import { StatementView } from './statement-view';
     @if (s.online) {
       @for (i of s.invoices; track i.id) {
         @if (i.outstanding !== '0.00') {
-          <button type="button" class="btn btn-primary btn-sm" [disabled]="busy()" (click)="pay(i.id)">Pay ₹{{ i.outstanding }} for {{ i.number }} online</button>
+          <button type="button" class="btn btn-primary btn-sm" [disabled]="busy()" (click)="pay(i.id)">Pay {{ money(i.outstanding) }} for {{ i.number }} online</button>
         }
       }
     } @else if (s.outstanding !== '0.00') {
@@ -25,6 +26,7 @@ import { StatementView } from './statement-view';
   `,
 })
 export class PayOnline {
+  protected readonly money = money;
   readonly statement = input.required<FeeStatement>();
   /** Where orders are created: student/fees/orders or family/children/<id>/fees/orders. */
   readonly orders = input.required<string>();

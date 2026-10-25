@@ -1,8 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { StatusBadge } from '../../ui/status-badge';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
-import { dateTime, readable } from '../../core/format';
+import { dateTime } from '../../core/format';
 import { load } from '../../core/load';
 import { ConfirmDialog } from '../../ui/confirm-dialog';
 import { PageHeader } from '../../ui/page-header';
@@ -12,7 +13,7 @@ import { CycleT, EvidenceT, ROW_STYLES } from './types';
 /** Quality evidence (S10C-09): request evidence by criterion, accept or return each version, freeze and export. */
 @Component({
   selector: 'app-quality-page',
-  imports: [PageHeader],
+  imports: [PageHeader, StatusBadge],
   template: `
     <div class="page">
       <app-page-header eyebrow="Academics" title="Quality evidence" subtitle="A frozen cycle is a record of what was assembled, not an accreditation decision." />
@@ -41,7 +42,7 @@ import { CycleT, EvidenceT, ROW_STYLES } from './types';
           <ul class="rows">
             @for (r of c.requests ?? []; track r.id) {
               <li>
-                <span><strong>{{ r.criterion }}</strong> {{ r.title }} <span class="muted small">· {{ r.owner }} · {{ readable(r.state) }} · {{ r.versions.length }} version{{ r.versions.length === 1 ? '' : 's' }}{{ r.note ? ' · ' + r.note : '' }}</span></span>
+                <span><strong>{{ r.criterion }}</strong> {{ r.title }} <app-status-badge [status]="r.state" /><span class="muted small meta">{{ r.owner }} · {{ r.versions.length }} version{{ r.versions.length === 1 ? '' : 's' }}{{ r.note ? ' · ' + r.note : '' }}</span></span>
                 <span class="actions">
                   @for (v of r.versions; track v.id) { <a class="small" [href]="'/api/v1/development/evidence-files/' + v.id">v{{ v.number }}</a> }
                   @if (r.state === 'submitted' && !c.frozen_at) {
@@ -76,7 +77,6 @@ export class QualityPage {
   private readonly toasts = inject(ToastService);
   private readonly dialog = inject(ConfirmDialog);
   protected readonly dateTime = dateTime;
-  protected readonly readable = readable;
   protected readonly open = signal('');
   protected readonly cycles = load(() => this.api.get<CycleT[]>('development/cycles'));
   protected readonly cycle = load(

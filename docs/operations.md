@@ -137,6 +137,7 @@ Run these before a release:
 - `pytest` (the everyday suite);
 - `pytest -m adversarial`: the cross-tenant sweep, and every route answering an empty request without a 5xx (about 10 minutes);
 - `npm test` and `npm run check:a11y`;
+- `pip-audit` (backend) and `npm audit` (frontend), both with 0 known vulnerabilities;
 - `ng build`;
 - `manage.py check --deploy` with production settings;
 - `ops/backup.sh` and `ops/restore-drill.sh`.

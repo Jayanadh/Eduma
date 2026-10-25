@@ -3,6 +3,38 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
+## Stack, security and mobile pass (25 October 2026)
+
+**Stack and security:**
+
+| Finding | Change |
+|---|---|
+| Node 25.2.1 on this machine is outside Angular 22's supported range (`^22.22.3 \|\| ^24.15.0 \|\| >=26`) | Verified on Node 24 LTS (24.22.1, Homebrew `node@24`, keg-only, so other projects are unaffected). `engines` in package.json, `frontend/.nvmrc` (24), README and the dev-server launcher all point to it |
+| `npm audit`: 3 vulnerabilities (1 high) in Vite 8.3.0, pinned by `@angular/build`; fast-uri (moderate) | npm `overrides` Vite to 8.3.4 (fixed); `npm audit fix` for fast-uri; Angular CLI/build to 22.2.4. Now 0 vulnerabilities. npm's own suggestion (downgrade to Angular 21) was not taken |
+| `pip-audit`: pip 25.0.1 in the virtualenv had 2 advisories | pip 26.2.2. asgiref 3.13.0 and ruff 0.17.2 patch updates. `ruff` and `pip-audit` added to `requirements-dev.txt`. Now 0 known vulnerabilities |
+| Everything else | Current: Angular 22.2 (latest), TypeScript 6.0 (Angular 22.2 requires `>=6.0 <6.1`, so TypeScript 7 waits), Vitest 5.0, Django 6.1.2, DRF 3.18, Python 3.12, PostgreSQL 17 |
+
+**Mobile pass** (375 px, browser):
+
+| Change | Where |
+|---|---|
+| A space between two tags is dropped by Angular, leaving text like "INV-2026-00001due" and "Beakers for term 2· …" across 30+ templates. Fixed at the root: `.meta` draws its own " · " separator | `styles/_components.scss`, all templates |
+| One list style for the whole app (dividers; on phones the details drop under the title and the buttons share the row), replacing 22 local copies | `styles/_components.scss` |
+| On phones, form fields in a row fill the width and buttons share it | `styles/_components.scss` |
+| Amounts in Indian rupee format ("₹74,000.00"), with `money()` and `joined()` helpers (tested) | `core/format.ts`, fees, purchasing, payroll, student pages |
+| States as coloured badges (requisitions, leave, payroll, cases, placements, evidence, milestones, invoices, payments) | `ui/status-badge.ts` |
+| Student and family portal: sticky translucent header with the logo or the institution's initials; pill navigation that wraps on wider screens and becomes one swipeable strip on phones, keeping the current page in view | `features/apply/portal-frame.ts` |
+| Fee statement leads with a large outstanding amount | `features/fees/statement-view.ts` |
+| Data tables (Health, Usage, Reports) become stacked cards on phones | `stack-table` in `styles/_components.scss` |
+| Case list before the form, for staff and requesters alike; the sign-in card names the institution once less | `features/cases/cases-page.ts`, `features/auth/login-page.ts` |
+
+Checks after the pass:
+
+- **Browser at 375 px:** no page scrolls sideways, and there are no console errors.
+- **Backend tests:** 622 passed.
+- **Frontend on Node 24:** 249 tests passed, `ng build` and `check:a11y` are clean.
+- **Audits:** `npm audit` and `pip-audit` both report 0 known vulnerabilities.
+
 ## Where things stand (25 October 2026, BUILD-12 — the web build is complete)
 
 **BUILD-12 (quality, migration rehearsal and pilot readiness) is done** in fast mode. Spec:

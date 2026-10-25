@@ -26,7 +26,7 @@
             <li>
               <span>
                 <strong>{{ e.course.code }}</strong> {{ e.course.title }}
-                <span class="muted small">· {{ e.course.credits }} credits · {{ e.category_label }}{{ e.elective_group ? ' (' + e.elective_group + ')' : '' }}{{ e.prerequisites.length ? ' · needs ' + e.prerequisites.join(', ') : '' }}</span>
+                <span class="muted small meta">{{ e.course.credits }} credits · {{ e.category_label }}{{ e.elective_group ? ' (' + e.elective_group + ')' : '' }}{{ e.prerequisites.length ? ' · needs ' + e.prerequisites.join(', ') : '' }}</span>
               </span>
               @if (editable()) {
                 <button type="button" class="btn btn-secondary btn-sm" [attr.aria-label]="'Remove ' + e.course.code" [disabled]="busy()" (click)="remove(e)">Remove</button>
@@ -50,7 +50,7 @@
           <ul class="rows">
             @for (course of found.value()?.results ?? []; track course.id) {
               <li>
-                <span>{{ course.code }} {{ course.title }} <span class="muted small">· {{ course.credits }} credits</span></span>
+                <span>{{ course.code }} {{ course.title }} <span class="muted small meta">{{ course.credits }} credits</span></span>
                 <button type="button" class="btn btn-secondary btn-sm" (click)="choose(course.id, course.code + ' ' + course.title)">Choose</button>
               </li>
             }

@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
 import { OwnCampus } from '../../core/api/types';
-import { date, dateTime } from '../../core/format';
+import { date, dateTime, money } from '../../core/format';
 import { load } from '../../core/load';
 import { LoadError } from '../../ui/load-error';
 import { ToastService } from '../../ui/toast';
@@ -18,8 +18,8 @@ import { PortalFrame } from '../apply/portal-frame';
       @if (data.value(); as c) {
         <section class="card stack">
           <h2 class="card-title">Library</h2>
-          <ul class="rows">
-            @for (l of c.loans; track l.id) { <li>{{ l.title }} <span class="muted small">· due {{ date(l.due_on) }} · {{ l.status }}@for (f of l.fines; track f.id) { · fine ₹{{ f.amount }}{{ f.waived_reason ? ' (waived)' : '' }} }</span></li> }
+          <ul class="bullets">
+            @for (l of c.loans; track l.id) { <li>{{ l.title }} <span class="muted small meta">due {{ date(l.due_on) }} · {{ l.status }}@for (f of l.fines; track f.id) { · fine {{ money(f.amount) }}{{ f.waived_reason ? ' (waived)' : '' }} }</span></li> }
             @empty { <li class="muted small">No books out.</li> }
           </ul>
         </section>
@@ -31,7 +31,7 @@ import { PortalFrame } from '../apply/portal-frame';
           <section class="card stack">
             <h2 class="card-title">Hostel</h2>
             <p class="small">Bed {{ h.bed ?? 'not assigned yet' }} · {{ h.state }}</p>
-            <ul class="rows">@for (o of c.out_passes; track o.id) { <li class="small">{{ dateTime(o.leaves_at) }} → {{ dateTime(o.returns_at) }} · {{ o.reason }} · {{ o.state }}</li> }</ul>
+            <ul class="bullets">@for (o of c.out_passes; track o.id) { <li class="small">{{ dateTime(o.leaves_at) }} → {{ dateTime(o.returns_at) }} · {{ o.reason }} · {{ o.state }}</li> }</ul>
             <form id="out-pass" class="stack" (submit)="$event.preventDefault(); ask($any($event.target))">
               <div class="field"><label for="out-leaves">Leaving</label><input id="out-leaves" type="datetime-local" /></div>
               <div class="field"><label for="out-returns">Back by</label><input id="out-returns" type="datetime-local" /></div>
@@ -44,13 +44,14 @@ import { PortalFrame } from '../apply/portal-frame';
     </app-portal-frame>
   `,
   styles: `
-    .rows {
+    .bullets {
       margin: 0;
       padding-left: 18px;
     }
   `,
 })
 export class StudentCampusPage {
+  protected readonly money = money;
   private readonly api = inject(Api);
   private readonly toasts = inject(ToastService);
   protected readonly date = date;

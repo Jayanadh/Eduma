@@ -64,9 +64,9 @@ MODULES: dict[str, Module] = {
         _operations("hostel", "Hostel and mess", available=True),
         _operations("hr_payroll", "HR and payroll", available=True),
         _operations("assets", "Assets, purchasing and labs", available=True),
-        _operations("services", "Student services and cases"),
-        _operations("placements", "Placements, internships and alumni"),
-        _operations("quality", "Quality, accreditation and research"),
+        _operations("services", "Student services and cases", available=True),
+        _operations("placements", "Placements, internships and alumni", available=True),
+        _operations("quality", "Quality, accreditation and research", available=True),
     )
 }
 

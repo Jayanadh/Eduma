@@ -44,6 +44,8 @@ urlpatterns = [
     path("api/v1/institution/campus/", include("campus.urls")),
     path("api/v1/institution/hr/", include("hr.urls")),
     path("api/v1/institution/stores/", include("stores.urls")),
+    path("api/v1/service-cases/", include("cases.urls")),
+    path("api/v1/development/", include("development.urls")),
     path("api/v1/webhooks/payments/<str:provider>/<uuid:institution>", FeeWebhook.as_view(), name="payment-webhook"),
     path("api/v1/public/verify/<str:token>", Verify.as_view(), name="public-verify"),
     path("api/v1/teaching/", include("academics.teaching_urls")),

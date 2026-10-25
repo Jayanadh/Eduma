@@ -131,6 +131,20 @@ PERMISSIONS: dict[str, Permission] = {
         Permission(
             "assets.manage", "Staff services", "Keep the asset register, maintenance, disposal and bookings", False
         ),
+        Permission("service_case.assign", "Student services", "See the case queue and assign cases", False),
+        Permission(
+            "service_case.confidential",
+            "Student services",
+            "Be assigned grievance, counselling and safeguarding cases",
+            True,
+        ),
+        Permission("placement.manage", "Student services", "Run placements, internships and the alumni list", False),
+        Permission(
+            "research.manage", "Student services", "Run research scholars, supervision and ethics records", False
+        ),
+        Permission(
+            "quality_evidence.manage", "Student services", "Run quality review cycles and accept evidence", False
+        ),
         Permission("student.read", "Students", "See student records", False),
         Permission("student.update", "Students", "Correct student details", False),
         Permission(
@@ -230,6 +244,40 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "enquiry.manage",
         ),
         _role("librarian", "Librarian", "Runs the library.", "library.manage"),
+        _role(
+            "student_services",
+            "Student Services Officer",
+            "Takes in service requests and grievances and assigns each to who handles it.",
+            "service_case.assign",
+        ),
+        _role(
+            "grievance_officer",
+            "Grievance Officer",
+            "Assigns cases and handles confidential grievance, counselling and safeguarding cases given to them.",
+            "service_case.assign",
+            "service_case.confidential",
+        ),
+        _role(
+            "placement_officer",
+            "Placement Officer",
+            "Runs placements, internships and alumni.",
+            "placement.manage",
+            "student.read",
+        ),
+        _role(
+            "research_coordinator",
+            "Research Coordinator",
+            "Runs research scholars and supervision.",
+            "research.manage",
+            "student.read",
+        ),
+        _role(
+            "iqac_coordinator",
+            "IQAC Coordinator",
+            "Runs quality review cycles and evidence.",
+            "quality_evidence.manage",
+            "membership.read",
+        ),
         _role(
             "hr_officer",
             "HR Officer",

@@ -286,6 +286,9 @@ def undo_blocker(job: ImportJob, students=None) -> str | None:
         | Q(hostel_allocations__isnull=False)
         | Q(holds__isnull=False)
         | Q(overrides__isnull=False)
+        | Q(placement_applications__isnull=False)
+        | Q(alumni_profile__isnull=False)
+        | Q(scholar__isnull=False)
     )
     if found := students.filter(academic).first():
         return f"{found.number} has registrations, attendance, a hold or an academic record."

@@ -5,6 +5,7 @@ from django.urls import path
 from academics import registration_views
 from attendance import views as attendance
 from campus import views as campus
+from development import views as development
 from fees import views as fees
 from results import views as results
 
@@ -21,4 +22,10 @@ urlpatterns = [
     path("fees/orders", fees.OwnOrder.as_view()),
     path("campus", campus.OwnCampus.as_view()),
     path("campus/out-passes", campus.OwnOutPass.as_view()),
+    path("placements", development.OwnPlacements.as_view()),
+    path("placements/<uuid:pk>/apply", development.OwnApply.as_view()),
+    path("placement-applications/<uuid:pk>/decide", development.OwnDecide.as_view()),
+    path("alumni", development.OwnAlumni.as_view()),
+    path("research", development.OwnResearch.as_view()),
+    path("research/milestones/<uuid:pk>/submit", development.OwnMilestone.as_view()),
 ]

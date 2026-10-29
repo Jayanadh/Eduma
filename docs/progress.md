@@ -3,6 +3,21 @@
 The durable record that `Eduma_Build_Pack/prompt.md` asks for: what is built, how it was checked, what was not, and
 what comes next. Read this first when continuing.
 
+## Whole-application check (29 October 2026)
+
+| Found | Fix |
+|---|---|
+| Admin Home, the console's Modules tab and onboarding said every module "arrives in a later release" (text left from slice 1); some role descriptions said permissions "arrive with" modules that exist | Text describes what is true now (switch modules on in Settings) |
+| Three modules were switches wired to nothing: Course registration and Affiliations were marked unavailable while working under Academics; Outcomes was available but never checked, so switching any of them off hid nothing | Each is a real switch: registration windows, holds, overrides, the academic record, the student's Registration and Degree progress need `course_registration`; affiliations need `affiliations`; course outcomes and attainment need `outcomes`. Pages hide those parts when off. Demo: Meridian has all three, Summit has Affiliations. Tested both ways (`institutions/tests/test_module_switches.py`, nav and results specs) |
+| "More arrives here…" on the student home and a child's page | Says where the school's services appear |
+
+**Checks:**
+
+- **Frontend calls:** every one of the 407 API calls the frontend makes matches a backend route, and all 74 menu and portal links point to defined pages.
+- **Browser sweep:** every menu page was opened as 25 different users, covering Aster's 11 staff roles, student and family; Meridian's 8 staff roles and student; Summit's admin; and the console. That is 284 page loads with 0 failed API calls, 0 error messages, 0 "Not found" pages and 0 console errors. Every page rendered its heading in the 66-page re-check.
+- **Backend:** 624 tests passed; `pytest -m adversarial` passed 6 (no cross-tenant leaks, no 5xx).
+- **Frontend:** 251 tests passed; `ng build` and `check:a11y` are clean.
+
 ## Stack, security and mobile pass (25 October 2026)
 
 **Stack and security:**

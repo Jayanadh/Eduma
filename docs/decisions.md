@@ -285,6 +285,10 @@ S10C-05 consented, eligibility-checked placement applications; S10C-06 internshi
 research with ethics validity and supervisor-only decisions; S10C-09 versioned evidence and frozen snapshots; S10C-10
 apps `cases` and `development`. Supervisors and evidence owners are given by username (offices can't list staff).
 
+## Module switches (29 October 2026)
+
+Every catalogue module is a real switch: its endpoints answer 404 and its screens hide while it is off, even when the modules it depends on are on. Course registration (registration, the academic record, degree progress), Affiliations and Outcomes gained their own gates; before, they rode on Academics or Results.
+
 ## BUILD-11 (operations)
 
 Full table: `docs/superpowers/specs/2026-10-25-build11-operations-design.md`. S11-01 code-defined, scope-respecting
@@ -292,5 +296,5 @@ reports with provenance; S11-02 small confidential groups suppressed; S11-03 exp
 and expiry; S11-04 `run_jobs` worker with heartbeat and scheduled tasks; S11-05 health tiles with unknown kept
 unknown; S11-06 alerts that resolve on recovery; S11-07 read-only usage; S11-08 backup and restore drill scripts with a
 recorded, measured drill; S11-09 app `operations`, permission `report.export`. The separate `course_registration` and
-`affiliations` module switches stay unavailable: those features are built and run under Academics, and a switch that
-did nothing would mislead (recorded for BUILD-12).
+`affiliations` module switches were left unavailable here (superseded on 29 October 2026: both are now real switches,
+see "Module switches" above).

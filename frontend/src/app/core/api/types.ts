@@ -688,7 +688,7 @@ export type MoveUpRow = {
 };
 
 export type TeachingClass = {
-  /** One of the two: a class or batch, or a course offering (whose class list arrives with registration). */
+  /** One of the two: a class or batch, or a course offering (whose class list comes from course registration). */
   section?: { id: string; code: string; grade: string; year: string };
   offering?: { id: string; course: string; title: string; code: string; term: string; year: string };
   subjects: string[];

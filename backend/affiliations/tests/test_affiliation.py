@@ -19,9 +19,9 @@ def pair(world, client_for):
     """Aster as a college with B.Sc students who sat Semester 1, and Summit University."""
     world.a.category = "college"
     world.a.save()
-    switch_on(world.a, modules=("admissions", "students", "academics"))
+    switch_on(world.a, modules=("admissions", "students", "academics", "exams", "affiliations"))
     summit = factories.institution(slug="summit", display_name="Summit University", category="university")
-    switch_on(summit, modules=("academics",))
+    switch_on(summit, modules=("academics", "exams", "affiliations"))
     c = setup.build(world.a)
     for number, name, gp in (("2026-0001", "Asha Rao", 8), ("2026-0002", "Ravi Kumar", 6)):
         s = setup.student(c, number, name=name)
@@ -82,7 +82,7 @@ def test_a_grant_is_proposed_then_approved_by_the_college(world, pair, client_fo
     assert approved.json()["status"] == "active" and approved.json()["in_effect"] is True
     assert [(g["status"], g["side"]) for g in c.registrar.get(GRANTS).json()] == [("active", "university")]
     assert [g["side"] for g in c.college.get(GRANTS).json()] == ["college"]
-    switch_on(world.b, modules=("academics",))
+    switch_on(world.b, modules=("academics", "exams", "affiliations"))
     assert client_for(world.b.slug, world.b_admin).get(GRANTS).json() == []
 
 

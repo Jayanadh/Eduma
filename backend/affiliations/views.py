@@ -45,7 +45,7 @@ class InstitutionView(GenericAPIView):
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
-        require_module(request.institution, "academics")
+        require_module(request.institution, "affiliations")
 
     def mine(self):
         from django.db.models import Q

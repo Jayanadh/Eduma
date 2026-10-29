@@ -260,7 +260,15 @@ class Promotion(ResultsView):
         return Response({"decision": made.decision, "label": made.get_decision_display()})
 
 
-class Outcomes(ResultsView):
+class OutcomesView(ResultsView):
+    """Course outcomes, mappings and attainment: Results plus the Outcomes module."""
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        require_module(request.institution, "outcomes")
+
+
+class Outcomes(OutcomesView):
     def get(self, request, pk):
         course = _found(Course.objects.filter(institution=request.institution), pk)
         return Response(
@@ -278,7 +286,7 @@ class Outcomes(ResultsView):
         )
 
 
-class Mappings(ResultsView):
+class Mappings(OutcomesView):
     def post(self, request, pk):
         made = services.map_outcome(
             request.user, self.assessment(), request.data.get("component"), request.data.get("outcome")
@@ -286,7 +294,7 @@ class Mappings(ResultsView):
         return Response({"id": str(made.id)}, status=status.HTTP_201_CREATED)
 
 
-class Attainment(ResultsView):
+class Attainment(OutcomesView):
     def post(self, request, pk):
         from decimal import InvalidOperation
 

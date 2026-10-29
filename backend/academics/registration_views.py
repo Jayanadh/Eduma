@@ -39,6 +39,12 @@ from students.models import Student
 
 
 class RegistrationView(AcademicsView):
+    """Registration windows, holds, overrides and the academic record: Academics plus Course registration."""
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        require_module(request.institution, "course_registration")
+
     def get_permissions(self):
         return [holds_any("institution.read" if self.request.method == "GET" else registration.MANAGE)()]
 
@@ -163,6 +169,8 @@ class OwnView(GenericAPIView):
 
 
 class OwnRegistration(OwnView):
+    module = "course_registration"
+
     def get(self, request):
         today = today_for(request.institution)
         windows = RegistrationWindow.objects.filter(institution=request.institution, closes_on__gte=today)
@@ -205,6 +213,8 @@ class OwnRegistration(OwnView):
 
 
 class OwnDrop(OwnView):
+    module = "course_registration"
+
     def post(self, request, pk):
         found = _registrations(request.institution).filter(enrollment__student=self.me, pk=pk).first()
         if found is None:
@@ -283,5 +293,7 @@ class StudentProgress(RecordView):
 
 
 class OwnProgress(OwnView):
+    module = "course_registration"
+
     def get(self, request):
         return Response(_progress_of(self.me))

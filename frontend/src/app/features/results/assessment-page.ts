@@ -101,7 +101,7 @@ type Cell = { status: MarkStatus; score: string };
             }
           </section>
         }
-        @if (a.target.kind === 'offering' && can('assessment.manage')) {
+        @if (a.target.kind === 'offering' && can('assessment.manage') && auth.on('outcomes')) {
           <section class="card stack section">
             <h2 class="card-title">Course outcomes</h2>
             <p class="small">@for (m of a.mappings; track $index) { <span class="part">{{ componentName(a, m.component) }} → {{ m.outcome }}</span> } @empty { <span class="muted">No components mapped.</span> }</p>
@@ -170,7 +170,7 @@ type Cell = { status: MarkStatus; score: string };
 export class AssessmentPage {
   readonly id = input.required<string>();
   private readonly api = inject(Api);
-  private readonly auth = inject(AuthStore);
+  protected readonly auth = inject(AuthStore);
   private readonly toasts = inject(ToastService);
   private readonly confirm = inject(ConfirmDialog);
   protected readonly statuses: [MarkStatus, string][] = [
@@ -186,7 +186,7 @@ export class AssessmentPage {
   protected readonly outcomes = load(
     () => {
       const a = this.data.value();
-      return a?.course && this.can('assessment.manage')
+      return a?.course && this.can('assessment.manage') && this.auth.on('outcomes')
         ? this.api.get<{ id: string; code: string; description: string }[]>(`institution/results/courses/${a.course?.id}/outcomes`)
         : of([]);
     },

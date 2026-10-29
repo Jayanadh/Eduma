@@ -67,6 +67,11 @@ export class AuthStore {
     return this.permissions().has(perm);
   }
 
+  /** Whether a module is switched on for the signed-in member's institution. For showing things only. */
+  on(module: string): boolean {
+    return this.current()?.membership?.modules_enabled?.includes(module) ?? false;
+  }
+
   /** Someone just signed up and was signed in by the server. */
   signedUp(user: Me): void {
     this.current.set(user);

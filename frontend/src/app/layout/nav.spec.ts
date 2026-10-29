@@ -50,6 +50,13 @@ describe('navFor', () => {
     expect(on.map((item) => item.label)).toContain('Students');
   });
 
+  it('shows Affiliations only with its own module on, not with Academics alone', () => {
+    const labels = (modules: string[]) =>
+      navFor('institution', holding('affiliation.submit'), (module) => modules.includes(module), true).map((item) => item.label);
+    expect(labels(['academics', 'exams'])).not.toContain('Affiliations');
+    expect(labels(['academics', 'exams', 'affiliations'])).toContain('Affiliations');
+  });
+
   it('shows Programs, Courses and Offerings to colleges and universities, not schools', () => {
     const can = holding('academic_structure.manage');
     const academics = (higher: boolean) =>

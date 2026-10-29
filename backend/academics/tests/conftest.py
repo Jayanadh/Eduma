@@ -7,7 +7,7 @@ API = "/api/v1/institution/academics"
 
 @pytest.fixture
 def on(world):
-    switch_on(world.a, modules=("admissions", "students", "academics"))
+    switch_on(world.a, modules=("admissions", "students", "academics", "course_registration"))
     return world.a
 
 

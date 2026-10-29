@@ -35,7 +35,7 @@ import { PortalFrame } from '../apply/portal-frame';
         @if (attendance.value(); as summary) {
           <section class="card"><h2 class="card-title">Attendance</h2><app-attendance-summary [summary]="summary" /></section>
         }
-        <p class="notice notice-info">More arrives here with each module your school switches on.</p>
+        <p class="notice notice-info">Your school's other services are in the menu above, as it switches them on.</p>
       } @else if (data.loading()) {
         <p class="muted" role="status">Loading…</p>
       }

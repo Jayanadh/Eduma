@@ -1,5 +1,6 @@
 """The modules an institution's plan can include (spec pack 01 §6, slice 2 spec §6). The platform records which ones
-each institution has (Institution.modules); the institution switches each one on in its settings (modules.enabled)."""
+each institution has (Institution.modules); the institution switches each one on in its settings (modules.enabled).
+Every module is a real switch: its endpoints answer 404 while it is off."""
 
 from dataclasses import dataclass
 
@@ -42,7 +43,13 @@ MODULES: dict[str, Module] = {
             default_for=frozenset({"school"}),
             available=True,
         ),
-        _core("course_registration", "Course registration, credits and degree audit", "academics", default_for=HIGHER),
+        _core(
+            "course_registration",
+            "Course registration, credits and degree audit",
+            "academics",
+            default_for=HIGHER,
+            available=True,
+        ),
         _core(
             "outcomes",
             "Lab batches, projects and outcome evidence",
@@ -55,6 +62,7 @@ MODULES: dict[str, Module] = {
             "Affiliated colleges and central examinations",
             "exams",
             default_for=frozenset({"university"}),
+            available=True,
         ),
         _core("fees", "Fees", "students", available=True),
         _core("communication", "Messages, calls and online classes", "students", available=True),

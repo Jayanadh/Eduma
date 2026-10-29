@@ -17,7 +17,6 @@ hidden behind a working-looking screen: each item is either absent from the inte
 
 | Area | Limit | Upgrade when |
 |---|---|---|
-| Module switches | `course_registration` and `affiliations` are listed as unavailable. Registration, credits, degree progress and affiliations are built and run under **Academics**, so a separate switch would do nothing. | An institution needs Academics without registration. |
 | Payroll | One cycle per month. There are no adjustment cycles: an exported month can't be redone in Eduma. Statutory deductions are entered, not calculated (D-11). | A payroll engine or adapter is chosen (D-11). |
 | Procurement | Requisitions double as orders: there are no separate purchase-order documents, quotations or depreciation. | Finance asks for them. |
 | Hostel | No mess, meal plans or deposits. | Those are scoped. |

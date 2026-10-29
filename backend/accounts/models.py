@@ -85,7 +85,7 @@ class Membership(VersionedModel):
 
 
 class Employee(VersionedModel):
-    """A staff member's employment record (spec pack 08 Employee). Leave, payroll and contracts arrive with HR."""
+    """A staff member's employment record (spec pack 08 Employee). Leave and pay hang off it in the hr app."""
 
     institution = models.ForeignKey("institutions.Institution", on_delete=models.PROTECT, related_name="employees")
     membership = models.OneToOneField(Membership, on_delete=models.PROTECT, related_name="employee")

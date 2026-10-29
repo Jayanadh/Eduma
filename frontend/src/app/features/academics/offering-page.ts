@@ -2,6 +2,7 @@ import { Component, inject, input, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage } from '../../core/api-error';
+import { AuthStore } from '../../core/auth-store';
 import { Offering, OfferingTeacher } from '../../core/api/types';
 import { date } from '../../core/format';
 import { load } from '../../core/load';
@@ -11,7 +12,7 @@ import { PageHeader } from '../../ui/page-header';
 import { ToastService } from '../../ui/toast';
 import { OfferingRegistrations } from './offering-registrations';
 
-/** One offering: its status and who teaches it. Its class list arrives with course registration. */
+/** One offering: its status, who teaches it and, with Course registration on, its class list. */
 @Component({
   selector: 'app-offering-page',
   imports: [LoadError, OfferingRegistrations, PageHeader],
@@ -40,7 +41,9 @@ import { OfferingRegistrations } from './offering-registrations';
         <p class="muted small section">
           {{ o.course.credits }} credits{{ o.linked_to ? ' · goes with ' + o.linked_to.label : '' }}{{ o.linked.length ? ' · ' + o.linked.join(', ') + ' go with it' : '' }}
         </p>
-        <app-offering-registrations [offering]="o.id" (changed)="data.reload()" />
+        @if (auth.on('course_registration')) {
+          <app-offering-registrations [offering]="o.id" (changed)="data.reload()" />
+        }
         <section class="card stack section">
           <h2 class="card-title">Teachers</h2>
           <ul class="rows">
@@ -80,6 +83,7 @@ import { OfferingRegistrations } from './offering-registrations';
   `,
 })
 export class OfferingPage {
+  protected readonly auth = inject(AuthStore);
   readonly id = input.required<string>();
   private readonly api = inject(Api);
   private readonly toasts = inject(ToastService);

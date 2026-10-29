@@ -53,6 +53,28 @@ describe('Results pages', () => {
     }
   }
 
+  it('shows course outcomes only with the Outcomes module on', async () => {
+    let fixture = TestBed.createComponent(AssessmentPage);
+    fixture.componentRef.setInput('id', 'as1');
+    await fixture.whenStable();
+    respond('/api/v1/institution/results/assessments/as1', ASSESSMENT);
+    await fixture.whenStable();
+    http.expectNone('/api/v1/institution/results/courses/c1/outcomes');
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Course outcomes');
+    fixture.destroy();
+    const officer = makeMe();
+    officer.membership = { ...officer.membership!, modules_enabled: ['exams', 'outcomes'], permissions: ['assessment.manage'] };
+    await signInAs(officer);
+    fixture = TestBed.createComponent(AssessmentPage);
+    fixture.componentRef.setInput('id', 'as1');
+    await fixture.whenStable();
+    respond('/api/v1/institution/results/assessments/as1', ASSESSMENT);
+    await fixture.whenStable();
+    respond('/api/v1/institution/results/courses/c1/outcomes', [{ id: 'co1', code: 'CO1', description: 'Differentiate' }]);
+    await fixture.whenStable();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Course outcomes');
+  });
+
   it('saves a draft scheme with its components', async () => {
     const fixture = TestBed.createComponent(SchemesPage);
     await fixture.whenStable();

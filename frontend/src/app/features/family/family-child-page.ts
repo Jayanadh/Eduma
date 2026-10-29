@@ -30,7 +30,7 @@ import { PayOnline } from '../fees/pay-online';
           @if (attendance.value(); as summary) {
             <section class="card"><h2 class="card-title">Attendance</h2><app-attendance-summary [summary]="summary" /></section>
           }
-          <p class="notice notice-info">More arrives here with each module your school switches on.</p>
+          <p class="notice notice-info">What the school shares with you appears here, as it switches each service on.</p>
         }
       } @else if (data.loading()) {
         <p class="muted" role="status">Loading…</p>

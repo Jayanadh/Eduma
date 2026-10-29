@@ -529,6 +529,7 @@ class Command(BaseCommand):
 
         meridian = Institution.objects.get(slug="meridian")
         admin = User.objects.get(username="meridian.admin")
+        self._switch_on(meridian, admin, "course_registration")
         self._member(meridian, actor, "meridian.adviser", "Meridian Academic Adviser", "academic_adviser", None)
         if RegistrationWindow.objects.filter(institution=meridian).exists():
             return
@@ -584,7 +585,11 @@ class Command(BaseCommand):
 
         meridian = Institution.objects.get(slug="meridian")
         summit = Institution.objects.get(slug="summit")
-        self._switch_on(summit, User.objects.get(username="summit.admin"), "academics")
+        # A college's plan doesn't include affiliations by default; Meridian bought it to send results to Summit.
+        meridian.modules = sorted({*meridian.modules, "affiliations"})
+        meridian.save(update_fields=["modules"])
+        self._switch_on(summit, User.objects.get(username="summit.admin"), "academics", "exams", "affiliations")
+        self._switch_on(meridian, User.objects.get(username="meridian.admin"), "exams", "affiliations")
         if AffiliationGrant.objects.filter(college=meridian, university=summit).exists():
             return
         admin = User.objects.get(username="meridian.admin")
@@ -653,7 +658,10 @@ class Command(BaseCommand):
             {"name": "Internal", "max_marks": 40, "weight": 40},
             {"name": "Final", "max_marks": 60, "weight": 60, "min_percent": 40},
         ]
-        for slug, modules in (("aster", ("exams", "report_cards")), ("meridian", ("exams",))):
+        outcomes = Institution.objects.get(slug="meridian")  # outcome evidence isn't in a college plan by default
+        outcomes.modules = sorted({*outcomes.modules, "outcomes"})
+        outcomes.save(update_fields=["modules"])
+        for slug, modules in (("aster", ("exams", "report_cards")), ("meridian", ("exams", "outcomes"))):
             institution = Institution.objects.get(slug=slug)
             admin = User.objects.get(username=f"{slug}.admin")
             self._switch_on(institution, admin, *modules)

@@ -93,8 +93,11 @@ def test_seed_runs_twice_without_duplicates(db, settings):
     assert setting(meridian, "modules.enabled") == [
         "academics",
         "admissions",
+        "affiliations",
+        "course_registration",
         "exams",
         "hostel",
+        "outcomes",
         "placements",
         "quality",
         "reports",

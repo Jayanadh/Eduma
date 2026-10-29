@@ -33,7 +33,7 @@ import { Icon } from '../../ui/icon';
           <a routerLink="/apply/applications" routerLinkActive="active">Applications</a>
         </nav>
       }
-      @if (auth.user()?.membership?.kind === 'student' && (academics() || attendance() || exams() || fees() || comms() || campus() || services() || careers())) {
+      @if (auth.user()?.membership?.kind === 'student' && (academics() || auth.on('course_registration') || attendance() || exams() || fees() || comms() || campus() || services() || careers())) {
         <nav class="portal-nav" aria-label="Student">
           <a routerLink="/student" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Your record</a>
           @if (attendance()) { <a routerLink="/student/assignments" routerLinkActive="active">Assignments</a> }
@@ -43,7 +43,7 @@ import { Icon } from '../../ui/icon';
           @if (campus()) { <a routerLink="/student/campus" routerLinkActive="active">Campus</a> }
           @if (careers()) { <a routerLink="/student/careers" routerLinkActive="active">Careers</a> }
           @if (services()) { <a routerLink="/cases" routerLinkActive="active">Cases</a> }
-          @if (auth.higher() && academics()) {
+          @if (auth.higher() && auth.on('course_registration')) {
             <a routerLink="/student/registration" routerLinkActive="active">Registration</a>
             <a routerLink="/student/progress" routerLinkActive="active">Degree progress</a>
           }

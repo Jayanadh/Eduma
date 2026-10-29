@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { of } from 'rxjs';
 import { Api } from '../../core/api/api';
 import { apiErrorMessage, fieldErrors } from '../../core/api-error';
+import { AuthStore } from '../../core/auth-store';
 import { AcademicYear, Campus, Course, Offering, Page } from '../../core/api/types';
 import { load } from '../../core/load';
 import { EmptyState } from '../../ui/empty-state';
@@ -22,7 +23,7 @@ const NONE = { count: 0, next: null, previous: null, results: [] };
   template: `
     <div class="page">
       <app-page-header eyebrow="Academics" title="Offerings" subtitle="The courses taught each term, with their seats and teachers." />
-      <app-windows-section />
+      @if (auth.on('course_registration')) { <app-windows-section /> }
       <div class="field section">
         <label for="filter-term">Term</label>
         <select id="filter-term" (change)="term.set($any($event.target).value); page.set(1)">
@@ -140,6 +141,7 @@ const NONE = { count: 0, next: null, previous: null, results: [] };
   `,
 })
 export class OfferingsPage {
+  protected readonly auth = inject(AuthStore);
   private readonly api = inject(Api);
   private readonly toasts = inject(ToastService);
   protected readonly years = load(() => this.api.get<AcademicYear[]>('institution/academics/years'));

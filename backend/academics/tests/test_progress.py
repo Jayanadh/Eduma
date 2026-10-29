@@ -159,7 +159,7 @@ def test_students_see_their_own_progress(world, c, client_for):
 
 
 def test_isolation(world, admin, c, seven, client_for):
-    switch_on(world.b, modules=("admissions", "students", "academics"))
+    switch_on(world.b, modules=("admissions", "students", "academics", "course_registration"))
     birch = client_for(world.b.slug, world.b_admin)
     first = CourseAttempt.objects.first()
     assert birch.patch(f"{API}/attempts/{first.id}", {"outcome": "absent"}, format="json").status_code == 404

@@ -177,7 +177,7 @@ def test_approval_holds_the_seat(world, admin, c):
 @pytest.mark.django_db(transaction=True)
 def test_two_students_race_for_the_last_seat(world):
     """TST-010: exactly one registers."""
-    switch_on(world.a, modules=("admissions", "students", "academics"))
+    switch_on(world.a, modules=("admissions", "students", "academics", "course_registration"))
     c = setup.build(world.a)
     students = [setup.student(c, f"2026-000{n}") for n in (1, 2)]
     results = []
@@ -265,7 +265,7 @@ def test_windows_and_holds_api(world, admin, c, client_for):
     lifted = admin.post(f"{API}/holds/{hold.json()['id']}/lift", {}, format="json")
     assert lifted.json()["lifted_on"] is not None
     assert register(admin, s, c.maths).status_code == 201
-    switch_on(world.b, modules=("admissions", "students", "academics"))
+    switch_on(world.b, modules=("admissions", "students", "academics", "course_registration"))
     birch = client_for(world.b.slug, world.b_admin)
     assert birch.get(f"{API}/registrations", {"student": str(s.id)}).json()["count"] == 0
     assert (

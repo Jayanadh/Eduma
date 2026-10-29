@@ -172,7 +172,7 @@ import { RegistrationSection } from './registration-section';
         @if (attendance.value(); as summary) {
           <section class="card section"><h2 class="card-title">Attendance</h2><app-attendance-summary [summary]="summary" /></section>
         }
-        @if (college() && student.enrollment?.program) {
+        @if (registration() && student.enrollment?.program) {
           <div class="grid-2 section">
             <app-registration-section [student]="student" />
             <app-record-section [student]="student" />
@@ -226,8 +226,8 @@ export class StudentPage {
   );
   protected readonly exams = computed(() => this.auth.user()?.membership?.modules_enabled?.includes('exams') ?? false);
   /** Registration and the academic record belong to colleges with Academics on. */
-  protected readonly college = computed(
-    () => this.auth.higher() && (this.auth.user()?.membership?.modules_enabled?.includes('academics') ?? false),
+  protected readonly registration = computed(
+    () => this.auth.higher() && this.auth.on('course_registration'),
   );
   protected readonly data = load(
     () => this.api.get<StudentRecord>(`institution/students/${this.id()}`),

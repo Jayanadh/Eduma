@@ -123,7 +123,7 @@ const WORKSPACE: (NavItem & { needs?: string | string[]; module?: string | strin
     link: '/app/affiliations',
     group: 'Academics',
     needs: ['affiliation.submit', 'affiliation.review'],
-    module: 'academics',
+    module: 'affiliations',
     higher: true,
   },
   { label: 'My classes', icon: 'book', link: '/app/teaching', group: 'Academics', module: 'academics' },

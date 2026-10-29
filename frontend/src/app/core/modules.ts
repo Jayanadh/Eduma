@@ -51,7 +51,7 @@ export const MODULE_LABELS: Readonly<Record<string, string>> = {
   affiliations: 'Affiliated colleges and central examinations',
   fees: 'Fees',
   communication: 'Messages, calls and online classes',
-  reports: 'Reports',
+  reports: 'Reports and exports',
   library: 'Library',
   transport: 'Transport',
   hostel: 'Hostel and mess',

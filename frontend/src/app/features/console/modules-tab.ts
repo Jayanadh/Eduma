@@ -14,7 +14,7 @@ import { ModulePicker } from './module-picker';
   template: `
     <section class="card stack">
       <h2 class="card-title">Modules in the plan</h2>
-      <p class="muted small">None of these is built yet: the institution sees each as arriving in a later release.</p>
+      <p class="muted small">What the institution may use. Its admin switches each one on in Settings, and it then appears in their menu.</p>
       <app-load-error [message]="catalogue.error()" (retry)="catalogue.reload()" />
       @if (catalogue.value(); as modules) {
         <app-module-picker [catalogue]="modules" [(selected)]="chosen" [disabled]="busy()" />

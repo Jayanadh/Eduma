@@ -1,5 +1,5 @@
 """The modules an institution's plan can include (spec pack 01 §6, slice 2 spec §6). The platform records which ones
-each institution has (Institution.modules); none is built yet, so each says it arrives in a later release."""
+each institution has (Institution.modules); the institution switches each one on in its settings (modules.enabled)."""
 
 from dataclasses import dataclass
 

@@ -193,7 +193,8 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
         _role(
             "principal",
             "Principal / Director",
-            f"{TODAY} Sees staff and their roles and student records, and approves fee credit notes and refunds.",
+            f"{TODAY} Sees staff, their roles and student records; approves fee credit notes and refunds, leave, "
+            "payroll and purchases; exports reports.",
             "membership.read",
             "student.read",
             "fees.read",
@@ -207,7 +208,7 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
         _role(
             "head_of_department",
             "Head of Department",
-            f"{TODAY} Sees the department's staff. Academic permissions arrive with the Academics module.",
+            f"{TODAY} Sees the department's staff and their roles.",
             "membership.read",
         ),
         _role(
@@ -236,7 +237,11 @@ BUILTIN_ROLES: dict[str, BuiltinRole] = {
             "registration.manage",
             "registration.override",
         ),
-        _role("teacher", "Teacher / Faculty", f"{TODAY} Teaching permissions arrive with Academics and Attendance."),
+        _role(
+            "teacher",
+            "Teacher / Faculty",
+            f"{TODAY} Teaches the classes and courses assigned to them: attendance, assignments and marks.",
+        ),
         _role(
             "admissions_officer",
             "Admissions Officer",

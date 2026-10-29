@@ -94,7 +94,7 @@ const FIX_AT: Readonly<Record<string, string>> = { site_published: '/app/site', 
           <section class="card stack">
             <h2 class="card-title">Modules in your plan</h2>
             @if (institution.modules.length) {
-              <p class="muted small">None is open yet: each arrives in a later release. Switched-on modules are marked.</p>
+              <p class="muted small">Switched-on modules are ticked and appear in your menu. Switch them on or off in Settings.</p>
               <ul class="chips modules">
                 @for (key of institution.modules; track key) {
                   <li class="chip module" [class.on]="enabled().includes(key)">
